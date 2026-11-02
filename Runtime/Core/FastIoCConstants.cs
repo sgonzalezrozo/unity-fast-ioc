@@ -5,7 +5,7 @@ namespace Tools.FastIoC.Runtime.Core
         // Framework type names
         public const string IINSTANTIATOR_TYPE = "Tools.FastIoC.Runtime.Core.IInstantiator";
         public const string INSTANTIATION_FACTORY_TYPE = "Tools.FastIoC.Runtime.Core.InstantiationFactory";
-        public const string IPREFAB_INSTANTIATOR_TYPE = "Tools.Core.IPrefabInstantiator";
+        public const string IPREFAB_INSTANTIATOR_TYPE = "ToolsCore.IPrefabInstantiator";
         public const string FAST_IOC_PREFAB_INSTANTIATOR_TYPE = "Tools.FastIoC.Runtime.Adapters.FastIoCPrefabInstantiator";
         public const string CONTEXT_RUNTIME_TYPE = "Tools.FastIoC.Runtime.Core.ContextRuntime";
         public const string GENERATED_MONO_INJECTORS_TYPE = "FastIoC.Generated.GeneratedMonoInjectors";

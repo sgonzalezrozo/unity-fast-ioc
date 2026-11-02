@@ -3,7 +3,7 @@
     "rootNamespace": "",
     "references": [
         "tools-fastioc.Core",
-        "tools.Core"
+        "ToolsCore"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
