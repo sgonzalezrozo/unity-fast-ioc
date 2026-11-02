@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Tools.FastIoC.Analyzers
+namespace FastIoC.Analyzers
 {
     public class ServiceLocatorBuildValidator
     {

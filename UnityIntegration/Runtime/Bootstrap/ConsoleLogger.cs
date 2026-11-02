@@ -1,7 +1,7 @@
 using System;
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 
-namespace Tools.FastIoC.UnityIntegration.Runtime.Bootstrap
+namespace FastIoC.UnityIntegration.Runtime.Bootstrap
 {
     public class ConsoleLogger : IFastIoCLogger
     {

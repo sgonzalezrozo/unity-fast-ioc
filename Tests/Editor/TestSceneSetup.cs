@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Tools.FastIoC.Tests.Editor
+namespace FastIoC.Tests.Editor
 {
     /// <summary>
     /// Automatically adds test scenes to Build Settings.

@@ -2,12 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Tools.FastIoC.Editor.Graph;
-using Tools.FastIoC.Runtime.API;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Editor.Graph;
+using FastIoC.API;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class TypeLifetimeBuilder
     {

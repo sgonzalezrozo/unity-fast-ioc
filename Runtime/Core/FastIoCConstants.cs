@@ -1,15 +1,15 @@
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public static class FastIoCConstants
     {
         // Framework type names
-        public const string IINSTANTIATOR_TYPE = "Tools.FastIoC.Runtime.Core.IInstantiator";
-        public const string INSTANTIATION_FACTORY_TYPE = "Tools.FastIoC.Runtime.Core.InstantiationFactory";
+        public const string IINSTANTIATOR_TYPE = "FastIoC.Core.IInstantiator";
+        public const string INSTANTIATION_FACTORY_TYPE = "FastIoC.Core.InstantiationFactory";
         public const string IPREFAB_INSTANTIATOR_TYPE = "ToolsCore.IPrefabInstantiator";
-        public const string FAST_IOC_PREFAB_INSTANTIATOR_TYPE = "Tools.FastIoC.Runtime.Adapters.FastIoCPrefabInstantiator";
-        public const string CONTEXT_RUNTIME_TYPE = "Tools.FastIoC.Runtime.Core.ContextRuntime";
-        public const string GENERATED_MONO_INJECTORS_TYPE = "FastIoC.Generated.GeneratedMonoInjectors";
-        public const string PROJECT_CONTEXT_TYPE = "Tools.FastIoC.Runtime.API.ProjectContext";
+        public const string FAST_IOC_PREFAB_INSTANTIATOR_TYPE = "FastIoC.Adapters.FastIoCPrefabInstantiator";
+        public const string CONTEXT_RUNTIME_TYPE = "FastIoC.Core.ContextRuntime";
+        public const string GENERATED_MONO_INJECTORS_TYPE = "FastIoCGenerated.GeneratedMonoInjectors";
+        public const string PROJECT_CONTEXT_TYPE = "FastIoC.API.ProjectContext";
 
         // Method names
         public const string METHOD_INJECT = "Inject";
@@ -20,7 +20,7 @@ namespace Tools.FastIoC.Runtime.Core
 
         // Paths
         public const string GENERATED_PATH = "Assets/FastIoC/Generated";
-        public const string GENERATED_NAMESPACE = "FastIoC.Generated";
+        public const string GENERATED_NAMESPACE = "FastIoCGenerated";
 
         // Lifetimes
         public const string LIFETIME_TRANSIENT = "Transient";

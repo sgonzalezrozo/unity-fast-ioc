@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.UnityIntegration.Runtime
+namespace FastIoC.UnityIntegration.Runtime
 {
     /// <summary>
     /// Helper for FastIoC provider initialization.

@@ -1,9 +1,9 @@
 using System;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Tools.FastIoC.Runtime.API.Initialization
+namespace FastIoC.API.Initialization
 {
     public class SceneEventSubscriber
     {

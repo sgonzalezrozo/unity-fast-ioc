@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public static class LocalComponentResolver
     {

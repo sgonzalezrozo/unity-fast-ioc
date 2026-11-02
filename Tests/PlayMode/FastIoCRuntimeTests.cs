@@ -1,10 +1,10 @@
 using System.Collections;
 using NUnit.Framework;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     public class FastIoCRuntimeTests
     {

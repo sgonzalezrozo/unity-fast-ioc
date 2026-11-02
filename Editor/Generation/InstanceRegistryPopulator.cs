@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class InstanceRegistryPopulator
     {
@@ -14,8 +14,8 @@ namespace Tools.FastIoC.Editor.Generation
             StringBuilder sb = new();
             
             sb.AppendLine("using System;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.Core;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.API;");
+            sb.AppendLine("using FastIoC.Core;");
+            sb.AppendLine("using FastIoC.API;");
             sb.AppendLine("using UnityEngine;");
 
             // Collect namespaces for instance binding types
@@ -32,7 +32,7 @@ namespace Tools.FastIoC.Editor.Generation
                 sb.AppendLine($"using {ns};");
 
             sb.AppendLine();
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    /// <summary>");
             sb.AppendLine("    /// Populates the InstanceRegistry with pre-created instances during runtime initialization.");

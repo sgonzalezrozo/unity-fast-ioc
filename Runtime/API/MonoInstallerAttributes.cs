@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class MonoInstallerAttribute : Attribute

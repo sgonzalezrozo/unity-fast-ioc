@@ -1,12 +1,12 @@
 {
-    "name": "tools-fastioc.Tools.FastIoC.Tests.PlayMode",
+    "name": "FastIoC.Tests.PlayMode",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
-        "tools-fastioc.FastIoCIntegration",
+        "FastIoC.Integration",
         "UnityEditor.TestRunner",
-        "tools-fastioc",
-        "tools-fastioc.Core"
+        "FastIoC",
+        "FastIoC.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

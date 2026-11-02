@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public static class GenerationStatusReader
     {

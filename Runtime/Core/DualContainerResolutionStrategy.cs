@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public class DualContainerResolutionStrategy : IResolutionStrategy
     {

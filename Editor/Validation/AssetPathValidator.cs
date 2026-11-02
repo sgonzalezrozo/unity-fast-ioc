@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
 using UnityEditor.AddressableAssets.Settings;
@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 #endif
 
-namespace Tools.FastIoC.Editor.Validation
+namespace FastIoC.Editor.Validation
 {
     public static class AssetPathValidator
     {

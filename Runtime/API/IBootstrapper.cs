@@ -1,6 +1,6 @@
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public interface IBootstrapper
     {

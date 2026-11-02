@@ -1,11 +1,11 @@
 using System;
 using ToolsCore;
-using Tools.FastIoC.Runtime.Adapters;
-using Tools.FastIoC.Runtime.Core.Abstraction;
-using Tools.FastIoC.UnityIntegration.Runtime.Providers;
+using FastIoC.Adapters;
+using FastIoC.Core.Abstraction;
+using FastIoC.UnityIntegration.Runtime.Providers;
 using UnityEngine;
 
-namespace Tools.FastIoC.UnityIntegration.Runtime.Bootstrap
+namespace FastIoC.UnityIntegration.Runtime.Bootstrap
 {
     public static class FastIoCUnityBootstrapper
     {

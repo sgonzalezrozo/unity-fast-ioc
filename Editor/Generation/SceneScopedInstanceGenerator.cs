@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Tools.FastIoC.Editor.Discovery;
-using Tools.FastIoC.Editor.Validation;
-using Tools.FastIoC.Runtime.API;
+using FastIoC.Editor.Discovery;
+using FastIoC.Editor.Validation;
+using FastIoC.API;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class SceneScopedInstanceGenerator
     {
@@ -79,15 +79,15 @@ namespace Tools.FastIoC.Editor.Generation
             }
 
             sb.AppendLine("using System;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.Core;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.API;");
+            sb.AppendLine("using FastIoC.Core;");
+            sb.AppendLine("using FastIoC.API;");
             sb.AppendLine("using UnityEngine;");
 
             foreach (string ns in namespaces)
                 sb.AppendLine($"using {ns};");
 
             sb.AppendLine();
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine($"    public static class Scene{SanitizeSceneName(sceneName)}InstanceInitializer");
             sb.AppendLine("    {");

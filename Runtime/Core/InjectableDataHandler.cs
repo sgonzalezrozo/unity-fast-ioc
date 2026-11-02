@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public static class InjectableDataHandler
     {

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class TypeIdEmitter
     {
@@ -18,7 +18,7 @@ namespace Tools.FastIoC.Editor.Generation
             StringBuilder sb = new();
             typeIdMap = new Dictionary<Type, int>();
 
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    /// <summary>");
             sb.AppendLine("    /// Generated type IDs for fast array-based lookup.");
@@ -35,7 +35,7 @@ namespace Tools.FastIoC.Editor.Generation
 
                 typeIdMap[type] = currentId;
                 string typeName = type.FullName?.Replace(".", "_").Replace("+", "_") ?? "Unknown";
-                sb.AppendLine($"        public static readonly Tools.FastIoC.Runtime.Core.TypeId {typeName} = new({currentId});");
+                sb.AppendLine($"        public static readonly FastIoC.Core.TypeId {typeName} = new({currentId});");
                 currentId++;
             }
 

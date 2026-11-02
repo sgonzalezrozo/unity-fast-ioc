@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using NUnit.Framework;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Integration tests for complex dependency graphs.

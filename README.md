@@ -117,7 +117,7 @@ public class InventoryService : IInventoryService
 ### 2. Bind it
 
 ```csharp
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 
 [MonoInstaller]
 public class GameplayInstaller : BindingRecorder
@@ -202,7 +202,7 @@ public override void InstallBindings()
 ## Scene-specific installers
 
 ```csharp
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 
 [MonoInstaller("Bootgame", "Frontend", Priority = 200)]
 public class FrontendInstaller : BindingRecorder
@@ -224,7 +224,7 @@ public class FrontendInstaller : BindingRecorder
 Inject `IInstantiator` to create prefabs with dependencies:
 
 ```csharp
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
@@ -245,7 +245,7 @@ The component type must implement `IInstanciable`, or a child interface such as 
 ## Lifecycle
 
 ```csharp
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
 public class SaveSystem : IInitializable, IDisposableHook
 {
@@ -259,7 +259,7 @@ Services can also implement `IAsyncInitializable`:
 ```csharp
 using System.Threading;
 using System.Threading.Tasks;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
 public class RemoteConfigService : IAsyncInitializable
 {

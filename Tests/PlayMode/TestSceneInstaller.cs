@@ -1,6 +1,6 @@
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Installer for integration test scenes.

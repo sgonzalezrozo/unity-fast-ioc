@@ -1,8 +1,9 @@
 {
-    "name": "tools-fastioc",
+    "name": "FastIoC.Integration",
     "rootNamespace": "",
     "references": [
-        "tools-fastioc.Core",
+        "FastIoC",
+        "FastIoC.Core",
         "ToolsCore"
     ],
     "includePlatforms": [],

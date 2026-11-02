@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public abstract class BindingRecorder : IBindingRecorder
     {

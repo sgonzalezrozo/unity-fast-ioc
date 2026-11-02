@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Abstraction
+namespace FastIoC.Abstraction
 {
     public interface IContextLifecycleObserver
     {

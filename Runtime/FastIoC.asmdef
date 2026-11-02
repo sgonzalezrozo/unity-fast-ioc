@@ -1,7 +1,10 @@
 {
-    "name": "tools-fastioc.Core",
+    "name": "FastIoC",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "FastIoC.Core",
+        "ToolsCore"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

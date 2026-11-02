@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class InstanceBindingsBuilder
     {

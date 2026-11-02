@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Test component for scene transition testing.

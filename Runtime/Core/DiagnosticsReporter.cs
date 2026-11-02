@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public class DiagnosticsReporter
     {

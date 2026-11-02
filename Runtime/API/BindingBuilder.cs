@@ -1,7 +1,7 @@
 using System;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public class BindingBuilder<T> where T : class
     {

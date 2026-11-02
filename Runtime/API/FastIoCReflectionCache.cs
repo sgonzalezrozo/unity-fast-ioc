@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public static class FastIoCReflectionCache
     {
@@ -25,23 +25,23 @@ namespace Tools.FastIoC.Runtime.API
 
             try
             {
-                GeneratedRegistryType = LoadType("FastIoC.Generated.GeneratedRegistry");
+                GeneratedRegistryType = LoadType("FastIoCGenerated.GeneratedRegistry");
                 if (GeneratedRegistryType != null)
                     CacheGeneratedRegistryMethods();
 
-                Type generatedInjectorsType = LoadType("FastIoC.Generated.GeneratedMonoInjectors");
+                Type generatedInjectorsType = LoadType("FastIoCGenerated.GeneratedMonoInjectors");
                 if (generatedInjectorsType != null)
                     CacheGeneratedInjectorMethods(generatedInjectorsType);
 
-                Type generatedInjectableType = LoadType("FastIoC.Generated.GeneratedInjectableMonoBehaviours");
+                Type generatedInjectableType = LoadType("FastIoCGenerated.GeneratedInjectableMonoBehaviours");
                 if (generatedInjectableType != null)
                     CacheInjectableTypes(generatedInjectableType);
 
-                Type generatedInstanceRegistryType = LoadType("FastIoC.Generated.GeneratedInstanceRegistry");
+                Type generatedInstanceRegistryType = LoadType("FastIoCGenerated.GeneratedInstanceRegistry");
                 if (generatedInstanceRegistryType != null)
                     CacheInstanceRegistryMethod(generatedInstanceRegistryType);
 
-                Type instanceInitializerType = LoadType("FastIoC.Generated.InstanceRegistryInitializer");
+                Type instanceInitializerType = LoadType("FastIoCGenerated.InstanceRegistryInitializer");
                 if (instanceInitializerType != null)
                     CacheInstanceInitializerMethod(instanceInitializerType);
 

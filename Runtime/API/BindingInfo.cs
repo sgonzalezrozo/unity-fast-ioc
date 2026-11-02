@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public class BindingInfo
     {

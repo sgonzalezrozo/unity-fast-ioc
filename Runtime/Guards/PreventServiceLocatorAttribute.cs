@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Guards
+namespace FastIoC.Guards
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property,
         AllowMultiple = false,

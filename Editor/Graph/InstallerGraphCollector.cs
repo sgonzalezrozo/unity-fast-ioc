@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Tools.FastIoC.Editor.Discovery;
-using Tools.FastIoC.Runtime.API;
+using FastIoC.Editor.Discovery;
+using FastIoC.API;
 using UnityEngine;
-using BindingInfo = Tools.FastIoC.Runtime.API.BindingInfo;
+using BindingInfo = FastIoC.API.BindingInfo;
 using Object = UnityEngine.Object;
 
-namespace Tools.FastIoC.Editor.Graph
+namespace FastIoC.Editor.Graph
 {
     public static class InstallerGraphCollector
     {

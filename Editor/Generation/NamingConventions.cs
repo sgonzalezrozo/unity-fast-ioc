@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class NamingConventions
     {

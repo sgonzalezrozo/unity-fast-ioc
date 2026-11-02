@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Factories
+namespace FastIoC.Factories
 {
     /// <summary>
     /// Base factory interface for runtime object spawning.

@@ -1,11 +1,11 @@
 {
-    "name": "tools-fastioc.FastIoCIntegrationEditor",
+    "name": "FastIoC.Integration.Editor",
     "rootNamespace": "",
     "references": [
-        "tools-fastioc.FastIoCIntegration",
-        "tools-fastioc",
-        "tools-fastioc.Core",
-        "tools-fastioc.Editor"
+        "FastIoC.Integration",
+        "FastIoC",
+        "FastIoC.Core",
+        "FastIoC.Editor"
     ],
     "includePlatforms": [
         "Editor"

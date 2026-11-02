@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public enum Lifetime
     {

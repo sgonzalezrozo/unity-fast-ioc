@@ -1,7 +1,7 @@
 using System;
-using Tools.FastIoC.Runtime.Core.Abstraction;
+using FastIoC.Core.Abstraction;
 
-namespace Tools.FastIoC.UnityIntegration.Runtime
+namespace FastIoC.UnityIntegration.Runtime
 {
     /// <summary>
     /// Global provider registry for FastIoC.
