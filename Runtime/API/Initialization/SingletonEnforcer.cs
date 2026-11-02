@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API.Initialization
+namespace FastIoC.API.Initialization
 {
     public static class SingletonEnforcer<T> where T : MonoBehaviour
     {

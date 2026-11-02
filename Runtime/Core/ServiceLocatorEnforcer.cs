@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Phase 2: Advanced Runtime Guard - Configurable Service Locator enforcement.
@@ -106,12 +106,12 @@ namespace Tools.FastIoC.Runtime.Core
 
         private static bool IsAuthorizedCaller(string typeName)
         {
-            return typeName == "Tools.FastIoC.Runtime.Core.ContextRuntime" ||
-                   typeName == "Tools.FastIoC.Runtime.Core.InstantiationFactory" ||
-                   typeName == "Tools.FastIoC.Runtime.API.ProjectContext" ||
-                   typeName == "Tools.FastIoC.Runtime.API.SceneContext" ||
-                   typeName == "Tools.FastIoC.Runtime.API.SceneInjector" ||
-                   typeName.StartsWith("FastIoC.Generated.");
+            return typeName == "FastIoC.Core.ContextRuntime" ||
+                   typeName == "FastIoC.Core.InstantiationFactory" ||
+                   typeName == "FastIoC.API.ProjectContext" ||
+                   typeName == "FastIoC.API.SceneContext" ||
+                   typeName == "FastIoC.API.SceneInjector" ||
+                   typeName.StartsWith("FastIoCGenerated.");
         }
 
         private static void HandleViolation(ServiceLocatorViolation violation)

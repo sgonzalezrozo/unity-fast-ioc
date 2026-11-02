@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Tools.FastIoC.Runtime.API.Injection
+namespace FastIoC.API.Injection
 {
     public class CachedTypeResolver : ITypeResolver
     {
@@ -16,7 +16,7 @@ namespace Tools.FastIoC.Runtime.API.Injection
             if (FastIoCReflectionCache.IsInitialized)
                 return cachedInjectableMonoBehaviourRegistry;
 
-            cachedInjectableMonoBehaviourRegistry = SearchTypeByName("FastIoC.Generated.GeneratedInjectableMonoBehaviours");
+            cachedInjectableMonoBehaviourRegistry = SearchTypeByName("FastIoCGenerated.GeneratedInjectableMonoBehaviours");
             return cachedInjectableMonoBehaviourRegistry;
         }
 
@@ -25,7 +25,7 @@ namespace Tools.FastIoC.Runtime.API.Injection
             if (cachedGeneratedMonoInjectors != null)
                 return cachedGeneratedMonoInjectors;
 
-            cachedGeneratedMonoInjectors = SearchTypeByName("FastIoC.Generated.GeneratedMonoInjectors");
+            cachedGeneratedMonoInjectors = SearchTypeByName("FastIoCGenerated.GeneratedMonoInjectors");
             return cachedGeneratedMonoInjectors;
         }
 

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     public class InjectedTestComponent : MonoBehaviour
     {

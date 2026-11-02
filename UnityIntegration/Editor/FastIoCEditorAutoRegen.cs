@@ -1,14 +1,14 @@
 #if UNITY_EDITOR
 using System;
 using System.Linq;
-using Tools.FastIoC.Editor.Generation;
-using Tools.FastIoC.Runtime.Core.Abstraction;
-using Tools.FastIoC.UnityIntegration.Runtime;
-using Tools.FastIoC.UnityIntegration.Runtime.Providers;
+using FastIoC.Editor.Generation;
+using FastIoC.Core.Abstraction;
+using FastIoC.UnityIntegration.Runtime;
+using FastIoC.UnityIntegration.Runtime.Providers;
 using UnityEditor;
 using UnityEngine;
 
-namespace Tools.FastIoC.UnityIntegration.Editor
+namespace FastIoC.UnityIntegration.Editor
 {
     [InitializeOnLoad]
     public class FastIoCEditorAutoRegen

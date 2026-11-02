@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class InjectableMonoBehavioursEmitter
     {
@@ -20,7 +20,7 @@ namespace Tools.FastIoC.Editor.Generation
 
             sb.AppendLine("using System;");
             sb.AppendLine();
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    public static class GeneratedInjectableMonoBehaviours");
             sb.AppendLine("    {");

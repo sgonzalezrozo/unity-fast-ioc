@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Phase 3: Compile-Time Guard - Attribute to prevent Service Locator wrapping.

@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class ActivatorEmitter
     {
@@ -21,7 +21,7 @@ namespace Tools.FastIoC.Editor.Generation
             StringBuilder sb = new();
 
             sb.AppendLine("using System;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.Core;");
+            sb.AppendLine("using FastIoC.Core;");
 
             HashSet<string> namespaces = new();
             foreach (Type type in reachableTypes)
@@ -44,13 +44,13 @@ namespace Tools.FastIoC.Editor.Generation
             }
 
             namespaces.Remove("System");
-            namespaces.Remove("Tools.FastIoC.Runtime.Core");
+            namespaces.Remove("FastIoC.Core");
 
             foreach (string ns in namespaces)
                 sb.AppendLine($"using {ns};");
 
             sb.AppendLine();
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    public static class GeneratedActivators");
             sb.AppendLine("    {");
@@ -105,7 +105,7 @@ namespace Tools.FastIoC.Editor.Generation
                                 string paramName = $"param{i}";
 
                                 // Special case: if parameter is ContextRuntime, use the context directly
-                                if (paramType.Name == "ContextRuntime" && paramType.Namespace == "Tools.FastIoC.Runtime.Core")
+                                if (paramType.Name == "ContextRuntime" && paramType.Namespace == "FastIoC.Core")
                                 {
                                     sb.AppendLine($"            var {paramName} = context;");
                                 }

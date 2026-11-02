@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tools.FastIoC.Analyzers
+namespace FastIoC.Analyzers
 {
     internal static class ServiceLocatorCodeAnalyzer
     {
@@ -40,23 +40,23 @@ namespace Tools.FastIoC.Analyzers
                 "GetProperty",
                 "GetValue",
                 ".Invoke(null",
-                "Type.GetType(\"FastIoC.Generated",
+                "Type.GetType(\"FastIoCGenerated",
             };
         }
 
         public static readonly HashSet<string> AllowedResolveCallers = new()
         {
             // Core
-            "Tools.FastIoC.Runtime.Core.ContextRuntime.Resolve",
-            "Tools.FastIoC.Runtime.Core.InstantiationFactory.",
+            "FastIoC.Core.ContextRuntime.Resolve",
+            "FastIoC.Core.InstantiationFactory.",
 
             // API
-            "Tools.FastIoC.Runtime.API.ProjectContext.",
-            "Tools.FastIoC.Runtime.API.SceneContext.",
-            "Tools.FastIoC.Runtime.API.SceneInjector.",
+            "FastIoC.API.ProjectContext.",
+            "FastIoC.API.SceneContext.",
+            "FastIoC.API.SceneInjector.",
 
             // Generated
-            "FastIoC.Generated.",
+            "FastIoCGenerated.",
         };
 
         public static bool IsAllowedResolveCall(string callerFullName)

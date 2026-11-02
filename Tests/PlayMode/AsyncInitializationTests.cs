@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     public class AsyncInitializationTests
     {

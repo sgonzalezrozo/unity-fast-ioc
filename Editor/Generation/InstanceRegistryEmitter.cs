@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class InstanceRegistryEmitter
     {
@@ -11,7 +11,7 @@ namespace Tools.FastIoC.Editor.Generation
         {
             StringBuilder sb = new();
 
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    /// <summary>");
             sb.AppendLine("    /// Generated registry that stores and retrieves pre-created instances by type ID.");

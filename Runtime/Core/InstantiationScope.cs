@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Provides a local scope for newly instantiated components, allowing child components

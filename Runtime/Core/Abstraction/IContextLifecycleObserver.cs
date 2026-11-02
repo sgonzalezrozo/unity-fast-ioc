@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Core.Abstraction
+namespace FastIoC.Core.Abstraction
 {
     /// <summary>
     /// Platform-agnostic interface for observing context (scene/scope) lifecycle.

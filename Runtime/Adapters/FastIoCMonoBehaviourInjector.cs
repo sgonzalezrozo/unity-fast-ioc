@@ -1,8 +1,8 @@
 using ToolsCore;
-using Tools.FastIoC.Runtime.API;
+using FastIoC.API;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.Adapters
+namespace FastIoC.Adapters
 {
     public sealed class FastIoCMonoBehaviourInjector : IMonoBehaviourInjector
     {

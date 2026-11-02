@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class TypeScopeAnalyzer
     {

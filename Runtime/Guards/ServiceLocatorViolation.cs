@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Guards
+namespace FastIoC.Guards
 {
     public class ServiceLocatorViolation
     {

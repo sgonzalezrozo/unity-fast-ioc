@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Tools.FastIoC.Runtime.Core.Abstraction;
+using FastIoC.Core.Abstraction;
 using UnityEngine;
 
-namespace Tools.FastIoC.UnityIntegration.Runtime.Providers
+namespace FastIoC.UnityIntegration.Runtime.Providers
 {
     /// <summary>
     /// Discovers types from currently-loaded assemblies in Unity's AppDomain.

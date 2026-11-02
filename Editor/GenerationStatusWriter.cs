@@ -2,10 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor
+namespace FastIoC.Editor
 {
     public static class GenerationStatusWriter
     {

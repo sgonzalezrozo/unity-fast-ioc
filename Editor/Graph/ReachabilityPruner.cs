@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Tools.FastIoC.Editor.Graph
+namespace FastIoC.Editor.Graph
 {
     public static class ReachabilityPruner
     {

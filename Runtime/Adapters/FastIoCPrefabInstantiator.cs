@@ -1,8 +1,8 @@
 using ToolsCore;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.Adapters
+namespace FastIoC.Adapters
 {
     public class FastIoCPrefabInstantiator : IPrefabInstantiator
     {

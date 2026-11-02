@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tools.FastIoC.Runtime.Core.Abstraction
+namespace FastIoC.Core.Abstraction
 {
     /// <summary>
     /// Platform-agnostic interface for discovering and resolving types.

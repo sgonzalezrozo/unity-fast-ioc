@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public interface IBindingRecorder
     {

@@ -1,10 +1,10 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class CoreFrameworkTypesRegistry
     {

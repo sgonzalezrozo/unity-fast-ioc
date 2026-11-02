@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Delegate type for all object creation in FastIoC.

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Tools.FastIoC.Runtime.Guards
+namespace FastIoC.Guards
 {
     /// <summary>
     /// Runtime detection for Service Locator anti-pattern.
@@ -25,18 +25,18 @@ namespace Tools.FastIoC.Runtime.Guards
         private static readonly HashSet<string> AllowedCallers = new()
         {
             // ===== Framework Core =====
-            "Tools.FastIoC.Runtime.Core.ContextRuntime",
-            "Tools.FastIoC.Runtime.Core.InstantiationFactory",
+            "FastIoC.Core.ContextRuntime",
+            "FastIoC.Core.InstantiationFactory",
 
             // ===== Framework API =====
-            "Tools.FastIoC.Runtime.API.ProjectContext",
-            "Tools.FastIoC.Runtime.API.SceneContext",
-            "Tools.FastIoC.Runtime.API.SceneInjector",
+            "FastIoC.API.ProjectContext",
+            "FastIoC.API.SceneContext",
+            "FastIoC.API.SceneInjector",
 
             // ===== Generated Code =====
-            "FastIoC.Generated.GeneratedRegistry",
-            "FastIoC.Generated.GeneratedMonoInjectors",
-            "FastIoC.Generated.GeneratedActivators",
+            "FastIoCGenerated.GeneratedRegistry",
+            "FastIoCGenerated.GeneratedMonoInjectors",
+            "FastIoCGenerated.GeneratedActivators",
         };
 
         /// <summary>
@@ -80,12 +80,12 @@ namespace Tools.FastIoC.Runtime.Guards
                         $"   public MyClass(IService service) {{ /* constructor injection */ }}\n" +
                         $"   var instance = instantiator.Instantiate<T>(prefab);\n\n" +
                         $"Allowed callers (FastIoC framework only):\n" +
-                        $"   • Tools.FastIoC.Runtime.Core.ContextRuntime\n" +
-                        $"   • Tools.FastIoC.Runtime.Core.InstantiationFactory\n" +
-                        $"   • Tools.FastIoC.Runtime.API.ProjectContext\n" +
-                        $"   • Tools.FastIoC.Runtime.API.SceneContext\n" +
-                        $"   • Tools.FastIoC.Runtime.API.SceneInjector\n" +
-                        $"   • FastIoC.Generated.* (generated code)"
+                        $"   • FastIoC.Core.ContextRuntime\n" +
+                        $"   • FastIoC.Core.InstantiationFactory\n" +
+                        $"   • FastIoC.API.ProjectContext\n" +
+                        $"   • FastIoC.API.SceneContext\n" +
+                        $"   • FastIoC.API.SceneInjector\n" +
+                        $"   • FastIoCGenerated.* (generated code)"
                     );
                 }
             }

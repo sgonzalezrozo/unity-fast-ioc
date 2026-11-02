@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Initializes test scenes by adding required components.

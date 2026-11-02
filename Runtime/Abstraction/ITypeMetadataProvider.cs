@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tools.FastIoC.Runtime.Abstraction
+namespace FastIoC.Abstraction
 {
     public interface ITypeMetadataProvider
     {

@@ -1,8 +1,8 @@
-using Tools.FastIoC.Runtime.API.Injection;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.API.Injection;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public class SceneInjector : MonoBehaviour
     {

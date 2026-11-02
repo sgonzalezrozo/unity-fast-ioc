@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Marks properties/fields that should not be used as Service Locators.

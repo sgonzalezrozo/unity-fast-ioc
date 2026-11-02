@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
-using Tools.FastIoC.Editor.Generation;
+using FastIoC.Editor.Generation;
 using UnityEditor;
 using UnityEngine;
 
-namespace Tools.FastIoC.UnityIntegration.Editor
+namespace FastIoC.UnityIntegration.Editor
 {
     public class FastIoCAssetProcessor : AssetPostprocessor
     {

@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Tools.FastIoC.Runtime.API.Initialization;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.API.Initialization;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public class ProjectContext : MonoBehaviour, IConstrainedToRoot
     {

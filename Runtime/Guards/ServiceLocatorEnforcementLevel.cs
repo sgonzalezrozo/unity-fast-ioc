@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Guards
+namespace FastIoC.Guards
 {
     public enum ServiceLocatorEnforcementLevel
     {

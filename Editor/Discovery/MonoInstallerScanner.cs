@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Tools.FastIoC.Runtime.API;
-using Tools.FastIoC.Runtime.Core.Abstraction;
+using FastIoC.API;
+using FastIoC.Core.Abstraction;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor.Discovery
+namespace FastIoC.Editor.Discovery
 {
     public static class MonoInstallerScanner
     {
@@ -105,7 +105,7 @@ namespace Tools.FastIoC.Editor.Discovery
                 Type providerType = null;
                 foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    providerType = assembly.GetType("Tools.FastIoC.UnityIntegration.Runtime.Providers.UnityAppDomainMetadataProvider", throwOnError: false);
+                    providerType = assembly.GetType("FastIoC.UnityIntegration.Runtime.Providers.UnityAppDomainMetadataProvider", throwOnError: false);
                     if (providerType != null)
                         break;
                 }

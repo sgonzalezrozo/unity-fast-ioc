@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Strategy interface for resolving type instances from DI container.

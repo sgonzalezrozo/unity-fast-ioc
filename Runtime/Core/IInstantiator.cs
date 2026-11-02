@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Marks a type as instantiable via the injection factory.

@@ -1,10 +1,10 @@
 using System.Collections;
 using NUnit.Framework;
-using Tools.FastIoC.UnityIntegration.Runtime;
+using FastIoC.UnityIntegration.Runtime;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Priority 1 Integration Test: Single Scene Load → Injection Works

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API.Injection
+namespace FastIoC.API.Injection
 {
     public class BatchScanInjectionStrategy : IInjectionStrategy
     {

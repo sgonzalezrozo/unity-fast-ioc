@@ -1,7 +1,7 @@
 using System;
 using NUnit.Framework;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Integration tests for error handling and robustness.

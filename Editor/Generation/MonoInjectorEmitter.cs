@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class MonoInjectorEmitter
     {
@@ -71,9 +71,9 @@ namespace Tools.FastIoC.Editor.Generation
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("using System.Reflection;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.Core;");
+            sb.AppendLine("using FastIoC.Core;");
             sb.AppendLine();
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    /// <summary>");
             sb.AppendLine("    /// Generated MonoBehaviour injectors for `internal` fields.");

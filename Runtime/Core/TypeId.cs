@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public readonly struct TypeId : IEquatable<TypeId>
     {

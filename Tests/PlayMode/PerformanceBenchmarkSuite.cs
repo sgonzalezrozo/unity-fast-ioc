@@ -7,7 +7,7 @@ using UnityEngine.TestTools;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
-namespace Tools.FastIoC.Tests.PlayMode
+namespace FastIoC.Tests.PlayMode
 {
     /// <summary>
     /// Performance benchmark suite for FastIoC.

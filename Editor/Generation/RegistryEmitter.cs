@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class RegistryEmitter
     {
@@ -214,9 +214,9 @@ namespace Tools.FastIoC.Editor.Generation
         {
             sb.AppendLine("using System;");
             sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using Tools.FastIoC.Runtime.Core;");
+            sb.AppendLine("using FastIoC.Core;");
             sb.AppendLine();
-            sb.AppendLine("namespace FastIoC.Generated");
+            sb.AppendLine("namespace FastIoCGenerated");
             sb.AppendLine("{");
             sb.AppendLine("    /// <summary>");
             sb.AppendLine("    /// Generated registry with recipes and activators.");

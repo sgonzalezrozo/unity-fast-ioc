@@ -1,6 +1,6 @@
 using System;
 
-namespace Tools.FastIoC.Runtime.API.Injection
+namespace FastIoC.API.Injection
 {
     public interface ITypeResolver
     {

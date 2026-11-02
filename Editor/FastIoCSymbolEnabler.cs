@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor
+namespace FastIoC.Editor
 {
     [InitializeOnLoad]
     public static class FastIoCSymbolEnabler

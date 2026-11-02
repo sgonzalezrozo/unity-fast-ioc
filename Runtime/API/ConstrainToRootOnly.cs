@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace Tools.FastIoC.Runtime.API
+namespace FastIoC.API
 {
     public class ConstrainToRootOnly : MonoBehaviour
     {

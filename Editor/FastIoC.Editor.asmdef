@@ -1,12 +1,16 @@
 {
-    "name": "tools-fastioc.FastIoCIntegration",
+    "name": "FastIoC.Editor",
     "rootNamespace": "",
     "references": [
-        "tools-fastioc",
-        "tools-fastioc.Core",
-        "ToolsCore"
+        "Unity.Addressables.Editor",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "FastIoC",
+        "FastIoC.Core"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

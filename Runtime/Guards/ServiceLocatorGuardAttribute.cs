@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Guards
+namespace FastIoC.Guards
 {
     [System.AttributeUsage(
         System.AttributeTargets.Property | System.AttributeTargets.Field,

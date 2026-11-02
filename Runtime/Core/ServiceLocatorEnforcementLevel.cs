@@ -1,4 +1,4 @@
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     /// <summary>
     /// Enforcement level for Service Locator anti-pattern detection.

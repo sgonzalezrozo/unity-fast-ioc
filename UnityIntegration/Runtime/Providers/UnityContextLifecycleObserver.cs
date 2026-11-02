@@ -1,8 +1,8 @@
 using System;
-using Tools.FastIoC.Runtime.Core.Abstraction;
+using FastIoC.Core.Abstraction;
 using UnityEngine.SceneManagement;
 
-namespace Tools.FastIoC.UnityIntegration.Runtime.Providers
+namespace FastIoC.UnityIntegration.Runtime.Providers
 {
     /// <summary>
     /// Observes context lifecycle by listening to Unity's SceneManager events.

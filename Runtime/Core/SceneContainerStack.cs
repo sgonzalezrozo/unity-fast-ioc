@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public class SceneContainerStack
     {

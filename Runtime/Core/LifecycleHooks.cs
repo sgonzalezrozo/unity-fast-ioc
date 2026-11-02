@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Tools.FastIoC.Runtime.Core
+namespace FastIoC.Core
 {
     public interface IInitializable
     {

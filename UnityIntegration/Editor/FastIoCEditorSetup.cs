@@ -6,15 +6,15 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using Tools.FastIoC.Editor.Generation;
-using Tools.FastIoC.Runtime.Core.Abstraction;
-using Tools.FastIoC.UnityIntegration.Runtime;
-using Tools.FastIoC.UnityIntegration.Runtime.Providers;
+using FastIoC.Editor.Generation;
+using FastIoC.Core.Abstraction;
+using FastIoC.UnityIntegration.Runtime;
+using FastIoC.UnityIntegration.Runtime.Providers;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Tools.FastIoC.UnityIntegration.Editor
+namespace FastIoC.UnityIntegration.Editor
 {
     /// <summary>
     /// Setup integration for FastIoC in Unity Editor.
@@ -75,7 +75,7 @@ namespace Tools.FastIoC.UnityIntegration.Editor
         public static void SetupProject()
         {
             EnsureEditorProviderInitialized();
-            Tools.FastIoC.Editor.FastIoCSymbolEnabler.EnsureFastIoCSymbolEnabled();
+            FastIoC.Editor.FastIoCSymbolEnabler.EnsureFastIoCSymbolEnabled();
             bool hasGeneratedCode = Directory.Exists("Assets/FastIoC/Generated");
 
             if (hasGeneratedCode)
@@ -164,17 +164,17 @@ namespace Tools.FastIoC.UnityIntegration.Editor
 
                 GameObject newGo = new GameObject("ProjectContext");
 
-                Type projectContextType = FindTypeInLoadedAssemblies("Tools.FastIoC.Runtime.API.ProjectContext");
+                Type projectContextType = FindTypeInLoadedAssemblies("FastIoC.API.ProjectContext");
                 if (projectContextType == null)
                 {
-                    Debug.LogError("[FastIoC] Could not find Tools.FastIoC.Runtime.API.ProjectContext type. Make sure the FastIoC runtime assembly is compiled.");
+                    Debug.LogError("[FastIoC] Could not find FastIoC.API.ProjectContext type. Make sure the FastIoC runtime assembly is compiled.");
                     Object.DestroyImmediate(newGo);
                     return;
                 }
 
                 newGo.AddComponent(projectContextType);
 
-                Type sceneInjectorType = FindTypeInLoadedAssemblies("Tools.FastIoC.Runtime.API.SceneInjector");
+                Type sceneInjectorType = FindTypeInLoadedAssemblies("FastIoC.API.SceneInjector");
                 if (sceneInjectorType != null)
                     newGo.AddComponent(sceneInjectorType);
 
@@ -204,7 +204,7 @@ namespace Tools.FastIoC.UnityIntegration.Editor
             try
             {
                 // Ensure ProjectContext component is present
-                Type projectContextType = FindTypeInLoadedAssemblies("Tools.FastIoC.Runtime.API.ProjectContext");
+                Type projectContextType = FindTypeInLoadedAssemblies("FastIoC.API.ProjectContext");
                 if (projectContextType != null && instance.GetComponent(projectContextType) == null)
                 {
                     instance.AddComponent(projectContextType);
@@ -213,7 +213,7 @@ namespace Tools.FastIoC.UnityIntegration.Editor
                 }
 
                 // Ensure SceneInjector component is present
-                Type sceneInjectorType = FindTypeInLoadedAssemblies("Tools.FastIoC.Runtime.API.SceneInjector");
+                Type sceneInjectorType = FindTypeInLoadedAssemblies("FastIoC.API.SceneInjector");
                 if (sceneInjectorType != null && instance.GetComponent(sceneInjectorType) == null)
                 {
                     instance.AddComponent(sceneInjectorType);

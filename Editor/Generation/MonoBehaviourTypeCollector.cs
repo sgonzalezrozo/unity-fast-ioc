@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Tools.FastIoC.Runtime.Core;
-using Tools.FastIoC.Runtime.Core.Abstraction;
+using FastIoC.Core;
+using FastIoC.Core.Abstraction;
 using UnityEngine;
 
-namespace Tools.FastIoC.Editor.Generation
+namespace FastIoC.Editor.Generation
 {
     public static class MonoBehaviourTypeCollector
     {
@@ -95,7 +95,7 @@ namespace Tools.FastIoC.Editor.Generation
                 Type providerType = null;
                 foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    providerType = assembly.GetType("Tools.FastIoC.UnityIntegration.Runtime.Providers.UnityAppDomainMetadataProvider", throwOnError: false);
+                    providerType = assembly.GetType("FastIoC.UnityIntegration.Runtime.Providers.UnityAppDomainMetadataProvider", throwOnError: false);
                     if (providerType != null)
                         break;
                 }

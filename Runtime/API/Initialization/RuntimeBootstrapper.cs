@@ -1,8 +1,8 @@
-using Tools.FastIoC.Runtime.Core;
+using FastIoC.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace Tools.FastIoC.Runtime.API.Initialization
+namespace FastIoC.API.Initialization
 {
     public class RuntimeBootstrapper
     {
@@ -16,7 +16,7 @@ namespace Tools.FastIoC.Runtime.API.Initialization
 
             if (FastIoCReflectionCache.GeneratedRegistryType == null)
             {
-                Debug.LogWarning("[FastIoC] GeneratedRegistry not found. Expected namespace: FastIoC.Generated");
+                Debug.LogWarning("[FastIoC] GeneratedRegistry not found. Expected namespace: FastIoCGenerated");
                 Debug.LogWarning("[FastIoC] Did you run 'Tools > FastIoC > Setup Project'?");
                 Debug.LogWarning("[FastIoC] Check that Assets/FastIoC/Generated/ contains GeneratedRegistry.cs");
                 return null;
