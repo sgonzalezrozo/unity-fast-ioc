@@ -1,0 +1,24 @@
+{
+    "name": "tools-fastioc.Tools.FastIoC.Tests.PlayMode",
+    "rootNamespace": "",
+    "references": [
+        "UnityEngine.TestRunner",
+        "tools-fastioc.FastIoCIntegration",
+        "UnityEditor.TestRunner",
+        "tools-fastioc",
+        "tools-fastioc.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,24 @@
+{
+    "name": "tools-fastioc.FastIoCIntegrationEditor",
+    "rootNamespace": "",
+    "references": [
+        "tools-fastioc.FastIoCIntegration",
+        "tools-fastioc",
+        "tools-fastioc.Core",
+        "tools-fastioc.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "FAST_IoC",
+        "UNITY_EDITOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

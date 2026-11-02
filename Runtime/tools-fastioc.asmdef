@@ -1,0 +1,17 @@
+{
+    "name": "tools-fastioc",
+    "rootNamespace": "",
+    "references": [
+        "tools-fastioc.Core",
+        "tools.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

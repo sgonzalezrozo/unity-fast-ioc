@@ -1,0 +1,9 @@
+.DS_Store
+Thumbs.db
+__MACOSX/
+.idea/
+.vs/
+.vscode/
+*.csproj
+*.sln
+*.user

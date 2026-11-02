@@ -1,0 +1,22 @@
+{
+    "name": "tools-fastioc.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Addressables.Editor",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "tools-fastioc",
+        "tools-fastioc.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,29 @@
+using System;
+
+namespace Tools.FastIoC.Runtime.API
+{
+    public class BindingInfo
+    {
+        public Type InterfaceType { get; internal set; }
+        public Type ImplementationType { get; internal set; }
+        public string LifetimeName { get; internal set; }
+        public object InstanceValue { get; internal set; }
+        public bool IsInstance { get; internal set; }
+        public string AssetPath { get; internal set; }
+        public bool IsPathBinding { get; internal set; }
+
+        public BindingInfo(Type interfaceType, Type implementationType, string lifetimeName)
+        {
+            InterfaceType = interfaceType ?? throw new ArgumentNullException(nameof(interfaceType));
+            ImplementationType = implementationType ?? throw new ArgumentNullException(nameof(implementationType));
+            LifetimeName = lifetimeName ?? "Transient";
+            InstanceValue = null;
+            IsInstance = false;
+            AssetPath = null;
+            IsPathBinding = false;
+        }
+    }
+}
+
+
+

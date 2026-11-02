@@ -1,0 +1,138 @@
+using System;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Tools.FastIoC.Runtime.Core
+{
+    public class ContextRuntime
+    {
+        private readonly RecipeActivator[] globalActivators;
+        private readonly Lifetime[] globalLifetimes;
+        private readonly InstanceCacheArray cacheArray;
+        private readonly int maxTypeId;
+        private readonly SceneContainerStack sceneStack;
+        private readonly IResolutionStrategy resolutionStrategy;
+        private readonly InitializationCoordinator initCoordinator;
+        private readonly DisposalCoordinator disposeCoordinator;
+        private readonly DiagnosticsReporter diagnostics;
+
+        private bool isDisposed;
+
+        public ContextRuntime(int maxTypeId, RecipeActivator[] activators, Lifetime[] lifetimes)
+        {
+            this.maxTypeId = maxTypeId;
+            this.globalActivators = activators ?? throw new ArgumentNullException(nameof(activators));
+            this.globalLifetimes = lifetimes ?? throw new ArgumentNullException(nameof(lifetimes));
+            this.cacheArray = new InstanceCacheArray(maxTypeId);
+
+            sceneStack = new(cacheArray);
+            resolutionStrategy = new DualContainerResolutionStrategy(sceneStack);
+            initCoordinator = new();
+            disposeCoordinator = new(cacheArray);
+            diagnostics = new();
+        }
+
+        public void PushSceneContainer(string sceneName, RecipeActivator[] activators, Lifetime[] lifetimes)
+            => sceneStack.Push(sceneName, activators, lifetimes);
+
+        public void PopSceneContainer(string sceneName)
+            => sceneStack.Pop(sceneName);
+
+        public RecipeActivator[] GetTopSceneActivators()
+            => sceneStack.GetTopActivators();
+
+        public Lifetime[] GetTopSceneLifetimes()
+            => sceneStack.GetTopLifetimes();
+
+        public RecipeActivator[] GetGlobalActivators()
+            => globalActivators;
+
+        public Lifetime[] GetGlobalLifetimes()
+            => globalLifetimes;
+
+        public string PrintInjectionsInBinding()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine("[FastIoC] Registered Bindings:");
+
+            sb.AppendLine("  GLOBAL CONTAINER:");
+            int globalCount = 0;
+            for (int i = 0; i <= maxTypeId && i < globalActivators.Length; i++)
+            {
+                if (globalActivators[i] == null)
+                    continue;
+
+                Lifetime lifetime = globalLifetimes[i];
+                sb.AppendLine($"    [{i}] Lifetime: {lifetime}");
+                globalCount++;
+            }
+
+            if (globalCount == 0)
+                sb.AppendLine("    (no global bindings)");
+
+            if (sceneStack.Count > 0)
+            {
+                sb.AppendLine(sceneStack.PrintDiagnostics());
+            }
+
+            return sb.ToString();
+        }
+
+        public object Resolve(TypeId typeId)
+        {
+            #if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (ServiceLocatorEnforcer.EnforcementLevel != ServiceLocatorEnforcementLevel.Off)
+                ServiceLocatorEnforcer.CheckResolution(skipFrames: 2);
+            #endif
+
+            if (isDisposed)
+                throw new InvalidOperationException("Context has been disposed.");
+
+            int id = typeId.Id;
+
+            if (resolutionStrategy.TryResolve(typeId, id, globalActivators, globalLifetimes, cacheArray, this, out object instance))
+            {
+                if (instance is IInitializable)
+                    initCoordinator.TrackInstance(instance);
+                if (instance is IDisposableHook)
+                    disposeCoordinator.TrackInstance(instance);
+
+                return instance;
+            }
+
+            throw new InvalidOperationException($"TypeId {id} is not registered in scene or global container.");
+        }
+
+        public void ReportCacheStatistics()
+            => diagnostics.ReportCacheStatistics();
+
+        public void InitializeAll()
+            => initCoordinator.InitializeAll();
+
+        public async Task InitializeAllAsync(CancellationToken ct = default)
+            => await initCoordinator.InitializeAllAsync(ct);
+
+        public async Task InitializeAllAsync(int maxConcurrency, CancellationToken ct = default)
+            => await initCoordinator.InitializeAllAsync(maxConcurrency, ct);
+
+        public void Dispose()
+        {
+            if (isDisposed)
+                return;
+
+            disposeCoordinator.Dispose();
+            sceneStack.Clear();
+            initCoordinator.Clear();
+            isDisposed = true;
+        }
+
+        public void ClearSceneSingletons()
+        {
+            if (isDisposed)
+                return;
+
+            disposeCoordinator.ClearSceneSingletons();
+        }
+    }
+}
