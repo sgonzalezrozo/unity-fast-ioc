@@ -93,7 +93,7 @@ namespace Tools.FastIoC.Runtime.Core
 
             if (resolutionStrategy.TryResolve(typeId, id, globalActivators, globalLifetimes, cacheArray, this, out object instance))
             {
-                if (instance is IInitializable)
+                if (instance is IInitializable or IAsyncInitializable)
                     initCoordinator.TrackInstance(instance);
                 if (instance is IDisposableHook)
                     disposeCoordinator.TrackInstance(instance);

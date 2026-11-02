@@ -19,7 +19,7 @@ namespace Tools.FastIoC.Runtime.Core
             if (instance == null)
                 return;
 
-            if (instance is IDisposableHook)
+            if (instance is IDisposableHook && !disposableInstances.Contains(instance))
                 disposableInstances.Add(instance);
         }
 
@@ -36,8 +36,9 @@ namespace Tools.FastIoC.Runtime.Core
                     {
                         hook.OnDispose();
                     }
-                    catch (Exception)
+                    catch (Exception exception)
                     {
+                        UnityEngine.Debug.LogException(exception);
                     }
                 }
             }
@@ -65,4 +66,3 @@ namespace Tools.FastIoC.Runtime.Core
         public int Count => disposableInstances.Count;
     }
 }
-

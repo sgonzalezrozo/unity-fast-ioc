@@ -24,7 +24,10 @@ namespace Tools.FastIoC.Runtime.Core
             if (instance == null)
                 return;
 
-            if (instance is IInitializable or IAsyncInitializable)
+            if (instance is not (IInitializable or IAsyncInitializable))
+                return;
+
+            if (!initializableInstances.Contains(instance))
                 initializableInstances.Add(instance);
         }
 
@@ -41,8 +44,9 @@ namespace Tools.FastIoC.Runtime.Core
                 // Initialize instance registry bindings first (using cached delegate, no reflection)
                 FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
             }
-            catch (Exception)
+            catch (Exception exception)
             {
+                UnityEngine.Debug.LogException(exception);
             }
 
             foreach (object instance in initializableInstances)
@@ -53,8 +57,9 @@ namespace Tools.FastIoC.Runtime.Core
                     {
                         init.Initialize();
                     }
-                    catch (Exception)
+                    catch (Exception exception)
                     {
+                        UnityEngine.Debug.LogException(exception);
                     }
                 }
             }
@@ -80,8 +85,9 @@ namespace Tools.FastIoC.Runtime.Core
                 {
                     FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
+                    UnityEngine.Debug.LogException(exception);
                 }
 
                 foreach (object instance in initializableInstances)
@@ -93,8 +99,9 @@ namespace Tools.FastIoC.Runtime.Core
                         {
                             init.Initialize();
                         }
-                        catch (Exception)
+                        catch (Exception exception)
                         {
+                            UnityEngine.Debug.LogException(exception);
                         }
                     }
                 }
@@ -145,8 +152,9 @@ namespace Tools.FastIoC.Runtime.Core
                 {
                     FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
+                    UnityEngine.Debug.LogException(exception);
                 }
 
                 foreach (object instance in initializableInstances)
@@ -158,8 +166,9 @@ namespace Tools.FastIoC.Runtime.Core
                         {
                             init.Initialize();
                         }
-                        catch (Exception)
+                        catch (Exception exception)
                         {
+                            UnityEngine.Debug.LogException(exception);
                         }
                     }
                 }
@@ -225,4 +234,3 @@ namespace Tools.FastIoC.Runtime.Core
         public int Count => initializableInstances.Count;
     }
 }
-

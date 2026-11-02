@@ -192,12 +192,12 @@ public override void InstallBindings()
 | Binding | Behavior |
 |---|---|
 | `AsSingle()` | One shared instance, created on first resolve |
-| `AsCached()` | One instance held in a separate cache, created on first resolve |
+| `AsCached()` | One cached instance, cleared when a scene unloads. |
 | `AsTransient()` | A new instance for each resolve. This is the default lifetime. |
 | `FromInstance(value)` | A singleton using the given instance |
 | `FromInstance(assetPath)` | A singleton loaded from an asset path |
 
-> **TODO:** Confirm when `FromInstance(value)` should be used, given that bindings are read at edit time. Explain when to choose `AsCached()` over `AsSingle()`.
+> **TODO:** Confirm when `FromInstance(value)` should be used, given that bindings are read at edit time.
 
 ## Scene-specific installers
 
@@ -261,10 +261,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Tools.FastIoC.Runtime.Core;
 
-public class RemoteConfigService : IInitializable, IAsyncInitializable
+public class RemoteConfigService : IAsyncInitializable
 {
-    public void Initialize() { }
-
     public async Task InitializeAsync(CancellationToken ct = default)
     {
         await Task.Delay(100, ct);
@@ -273,8 +271,6 @@ public class RemoteConfigService : IInitializable, IAsyncInitializable
 ```
 
 - Async initialization doesn't block the first scene, so check that a service is ready before using it.
-- Keep `IInitializable` on async services for now. A service with only `IAsyncInitializable` isn't tracked for initialization.
-- Exceptions from `Initialize()` and `OnDispose()` are caught and not logged.
 
 ## Editor commands
 

@@ -47,6 +47,7 @@ namespace Tools.FastIoC.Runtime.Core
             {
                 containers.Pop();
                 cacheArray.ClearSceneSingletons();
+                cacheArray.ClearAllCached();
             }
             else
             {
@@ -58,6 +59,7 @@ namespace Tools.FastIoC.Runtime.Core
 
                 containers = new Stack<SceneContainer>(list.AsEnumerable().Reverse());
                 cacheArray.ClearSceneSingletons();
+                cacheArray.ClearAllCached();
             }
         }
 
@@ -112,4 +114,3 @@ namespace Tools.FastIoC.Runtime.Core
         }
     }
 }
-
