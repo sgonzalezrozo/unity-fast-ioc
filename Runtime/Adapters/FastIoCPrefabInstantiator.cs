@@ -1,4 +1,4 @@
-using Tools.Core;
+using ToolsCore;
 using Tools.FastIoC.Runtime.Core;
 using UnityEngine;
 

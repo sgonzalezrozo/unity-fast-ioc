@@ -1,6 +1,6 @@
 {
   "name": "com.sgonzalezrozo.fast-ioc",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "displayName": "Fast IoC",
   "description": "Code-generated dependency injection for Unity with installer-based bindings.",
   "unity": "2022.3",
@@ -20,7 +20,7 @@
     "codegen"
   ],
   "dependencies": {
-    "com.sgonzalezrozo.core": "0.1.0",
+    "com.sgonzalezrozo.core": "0.2.0",
     "com.unity.addressables": "1.21.21"
   }
 }

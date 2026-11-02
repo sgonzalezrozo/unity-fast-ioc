@@ -1,5 +1,5 @@
 using System;
-using Tools.Core;
+using ToolsCore;
 using Tools.FastIoC.Runtime.Adapters;
 using Tools.FastIoC.Runtime.Core.Abstraction;
 using Tools.FastIoC.UnityIntegration.Runtime.Providers;
