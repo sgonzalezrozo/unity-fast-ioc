@@ -41,7 +41,7 @@ namespace FastIoC.UnityIntegration.Editor
             EditorApplication.delayCall += () =>
             {
                 GenerationCoordinator.GenerateAll();
-                EditorPrefs.DeleteKey("FastIoC_LastChangeHash");
+                FastIoCEditorAutoRegen.ClearLastHash();
             };
         }
     }

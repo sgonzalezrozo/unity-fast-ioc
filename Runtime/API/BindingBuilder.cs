@@ -4,7 +4,7 @@ using FastIoC.Core;
 namespace FastIoC.API
 {
     /// <summary>Fluent API for declaring how a type is provided. Finish a binding with a lifetime method.</summary>
-    public class BindingBuilder<T> where T : class
+    public class BindingBuilder<T> : IBindingDescriptor where T : class
     {
         private readonly IBindingRecorder installer;
         internal Type ImplementationType { get; private set; } = typeof(T);
@@ -13,6 +13,13 @@ namespace FastIoC.API
         internal bool IsInstance { get; private set; }
         internal string AssetPath { get; private set; }
         internal bool IsPathBinding { get; private set; }
+
+        Type IBindingDescriptor.ImplementationType => ImplementationType;
+        Lifetime IBindingDescriptor.BindingLifetime => BindingLifetime;
+        object IBindingDescriptor.InstanceValue => InstanceValue;
+        bool IBindingDescriptor.IsInstance => IsInstance;
+        string IBindingDescriptor.AssetPath => AssetPath;
+        bool IBindingDescriptor.IsPathBinding => IsPathBinding;
 
         /// <summary>Creates a builder that records its binding on the given installer.</summary>
         public BindingBuilder(IBindingRecorder installer)
@@ -27,7 +34,7 @@ namespace FastIoC.API
             return this;
         }
 
-        /// <summary>Records an instance. The value is not saved into generated code, so it does not reach the game. Use the asset path overload instead.</summary>
+        /// <summary>Binds an existing object. The installer also runs once at startup in the game to create this value, so build it from code that works outside the Editor.</summary>
         public void FromInstance(T instance)
         {
             if (instance == null)

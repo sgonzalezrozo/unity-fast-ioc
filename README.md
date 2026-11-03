@@ -3,7 +3,7 @@
 **Code-generated dependency injection for Unity, with installer-based bindings.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Unity 2022.3+](https://img.shields.io/badge/Unity-2022.3%2B-black?logo=unity)](#compatibility)
+[![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
 [![Version 0.2.0](https://img.shields.io/badge/version-0.2.0-blue.svg)](CHANGELOG.md)
 
 Fast IoC generates registries, activators and injectors at edit time. FastIoC avoids runtime reflection for dependency graph discovery and resolution, using generated IDs and activators, but still uses limited runtime reflection for generated injector binding and prefab injection fallback paths.
@@ -25,7 +25,7 @@ Something else came up along the way. Since every declaration in Fast IoC happen
 **Use Fast IoC if you want:**
 
 - Feature-owned installers instead of one long project installer
-- Dependency cycles and invalid asset bindings caught in the Editor, before you press Play
+- Dependency cycles, missing bindings and invalid assets caught in the Editor, before you press Play
 - Generated IDs and activators for dependency resolution
 - Global and scene-specific installers
 - Project bootstrap that runs before the first scene loads
@@ -41,8 +41,8 @@ Something else came up along the way. Since every declaration in Fast IoC happen
 - Installer-based binding with `BindingRecorder` and `Bind<T>()`
 - Auto-discovered installers, with no central list to maintain
 - Registries, activators and injectors generated at edit time
-- One-click regeneration, plus automatic regeneration when injected MonoBehaviour fields change or scripts are deleted
-- Cycle and asset-binding validation during generation
+- Automatic regeneration after a script compile, when installers, bindings, constructors or injected fields change
+- Cycle, missing-binding and asset validation during generation
 - Constructor injection for plain classes
 - `internal` field injection for MonoBehaviours
 - `AsSingle`, `AsCached`, `AsTransient` and `FromInstance` bindings
@@ -55,7 +55,7 @@ Something else came up along the way. Since every declaration in Fast IoC happen
 
 | Requirement | Supported |
 |---|---|
-| Unity | 2022.3 or newer. This is the declared minimum. Tested versions aren't published yet. |
+| Unity | Tested on Unity 6 (`6000.3.16f1`). The package declares `2022.3` as its minimum, but older versions aren't tested yet. |
 | Scripting backend | Not verified yet. See [Runtime reflection](#runtime-reflection) before using IL2CPP. |
 | Platforms | Not verified yet |
 | Managed code stripping | Not verified yet. The package doesn't ship a `link.xml`, and it finds generated code through reflection, so test your stripping level in a player build. |
@@ -170,7 +170,7 @@ The field must be `internal`. Public and private fields aren't injected. Give ea
 
 ### 4. Press Play
 
-Run **Tools > FastIoC > Regenerate Code** after adding an installer or changing a binding. Add `InventoryView` to a scene and press Play to see `Items: 3` in the Console.
+Fast IoC regenerates after your scripts compile, so save your files and let Unity finish. Add `InventoryView` to a scene and press Play to see `Items: 3` in the Console.
 
 ## Organize bindings by feature
 
@@ -215,7 +215,7 @@ flowchart LR
     D --> E["Global and scene containers<br>resolve your services"]
 ```
 
-Installers only run in the Editor. The game runs the generated code, not your installers.
+The game runs the generated code, not your installers. The one exception is an installer with a [`FromInstance(value)`](#bind-existing-objects) binding, which also runs once at startup.
 
 ## Core concepts
 
@@ -244,6 +244,7 @@ public override void InstallBindings()
 | `AsSingle()` | One shared instance, created on first resolve |
 | `AsCached()` | One cached instance, cleared when a scene unloads. Use this to tie an instance to a scene. |
 | `AsTransient()` | A new instance for each resolve. This is the default lifetime. |
+| `FromInstance(value)` | A singleton using an object you create. See [Bind existing objects](#bind-existing-objects). |
 | `FromInstance(assetPath).AsSingle()` | A singleton loaded from a prefab or ScriptableObject. See [Bind assets](#bind-assets). |
 
 A scene-specific `AsSingle()` instance stays cached after its scene unloads, so use `AsCached()` when the instance shouldn't outlive the scene.
@@ -277,7 +278,20 @@ namespace MyGame.Shop
 
 Other prefabs don't belong here. Keep them in Addressables and load them when needed. Screens, for example, are loaded by [Screen System](https://github.com/sgonzalezrozo/unity-screen-system).
 
-`FromInstance(value)` compiles, but don't use it. Installers only run in the Editor and the value isn't saved into generated code, so the game creates a new object with the type's constructor instead.
+## Bind existing objects
+
+Use `FromInstance(value)` for a plain object that needs specific values, or a type the container can't construct:
+
+```csharp
+Bind<IGameClock>().FromInstance(new FixedClock(startHour: 8));
+```
+
+A value can't be saved at edit time, so Fast IoC runs this installer once more when the game starts, and registers the object it gets:
+
+- **Build the value from code that works in the game and in the Editor.** The installer runs in both.
+- **Don't create scene objects in the installer.** It also runs during every generation.
+- **Installers with this binding need a public parameterless constructor.**
+- **The value is shared across all scenes.** It's registered at startup, even if the installer lists scene names.
 
 ## Scene-specific installers
 
@@ -377,11 +391,14 @@ Assets/FastIoC/Generated/GenerationStatus.json.meta
 
 ### When regeneration runs
 
-| Change | What happens |
-|---|---|
-| Add an installer or change a binding | Run **Regenerate Code** yourself |
-| Add, remove or change a non-public, class-typed field on a MonoBehaviour | Regenerates within a few seconds |
-| Delete a script | Regenerates automatically |
+Fast IoC checks for changes after each script compile, and regenerates when you've changed:
+
+- An installer, including adding or removing one
+- A binding, or the scenes or priority of its installer
+- The constructor of a bound type
+- An `internal` field on a MonoBehaviour
+
+It also regenerates when you delete a script. After a failed generation, it tries again on the next compile. To regenerate at any time, run **Tools > FastIoC > Regenerate Code**.
 
 ### Run it in CI
 
@@ -435,8 +452,6 @@ Tools > FastIoC > Regenerate Code
 
 ### Example: a missing binding
 
-Generation doesn't currently fail when a constructor needs an unbound type, so check for this yourself:
-
 ```csharp
 public class ShopService
 {
@@ -445,20 +460,28 @@ public class ShopService
 }
 ```
 
-The constructor receives `null`, and `GeneratedActivators.cs` contains this comment:
+If `ShopService` is bound, generation fails, and Play Mode shows:
 
-```csharp
-// WARNING: Parameter type IPaymentGateway not in registry
+```text
+[FastIoC] ❌ CODE GENERATION FAILED
+Last attempt: <time>
+Error: Dependency graph has missing bindings
+
+Details:
+  • ShopService requires IPaymentGateway, which isn't bound in any installer.
+
+Fix the issues and regenerate code:
+Tools > FastIoC > Regenerate Code
 ```
 
-Search that file for `WARNING` after generating. An unbound `internal` MonoBehaviour field stays `null`, also without an error.
+Constructor parameters with a default value are skipped. MonoBehaviour fields aren't checked, because an `internal` field isn't always a dependency, so an unbound field stays `null`.
 
 ## Editor commands
 
 | Command | Use it when |
 |---|---|
 | `Tools/FastIoC/Setup` | Setting up a project for the first time |
-| `Tools/FastIoC/Regenerate Code` | Adding an installer or changing a binding |
+| `Tools/FastIoC/Regenerate Code` | Regenerating without waiting for a compile |
 
 ## Runtime reflection
 
@@ -490,7 +513,7 @@ These are the author's own measurements. The test setup and benchmark project ar
 | Requires generated code in your project | Yes | No | No | No |
 | Track record | Pre-release, single author | Long-established, large community | Established, active community | Established, active community |
 
-**Choose Fast IoC** for feature-owned installers and edit-time generation. **Choose one of the others** if you want a proven container, no generated files or a stronger guarantee against missing bindings. Each project publishes its own benchmarks, so compare them against your own workload.
+**Choose Fast IoC** for feature-owned installers and edit-time generation. **Choose one of the others** if you want a proven container or no generated files. Each project publishes its own benchmarks, so compare them against your own workload.
 
 ## Tests
 
@@ -505,8 +528,7 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 | Problem | Try this |
 |---|---|
 | Play Mode stops with `CODE GENERATION FAILED` | Fix the listed errors, then run **Regenerate Code** |
-| New bindings have no effect | Run **Regenerate Code**, because binding changes don't regenerate automatically |
-| A constructor parameter is `null` | Bind its type, then search `GeneratedActivators.cs` for `WARNING` |
+| `requires ..., which isn't bound in any installer` | Bind the type, or give the constructor parameter a default value |
 | `Could not resolve asset path` | Use the asset's name or its full `Assets/...` path |
 | `neither in Resources/ folder nor marked for Addressables` | Move the asset to a `Resources` folder or mark it as Addressable |
 | `TypeId ... is not registered` | Add a binding, and check that its scene installer applies to the active scene |
@@ -516,9 +538,8 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 ## Limitations
 
 - MonoBehaviour fields must be `internal`.
-- Binding changes need a manual **Regenerate Code**.
-- Generation doesn't report unbound constructor parameters.
-- `FromInstance(value)` doesn't carry its value to the game.
+- Generation doesn't check MonoBehaviour fields for missing bindings.
+- Installers with a `FromInstance(value)` binding run once more at startup.
 - A failed generation doesn't block player builds.
 - Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`.
 - See [Runtime reflection](#runtime-reflection) for where reflection is still used.

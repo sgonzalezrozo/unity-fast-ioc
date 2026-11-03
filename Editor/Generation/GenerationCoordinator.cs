@@ -40,7 +40,7 @@ namespace FastIoC.Editor.Generation
                 CoreFrameworkTypesRegistry.CoreTypes coreTypes = CoreFrameworkTypesRegistry.GetCoreFrameworkTypes();
                 CoreFrameworkTypesRegistry.RegisterCoreFrameworkBindings(reachableTypes, installerBindings, coreTypes);
 
-                ValidateDependencyGraph(reachableTypes, installerBindings);
+                ValidateDependencyGraph(reachableTypes, coreTypes);
 
                 Dictionary<Type, Lifetime> typeLifetimes = TypeLifetimeBuilder.BuildTypeLifetimes(installerBindings, reachableTypes, coreTypes);
                 Dictionary<Type, bool> instanceBindings = InstanceBindingsBuilder.BuildInstanceBindingsMap(installerBindings);
@@ -96,9 +96,10 @@ namespace FastIoC.Editor.Generation
 
         private static void ValidateDependencyGraph(
             HashSet<Type> reachableTypes,
-            Dictionary<Type, List<Type>> installerBindings)
+            CoreFrameworkTypesRegistry.CoreTypes coreTypes)
         {
-            Dictionary<Type, DependencyDagValidator.DagNode> dag = DependencyDagValidator.BuildDag(reachableTypes);
+            Dictionary<Type, BindingInfo> bindings = InstallerGraphCollector.GetCachedBindingInfo();
+            Dictionary<Type, DependencyDagValidator.DagNode> dag = DependencyDagValidator.BuildDag(reachableTypes, bindings);
 
             if (DependencyDagValidator.HasCycles(dag, out List<string> cycleErrors))
             {
@@ -109,7 +110,17 @@ namespace FastIoC.Editor.Generation
                 throw new InvalidOperationException("Dependency graph contains cycles");
             }
 
-            if (!DependencyDagValidator.ValidateMissingBindings(dag, installerBindings, out List<string> missingErrors))
+            HashSet<Type> frameworkTypes = new()
+            {
+                coreTypes.IInstantiator,
+                coreTypes.InstantiationFactory,
+                coreTypes.IPrefabInstantiator,
+                coreTypes.FastIoCPrefabInstantiator,
+                coreTypes.ContextRuntime
+            };
+            frameworkTypes.Remove(null);
+
+            if (!DependencyDagValidator.ValidateMissingBindings(reachableTypes, bindings, frameworkTypes, out List<string> missingErrors))
             {
                 lastValidationErrors = missingErrors;
                 foreach (string error in missingErrors)
