@@ -64,7 +64,14 @@ namespace FastIoC.UnityIntegration.Editor
 
             string currentHash = ComputeHash();
 
-            if (string.IsNullOrEmpty(currentHash) || currentHash == EditorPrefs.GetString(ProjectHashKey, ""))
+            if (string.IsNullOrEmpty(currentHash))
+                return;
+
+            // Generated code from an older FastIoC version has no GeneratedModule: regenerate once.
+            bool generatedCodeIsOutdated = System.IO.Directory.Exists(FastIoC.Core.FastIoCConstants.GENERATED_PATH)
+                                           && !System.IO.File.Exists(System.IO.Path.Combine(FastIoC.Core.FastIoCConstants.GENERATED_PATH, "GeneratedModule.cs"));
+
+            if (!generatedCodeIsOutdated && currentHash == EditorPrefs.GetString(ProjectHashKey, ""))
                 return;
 
             Debug.Log("[FastIoC] Changes detected - regenerating code...");

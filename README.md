@@ -4,9 +4,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.3.0](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
+[![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
 
-Fast IoC generates registries, activators and injectors at edit time. FastIoC avoids runtime reflection for dependency graph discovery and resolution, using generated IDs and activators, but still uses limited runtime reflection for generated injector binding and prefab injection fallback paths.
+Fast IoC generates registries, activators and injectors at edit time. The runtime uses no reflection: the generated code registers itself at startup, MonoBehaviour fields are assigned by generated code, and scene objects are listed in a manifest baked into each scene. See [Runtime reflection](#runtime-reflection).
 
 **Each feature owns its bindings.** Add an installer next to a feature's code and Fast IoC finds it. There's no central list to edit, so features stay self-contained and teams hit fewer merge conflicts. See [Organize bindings by feature](#organize-bindings-by-feature).
 
@@ -58,8 +58,8 @@ Something else came up along the way. Since every declaration in Fast IoC happen
 | Unity | Tested on Unity 6 (`6000.3.16f1`). The package declares `2022.3` as its minimum, but older versions aren't tested yet. |
 | Scripting backend | Not verified yet. See [Runtime reflection](#runtime-reflection) before using IL2CPP. |
 | Platforms | Not verified yet |
-| Managed code stripping | Not verified yet. The package doesn't ship a `link.xml`, and it finds generated code through reflection, so test your stripping level in a player build. |
-| Enter Play Mode with domain reload disabled | Not verified yet. The package has no static reset for this mode, so keep domain reload on until you've tested it. |
+| Managed code stripping | Not verified yet. Generated code is referenced directly and marked `[Preserve]`, so no `link.xml` should be needed. Test your stripping level in a player build. |
+| Enter Play Mode with domain reload disabled | Not verified yet. The generated module and scene injection reset their static state on each Play Mode start, but test it before relying on it. |
 | Dependencies | [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core), Addressables |
 
 ## Installation
@@ -91,7 +91,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.3.0
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.4.0
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -166,7 +166,7 @@ public class InventoryView : MonoBehaviour
 }
 ```
 
-The field must be `internal`. Public and private fields aren't injected. Give each service one public constructor.
+The field must be `internal`, so the generated code can assign it directly. Public and private fields aren't injected. Give each service one public constructor.
 
 ### 4. Press Play
 
@@ -374,11 +374,17 @@ Fast IoC writes these files to `Assets/FastIoC/Generated/`:
 |---|---|
 | `GeneratedTypeIds.cs` | An ID for each type |
 | `GeneratedActivators.cs` | The code that creates each service |
-| `GeneratedMonoInjectors.cs` | The code that fills `internal` MonoBehaviour fields |
-| `GeneratedInjectableMonoBehaviours.cs` | The list of injectable MonoBehaviours |
+| `GeneratedMonoInjectors.cs` | The code that fills `internal` MonoBehaviour fields, prefab data and local references |
+| `GeneratedModule.cs` | Registers the generated code with the runtime at startup |
 | `GeneratedRegistry.cs` | Global and scene bindings |
 | `GeneratedInstanceRegistry.cs`, `InstanceRegistryInitializer.cs` | Assets bound with `FromInstance` |
 | `GenerationStatus.json` | The result of the last generation |
+
+If a MonoBehaviour with `internal` injected fields lives in an assembly definition under `Assets/`, Fast IoC also writes `FastIoC.InternalsVisibleTo.g.cs` next to that `.asmdef`, so the generated code in `Assembly-CSharp` can assign those fields. Commit it too. Assemblies in packages are never modified: add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to them yourself.
+
+### Scene manifests
+
+When Unity builds a scene, and when a scene loads in Play Mode in the Editor, Fast IoC adds a hidden `SceneInjectionManifest` to it. It holds references to the scene's injectable MonoBehaviours and the index of each one's injector, so scene injection doesn't search the scene. The scene asset itself is never changed. If a scene has no manifest, for example when Play Mode starts without reloading the scene, Fast IoC finds the objects with `FindObjectsByType` instead.
 
 ### What to commit
 
@@ -485,12 +491,16 @@ Constructor parameters with a default value are skipped. MonoBehaviour fields ar
 
 ## Runtime reflection
 
-FastIoC avoids runtime reflection for dependency graph discovery and resolution, using generated IDs and activators. It still uses limited runtime reflection in these places:
+The runtime doesn't use reflection:
 
-- Finding the generated code at startup
-- Setting `internal` MonoBehaviour fields from generated injectors, with `FieldInfo` lookups cached
-- Instantiating `IInstantiable` prefabs through `IInstantiator`
-- Prefab injection fallback paths
+- The generated `GeneratedModule` registers itself with `[RuntimeInitializeOnLoadMethod]`, so nothing searches assemblies for generated types.
+- Generated injectors assign `internal` MonoBehaviour fields directly.
+- Scenes are injected from a baked `SceneInjectionManifest`.
+- Prefabs instantiated through `IInstantiator` or `IPrefabInstantiator` get their data (`IInjectableForChildren<T>`), container fields and local references from generated code.
+
+Generation falls back to reflection only for an `internal` field in a package that doesn't expose its internals to `Assembly-CSharp`. Generation lists these fields in the Console, and `GeneratedMonoInjectors.ReflectionFallbackFieldCount` says how many there are. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to that package to remove the fallback.
+
+Service-locator detection still reads stack traces, in the Editor and development builds only.
 
 Test IL2CPP builds with code stripping enabled before shipping.
 
@@ -508,7 +518,7 @@ These are the author's own measurements. The test setup and benchmark project ar
 |---|---|---|---|---|
 | Where bindings live | Feature installers, found automatically | Installers added to a context | `LifetimeScope` classes | Installers on a scope |
 | Scene scoping | Scene names on the installer | `SceneContext` | Child `LifetimeScope`s | Scene containers that inherit from the root |
-| Reflection | Limited. See [Runtime reflection](#runtime-reflection). | Used by default, with optional reflection baking | Used by default, with an optional Roslyn source generator | Reduced with an optional Roslyn source generator |
+| Reflection | None at runtime. See [Runtime reflection](#runtime-reflection). | Used by default, with optional reflection baking | Used by default, with an optional Roslyn source generator | Reduced with an optional Roslyn source generator |
 | MonoBehaviour injection | `internal` fields | `[Inject]` | `[Inject]` | `[Inject]` |
 | Requires generated code in your project | Yes | No | No | No |
 | Track record | Pre-release, single author | Long-established, large community | Established, active community | Established, active community |
@@ -537,16 +547,15 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 
 ## Limitations
 
-- MonoBehaviour fields must be `internal`.
+- MonoBehaviour fields must be `internal`. Local references inside an instantiated prefab are also filled only for `internal` fields.
 - Generation doesn't check MonoBehaviour fields for missing bindings.
 - Installers with a `FromInstance(value)` binding run once more at startup.
 - A failed generation doesn't block player builds.
 - Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`.
-- See [Runtime reflection](#runtime-reflection) for where reflection is still used.
 
 ## Project status
 
-This is a pre-release package at version `0.3.0`. Its API and behavior may change before `1.0.0`.
+This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`.
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

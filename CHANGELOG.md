@@ -2,6 +2,30 @@
 
 All notable changes to this package are documented in this file.
 
+## [0.4.0] - 2026-11-03
+
+### Changed
+
+- The runtime no longer uses reflection. The generated `GeneratedModule` registers itself with `[RuntimeInitializeOnLoadMethod]`, instead of the runtime searching assemblies for generated types.
+- Generated injectors assign `internal` MonoBehaviour fields directly instead of using `FieldInfo.SetValue`. An `internal` field in a package without `InternalsVisibleTo("Assembly-CSharp")` still uses reflection, and generation lists it in the Console.
+- Generation writes `FastIoC.InternalsVisibleTo.g.cs` next to each `.asmdef` under `Assets/` that has injected `internal` fields.
+- Scenes are injected from a `SceneInjectionManifest` baked at build time and in Play Mode, instead of searching every MonoBehaviour. Scenes without a manifest fall back to `FindObjectsByType`.
+- **Breaking:** Prefab data (`IInjectableForChildren<T>.Data`) and local references are set by generated code. Local references are now filled only for `internal` fields.
+- `IPrefabInstantiator` instantiation no longer calls `IInstantiator` through `MakeGenericMethod`.
+- Scenes loaded after startup now have their MonoBehaviours injected.
+- Existing projects regenerate automatically once after updating, because `GeneratedModule.cs` is missing.
+
+### Removed
+
+- **Breaking:** `FastIoCReflectionCache`, `GeneratedInjectorsCache`, `CachedTypeResolver`, `ITypeResolver`, `IInjectionStrategy`, `BatchScanInjectionStrategy`, `ReflectionInjectionStrategy`, `InjectionCoordinator`, `InjectableDataHandler`, `LocalComponentResolver`. `ReflectionUtility` moved to the Editor assembly.
+- The generated `GeneratedInjectableMonoBehaviours.cs`. Generation deletes it.
+
+### Fixed
+
+- `IInjectableForChildren<T>.Data` is now set. It was never set before, because the runtime looked for an `Inject` method the interface doesn't have.
+- **Breaking:** Injected fields were selected with a bit mask that also matched `private` fields, contrary to the documentation. Only `internal` fields are injected now. Generation warns about `private` fields with a bound type, so you can make the real dependencies `internal`.
+- Inactive scene objects are injected in Unity 2023.1 and later.
+
 ## [0.3.0] - 2026-11-03
 
 ### Fixed
