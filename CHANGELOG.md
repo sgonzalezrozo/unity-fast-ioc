@@ -2,7 +2,7 @@
 
 All notable changes to this package are documented in this file.
 
-## [Unreleased]
+## [0.3.0] - 2026-11-03
 
 ### Fixed
 
@@ -15,6 +15,7 @@ All notable changes to this package are documented in this file.
 
 ### Changed
 
+- Updated to Tools Core `0.3.0`, which removes `IMaskSource`.
 - `BindingRecorder` no longer uses reflection to read binding builders, so installers are safe to run in IL2CPP builds.
 
 ### Documentation
