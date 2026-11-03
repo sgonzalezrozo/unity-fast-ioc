@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.3.0](https://img.shields.io/badge/version-0.3.0-blue.svg)](CHANGELOG.md)
+[![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
 
 Fast IoC generates registries, activators and injectors at edit time. The runtime uses no reflection: the generated code registers itself at startup, MonoBehaviour fields are assigned by generated code, and scene objects are listed in a manifest baked into each scene. See [Runtime reflection](#runtime-reflection).
 
@@ -91,7 +91,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.3.0
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.4.0
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -555,7 +555,7 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 
 ## Project status
 
-This is a pre-release package at version `0.3.0`. Its API and behavior may change before `1.0.0`.
+This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`.
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 
