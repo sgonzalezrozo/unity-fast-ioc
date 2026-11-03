@@ -42,6 +42,14 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("                return instances[typeId];");
             sb.AppendLine("            return null;");
             sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// Remove every registered instance. Called on Play Mode start (also with Domain Reload disabled).");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine("        public static void Clear()");
+            sb.AppendLine("        {");
+            sb.AppendLine("            global::System.Array.Clear(instances, 0, instances.Length);");
+            sb.AppendLine("        }");
             sb.AppendLine("    }");
             sb.AppendLine("}");
 

@@ -1,4 +1,3 @@
-using FastIoC.API.Injection;
 using FastIoC.Core;
 using UnityEngine;
 
@@ -6,12 +5,8 @@ namespace FastIoC.API
 {
     public class SceneInjector : MonoBehaviour
     {
-        private static CachedTypeResolver s_cachedTypeResolver;
-        private static InjectionCoordinator s_cachedCoordinator;
-
         private ContextRuntime context;
         private bool hasRun;
-        private InjectionCoordinator injectionCoordinator;
 
         public void SetContext(ContextRuntime ctx)
         {
@@ -37,11 +32,13 @@ namespace FastIoC.API
                 return;
             }
 
-            InitializeCachedCoordinator();
-            injectionCoordinator ??= s_cachedCoordinator;
-            injectionCoordinator.InjectScene(context);
+            SceneInjection.InjectLoadedScenes(context);
         }
 
+        /// <summary>
+        /// Injects a MonoBehaviour created at runtime outside of IInstantiator.
+        /// Does nothing if its type has no generated injector.
+        /// </summary>
         public static void InjectIfNeeded(MonoBehaviour instance)
         {
             if (instance == null)
@@ -64,32 +61,7 @@ namespace FastIoC.API
                 return;
             }
 
-            try
-            {
-                if (FastIoCReflectionCache.IsInitialized && FastIoCReflectionCache.InjectMonoBehaviour != null)
-                    FastIoCReflectionCache.InjectMonoBehaviour(instance, contextRuntime);
-                else
-                {
-                    InitializeCachedCoordinator();
-                    s_cachedCoordinator.InjectInstance(instance, contextRuntime);
-                }
-            }
-            catch (System.Exception ex)
-            {
-                if (ex.Message.Contains("not registered") || ex.InnerException?.Message.Contains("not registered") == true)
-                    return;
-
-                Debug.LogError($"[FastIoC] Unexpected error during injection of {instance.GetType().Name}: {ex.Message}");
-            }
-        }
-
-        private static void InitializeCachedCoordinator()
-        {
-            if (s_cachedCoordinator != null)
-                return;
-
-            s_cachedTypeResolver ??= new CachedTypeResolver();
-            s_cachedCoordinator = new InjectionCoordinator(s_cachedTypeResolver);
+            InjectionRunner.TryInject(instance, contextRuntime);
         }
     }
 }

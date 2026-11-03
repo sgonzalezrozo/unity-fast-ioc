@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace FastIoC.Core
+namespace FastIoC.Editor
 {
     public static class ReflectionUtility
     {

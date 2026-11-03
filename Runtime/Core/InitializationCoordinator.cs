@@ -39,16 +39,6 @@ namespace FastIoC.Core
             if (isInitialized)
                 return;
 
-            try
-            {
-                // Initialize instance registry bindings first (using cached delegate, no reflection)
-                FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
-            }
-            catch (Exception exception)
-            {
-                UnityEngine.Debug.LogException(exception);
-            }
-
             foreach (object instance in initializableInstances)
             {
                 if (instance is IInitializable init)
@@ -70,9 +60,8 @@ namespace FastIoC.Core
         /// <summary>
         /// Initialize all tracked instances asynchronously.
         /// Execution order:
-        /// 1. InstanceRegistry initialization (synchronous)
-        /// 2. IInitializable.Initialize() (synchronous, all in sequence)
-        /// 3. IAsyncInitializable.InitializeAsync() (concurrent, all at once)
+        /// 1. IInitializable.Initialize() (synchronous, all in sequence)
+        /// 2. IAsyncInitializable.InitializeAsync() (concurrent, all at once)
         /// </summary>
         public async Task InitializeAllAsync(CancellationToken ct = default)
         {
@@ -81,15 +70,6 @@ namespace FastIoC.Core
 
             try
             {
-                try
-                {
-                    FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
-                }
-                catch (Exception exception)
-                {
-                    UnityEngine.Debug.LogException(exception);
-                }
-
                 foreach (object instance in initializableInstances)
                 {
                     ct.ThrowIfCancellationRequested();
@@ -148,15 +128,6 @@ namespace FastIoC.Core
 
             try
             {
-                try
-                {
-                    FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
-                }
-                catch (Exception exception)
-                {
-                    UnityEngine.Debug.LogException(exception);
-                }
-
                 foreach (object instance in initializableInstances)
                 {
                     ct.ThrowIfCancellationRequested();

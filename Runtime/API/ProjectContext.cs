@@ -12,7 +12,8 @@ namespace FastIoC.API
     {
         private static ProjectContext instance;
         private ContextRuntime runtime;
-        private IInstantiator instantiator;
+        // Filled by the generated injector. Must be internal so generated code can assign it directly.
+        internal IInstantiator instantiator;
         private CancellationTokenSource bootstrapCts;
 
         private SceneEventSubscriber sceneSubscriber;
@@ -96,7 +97,7 @@ namespace FastIoC.API
         {
             try
             {
-                FastIoCReflectionCache.InitializeInstanceRegistry?.Invoke();
+                GeneratedModuleRegistry.Module?.InitializeInstances();
             }
             catch (Exception ex)
             {
