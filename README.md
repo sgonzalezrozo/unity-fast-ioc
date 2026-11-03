@@ -20,6 +20,7 @@ I wanted the structure of a dependency injection container, with its dependency 
 
 **Use Fast IoC if you want:**
 
+- Feature-owned installers instead of one long project installer
 - Bindings validated in the Editor, before you press Play
 - Generated IDs and activators for dependency resolution
 - Global and scene-specific installers
@@ -34,6 +35,7 @@ I wanted the structure of a dependency injection container, with its dependency 
 ## Features
 
 - Installer-based binding with `BindingRecorder` and `Bind<T>()`
+- Auto-discovered installers, with no central list to maintain
 - Registries, activators and injectors generated at edit time
 - Automatic regeneration when installers change
 - Cycle and missing-binding validation during generation
@@ -85,7 +87,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.1.0
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.2.0
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -93,10 +95,9 @@ Fast IoC adds the `FAST_IoC` scripting define for all build targets when it load
 ## Setup
 
 1. Run **Tools > FastIoC > Setup**.
-2. Confirm that these were created:
-   - `Assets/Resources/Tools/FastIoC/ProjectContext.prefab`
-   - `Assets/FastIoC/Generated/`
-3. Commit both. The generated code is needed in player builds.
+2. Confirm that `Assets/Resources/Tools/FastIoC/ProjectContext.prefab` was created.
+3. Add your first installer, as shown in [Quick start](#quick-start). Fast IoC then creates `Assets/FastIoC/Generated/`.
+4. Commit the prefab and generated folder. The generated code is needed in player builds.
 
 ## Quick start
 
@@ -167,6 +168,39 @@ The field must be `internal`. Public and private fields aren't injected. Give ea
 
 Fast IoC regenerates automatically when installers change. If you've just changed bindings, you can also run **Tools > FastIoC > Regenerate Code**. Add `InventoryView` to a scene and press Play to see `Items: 3` in the Console.
 
+## Organize bindings by feature
+
+Project installers tend to grow into one long file that every feature has to edit. With Fast IoC, each feature can own its bindings in its own installer:
+
+```csharp
+using FastIoC.API;
+
+[MonoInstaller]
+public class InventoryInstaller : BindingRecorder
+{
+    public override void InstallBindings()
+    {
+        Bind<IInventoryService>().To<InventoryService>().AsSingle();
+    }
+}
+
+[MonoInstaller]
+public class ShopInstaller : BindingRecorder
+{
+    public override void InstallBindings()
+    {
+        Bind<IShopService>().To<ShopService>().AsSingle();
+    }
+}
+```
+
+Fast IoC discovers classes with `[MonoInstaller]` automatically, so there's no central list or scene reference to update.
+
+- **Adding a feature:** add its installer, without editing a shared file.
+- **Removing a feature:** delete its installer along with its code.
+- **Working in a team:** features change separate files, which reduces merge conflicts.
+- **Finding bindings:** each feature's bindings live next to its code.
+
 ## Core concepts
 
 | Concept | Meaning |
@@ -204,8 +238,8 @@ public override void InstallBindings()
 ```csharp
 using FastIoC.API;
 
-[MonoInstaller("Bootgame", "Frontend", Priority = 200)]
-public class FrontendInstaller : BindingRecorder
+[MonoInstaller("MainMenu", "Shop", Priority = 200)]
+public class MenuInstaller : BindingRecorder
 {
     public override void InstallBindings()
     {
@@ -323,7 +357,7 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 
 ## Project status
 
-This is a pre-release package at version `0.1.0`. Its API and behavior may change before `1.0.0`.
+This is a pre-release package at version `0.2.0`. Its API and behavior may change before `1.0.0`.
 
 > **TODO:** Add a roadmap link and breaking-change policy.
 
