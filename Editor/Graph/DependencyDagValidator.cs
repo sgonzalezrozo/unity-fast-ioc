@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FastIoC.API;
 
 namespace FastIoC.Editor.Graph
 {
@@ -15,7 +16,7 @@ namespace FastIoC.Editor.Graph
             public bool InStack { get; set; }
         }
 
-        public static Dictionary<Type, DagNode> BuildDag(HashSet<Type> reachableTypes)
+        public static Dictionary<Type, DagNode> BuildDag(HashSet<Type> reachableTypes, Dictionary<Type, BindingInfo> bindings)
         {
             Dictionary<Type, DagNode> dag = new();
 
@@ -29,8 +30,9 @@ namespace FastIoC.Editor.Graph
                     ParameterInfo[] parameters = constructors[0].GetParameters();
                     foreach (ParameterInfo param in parameters)
                     {
-                        if (reachableTypes.Contains(param.ParameterType))
-                            node.Dependencies.Add(param.ParameterType);
+                        Type dependency = ResolveDependency(param.ParameterType, bindings);
+                        if (reachableTypes.Contains(dependency))
+                            node.Dependencies.Add(dependency);
                     }
                 }
 
@@ -38,6 +40,13 @@ namespace FastIoC.Editor.Graph
             }
 
             return dag;
+        }
+
+        private static Type ResolveDependency(Type parameterType, Dictionary<Type, BindingInfo> bindings)
+        {
+            return bindings.TryGetValue(parameterType, out BindingInfo binding)
+                ? binding.ImplementationType
+                : parameterType;
         }
 
         public static bool HasCycles(Dictionary<Type, DagNode> dag, out List<string> cycleErrors)
@@ -88,29 +97,52 @@ namespace FastIoC.Editor.Graph
             return false;
         }
 
-        public static bool ValidateMissingBindings(Dictionary<Type, DagNode> dag, Dictionary<Type, List<Type>> installerBindings, out List<string> errors)
+        /// <summary>
+        /// Checks that every constructor parameter the generated code needs has a binding.
+        /// Without this check, the generated activator passes null or a default value.
+        /// </summary>
+        public static bool ValidateMissingBindings(
+            HashSet<Type> reachableTypes,
+            Dictionary<Type, BindingInfo> bindings,
+            HashSet<Type> frameworkTypes,
+            out List<string> errors)
         {
             errors = new();
 
-            foreach (KeyValuePair<Type, DagNode> kvp in dag)
+            HashSet<Type> availableTypes = new(frameworkTypes);
+            availableTypes.UnionWith(reachableTypes);
+            foreach (KeyValuePair<Type, BindingInfo> binding in bindings)
             {
-                Type type = kvp.Key;
-                DagNode node = kvp.Value;
-
-                bool isBound = false;
-                foreach (KeyValuePair<Type, List<Type>> installerKvp in installerBindings)
-                {
-                    if (!installerKvp.Value.Contains(type))
-                        continue;
-
-                    isBound = true;
-                    break;
-                }
-
-                if (!isBound && node.Dependencies.Count > 0)
-                    errors.Add($"Type {type.Name} is required but not bound in any installer.");
+                availableTypes.Add(binding.Key);
+                availableTypes.Add(binding.Value.ImplementationType);
             }
 
+            HashSet<Type> instanceTypes = new();
+            foreach (KeyValuePair<Type, BindingInfo> binding in bindings)
+            {
+                if (binding.Value.IsInstance)
+                    instanceTypes.Add(binding.Value.ImplementationType);
+            }
+
+            foreach (Type type in reachableTypes)
+            {
+                if (frameworkTypes.Contains(type) || instanceTypes.Contains(type))
+                    continue;
+
+                ConstructorInfo[] constructors = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+                if (constructors.Length == 0)
+                    continue;
+
+                foreach (ParameterInfo param in constructors[0].GetParameters())
+                {
+                    if (param.HasDefaultValue || availableTypes.Contains(param.ParameterType))
+                        continue;
+
+                    errors.Add($"{type.Name} requires {param.ParameterType.Name}, which isn't bound in any installer.");
+                }
+            }
+
+            errors.Sort(StringComparer.Ordinal);
             return errors.Count == 0;
         }
     }

@@ -12,15 +12,23 @@ namespace FastIoC.Editor.Graph
     public static class InstallerGraphCollector
     {
         private static Dictionary<Type, BindingInfo> cachedBindingInfo = new();
+        private static Dictionary<Type, Type> cachedBindingOwners = new();
 
         public static Dictionary<Type, BindingInfo> GetCachedBindingInfo()
         {
             return cachedBindingInfo;
         }
 
+        /// <summary>Gets the installer that declared a binding.</summary>
+        public static Type GetBindingOwner(Type boundType)
+        {
+            return cachedBindingOwners.TryGetValue(boundType, out Type owner) ? owner : null;
+        }
+
         public static void ClearBindingInfoCache()
         {
             cachedBindingInfo.Clear();
+            cachedBindingOwners.Clear();
         }
 
         public static List<Type> CollectInstallers()
@@ -111,6 +119,7 @@ namespace FastIoC.Editor.Graph
 
                                             bindings.Add(implType);
                                             cachedBindingInfo[interfaceType] = bindingInfo;
+                                            cachedBindingOwners[interfaceType] = installerType;
                                         }
                                     }
                                 }

@@ -1,8 +1,10 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using FastIoC.API;
+using FastIoC.Editor.Graph;
 using UnityEngine;
 
 namespace FastIoC.Editor.Generation
@@ -57,7 +59,7 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("                }");
             sb.AppendLine();
             sb.AppendLine("                // Instance bindings are loaded via path-based assets only (AOT - no reflection)");
-            sb.AppendLine("                // Components are injected later by SceneInjector in Phase 4");
+            sb.AppendLine("                // Components are injected later by SceneInjector");
               // Add path-based asset initialization code
               string pathBasedInitCode = PathBasedAssetInitializer.GeneratePathBasedAssetInitCode(bindings, typeIdMap);
               if (!string.IsNullOrEmpty(pathBasedInitCode))
@@ -65,6 +67,8 @@ namespace FastIoC.Editor.Generation
                   sb.Append(pathBasedInitCode);
                   sb.AppendLine();
               }
+
+              AppendValueBindings(sb, bindings, typeIdMap);
 
               sb.AppendLine("            }");
               sb.AppendLine("            catch (Exception ex)");
@@ -76,6 +80,56 @@ namespace FastIoC.Editor.Generation
               sb.AppendLine("}");
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Generates the code that restores FromInstance(value) bindings. Values can't be saved
+        /// at edit time, so each installer that declares one runs once more at startup.
+        /// </summary>
+        private static void AppendValueBindings(StringBuilder sb, Dictionary<Type, BindingInfo> bindings, Dictionary<Type, int> typeIdMap)
+        {
+            Dictionary<Type, List<BindingInfo>> bindingsByInstaller = new();
+
+            foreach (KeyValuePair<Type, BindingInfo> binding in bindings)
+            {
+                if (!binding.Value.IsInstance || binding.Value.IsPathBinding)
+                    continue;
+
+                Type installerType = InstallerGraphCollector.GetBindingOwner(binding.Key);
+                if (installerType == null || !typeIdMap.ContainsKey(binding.Value.ImplementationType))
+                    continue;
+
+                if (!bindingsByInstaller.TryGetValue(installerType, out List<BindingInfo> installerBindings))
+                {
+                    installerBindings = new List<BindingInfo>();
+                    bindingsByInstaller[installerType] = installerBindings;
+                }
+
+                installerBindings.Add(binding.Value);
+            }
+
+            foreach (KeyValuePair<Type, List<BindingInfo>> installer in bindingsByInstaller.OrderBy(kvp => kvp.Key.FullName))
+            {
+                sb.AppendLine($"                // Instance bindings from {installer.Key.FullName}");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    {CodeName(installer.Key)} installer = new {CodeName(installer.Key)}();");
+                sb.AppendLine("                    installer.InstallBindings();");
+                sb.AppendLine("                    var recordedBindings = installer.GetBindingsForGeneration();");
+
+                foreach (BindingInfo binding in installer.Value.OrderBy(info => info.InterfaceType.FullName))
+                {
+                    string typeIdName = binding.ImplementationType.FullName?.Replace(".", "_").Replace("+", "_") ?? "Unknown";
+                    sb.AppendLine($"                    GeneratedInstanceRegistry.RegisterInstance(GeneratedTypeIds.{typeIdName}.Id, recordedBindings[typeof({CodeName(binding.InterfaceType)})].InstanceValue);");
+                }
+
+                sb.AppendLine("                }");
+                sb.AppendLine();
+            }
+        }
+
+        private static string CodeName(Type type)
+        {
+            return "global::" + type.FullName?.Replace("+", ".");
         }
 
         /// <summary>
