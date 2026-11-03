@@ -336,6 +336,40 @@ public class EnemySpawner : MonoBehaviour
 
 The component type must implement `IInstanciable`, or a child interface such as `IInjectableForChildren`.
 
+### Pass data to a prefab
+
+Implement `IInjectableForChildren<T>` and pass the data to `Instantiate`. Fast IoC sets `Data` before it fills the container fields, so it's ready in `Awake()` once the instance activates:
+
+```csharp
+using FastIoC.Core;
+using UnityEngine;
+
+public class EnemyView : MonoBehaviour, IInjectableForChildren<EnemyData>
+{
+    public EnemyData Data { get; set; }
+}
+
+// In the spawner:
+EnemyView boss = instantiator.Instantiate<EnemyView>(enemyPrefab, transform, data: bossData);
+```
+
+### Reference other components of the prefab
+
+An `internal` field whose type is a MonoBehaviour is filled with a component of that type from the same instantiated prefab, if the field is still empty:
+
+```csharp
+public class EnemyController : MonoBehaviour
+{
+    internal EnemyModel model; // the EnemyModel on this prefab
+}
+```
+
+Fields you assign in the Inspector are left as they are.
+
+### Objects created outside Fast IoC
+
+Scenes loaded at any time are injected when they load. For an object you create with `Object.Instantiate` or `AddComponent`, call `SceneInjector.InjectIfNeeded(component)`.
+
 ## Lifecycle
 
 ```csharp
@@ -543,6 +577,9 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 | `neither in Resources/ folder nor marked for Addressables` | Move the asset to a `Resources` folder or mark it as Addressable |
 | `TypeId ... is not registered` | Add a binding, and check that its scene installer applies to the active scene |
 | A MonoBehaviour field stays `null` | Make the field `internal`, bind its type, and use it from `Start()` |
+| `These private fields have a bound type but aren't injected` | Make the field `internal` if it's a dependency. If it's private state, ignore the warning. |
+| `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
+| `Generated code is not registered` | Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists |
 | `Service Locator Anti-Pattern Detected` | Inject the dependency instead of resolving it from `ContextRuntime`. The default level is strict, so this throws in the Editor and development builds. |
 
 ## Limitations
