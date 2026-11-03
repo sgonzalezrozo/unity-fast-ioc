@@ -225,10 +225,17 @@ namespace FastIoC.Editor.Generation
                                  string.Join("\n  • ", result.SkippedTypes));
             }
 
+            if (result.IgnoredPrivateFields.Count > 0)
+            {
+                Debug.LogWarning("[FastIoC] These private fields have a bound type but aren't injected, because only `internal` fields are. " +
+                                 "Make a field `internal` if it's a dependency; ignore this if it isn't:\n  • " +
+                                 string.Join("\n  • ", result.IgnoredPrivateFields));
+            }
+
             if (result.ReflectionFallbackFields.Count > 0)
             {
                 Debug.LogWarning($"[FastIoC] {result.ReflectionFallbackFields.Count} injected field(s) still use reflection. " +
-                                 "Make them `internal` (and, for package assemblies, add [assembly: InternalsVisibleTo(\"Assembly-CSharp\")]) to remove it:\n  • " +
+                                 "Add [assembly: InternalsVisibleTo(\"Assembly-CSharp\")] to their assemblies to remove it:\n  • " +
                                  string.Join("\n  • ", result.ReflectionFallbackFields));
             }
             else

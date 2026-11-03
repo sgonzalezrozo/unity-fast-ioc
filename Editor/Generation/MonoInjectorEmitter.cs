@@ -31,6 +31,7 @@ namespace FastIoC.Editor.Generation
             public int DataInjectorCount;
             public readonly List<string> ReflectionFallbackFields = new();
             public readonly List<string> SkippedTypes = new();
+            public readonly List<string> IgnoredPrivateFields = new();
         }
 
         private sealed class FieldInjection
@@ -88,10 +89,17 @@ namespace FastIoC.Editor.Generation
             => type != null && map.ContainsKey(type) ? type : FindTypeByFullName(type, map);
 
         /// <summary>
-        /// Same field selection as earlier versions: private, private protected, internal and protected internal.
+        /// Only `internal` and `protected internal` fields are injected. Earlier versions also matched
+        /// `private` fields by mistake (a bit mask test), which the documentation never allowed.
         /// </summary>
         private static bool IsInjectionCandidateAccess(FieldInfo field)
-            => (field.Attributes & FieldAttributes.Assembly) != 0;
+            => CodeGenTypeUtility.IsInternal(field);
+
+        private static bool IsPrivateAccess(FieldInfo field)
+        {
+            FieldAttributes access = CodeGenTypeUtility.GetAccess(field);
+            return access == FieldAttributes.Private || access == FieldAttributes.FamANDAssem;
+        }
 
         internal static Result GenerateMonoInjectors(
             HashSet<Type> monoBehaviourTypes,
@@ -142,7 +150,11 @@ namespace FastIoC.Editor.Generation
 
                 foreach (FieldInfo field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
                 {
-                    if (!IsInjectionCandidateAccess(field) || !seenNames.Add(field.Name))
+                    if (!seenNames.Add(field.Name))
+                        continue;
+
+                    bool isPrivate = IsPrivateAccess(field);
+                    if (!isPrivate && !IsInjectionCandidateAccess(field))
                         continue;
 
                     Type fieldType = field.FieldType;
@@ -157,6 +169,14 @@ namespace FastIoC.Editor.Generation
 
                     if (typeIdKey == null && instanceKey == null)
                         continue;
+
+                    if (isPrivate)
+                    {
+                        // Not injected. Reported so a field that used to be injected by mistake doesn't go null silently.
+                        if (field.Name.IndexOf('<') < 0)
+                            result.IgnoredPrivateFields.Add($"{type.FullName}.{field.Name}");
+                        continue;
+                    }
 
                     injector.Fields.Add(new FieldInjection
                     {
@@ -460,8 +480,6 @@ namespace FastIoC.Editor.Generation
 
             return CodeGenTypeUtility.GetAccess(field) switch
             {
-                FieldAttributes.Private => "private",
-                FieldAttributes.FamANDAssem => "private protected",
                 FieldAttributes.Assembly => "internal, assembly doesn't expose internals to Assembly-CSharp",
                 FieldAttributes.FamORAssem => "protected internal, assembly doesn't expose internals to Assembly-CSharp",
                 _ => "not accessible"

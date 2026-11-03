@@ -166,7 +166,7 @@ public class InventoryView : MonoBehaviour
 }
 ```
 
-The field must be `internal`, so the generated code can assign it directly. Give each service one public constructor.
+The field must be `internal`, so the generated code can assign it directly. Public and private fields aren't injected. Give each service one public constructor.
 
 ### 4. Press Play
 
@@ -498,7 +498,7 @@ The runtime doesn't use reflection:
 - Scenes are injected from a baked `SceneInjectionManifest`.
 - Prefabs instantiated through `IInstantiator` or `IPrefabInstantiator` get their data (`IInjectableForChildren<T>`), container fields and local references from generated code.
 
-Generation falls back to reflection only for a field the generated code can't reach: a `private` field, or an `internal` field in a package that doesn't expose its internals to `Assembly-CSharp`. Generation lists these fields in the Console, and `GeneratedMonoInjectors.ReflectionFallbackFieldCount` says how many there are. Make them `internal` to remove the fallback.
+Generation falls back to reflection only for an `internal` field in a package that doesn't expose its internals to `Assembly-CSharp`. Generation lists these fields in the Console, and `GeneratedMonoInjectors.ReflectionFallbackFieldCount` says how many there are. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to that package to remove the fallback.
 
 Service-locator detection still reads stack traces, in the Editor and development builds only.
 

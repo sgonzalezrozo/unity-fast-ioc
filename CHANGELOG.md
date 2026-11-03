@@ -7,7 +7,7 @@ All notable changes to this package are documented in this file.
 ### Changed
 
 - The runtime no longer uses reflection. The generated `GeneratedModule` registers itself with `[RuntimeInitializeOnLoadMethod]`, instead of the runtime searching assemblies for generated types.
-- Generated injectors assign `internal` MonoBehaviour fields directly instead of using `FieldInfo.SetValue`. A field the generated code can't reach (`private`, or `internal` in a package without `InternalsVisibleTo("Assembly-CSharp")`) still uses reflection, and generation lists it in the Console.
+- Generated injectors assign `internal` MonoBehaviour fields directly instead of using `FieldInfo.SetValue`. An `internal` field in a package without `InternalsVisibleTo("Assembly-CSharp")` still uses reflection, and generation lists it in the Console.
 - Generation writes `FastIoC.InternalsVisibleTo.g.cs` next to each `.asmdef` under `Assets/` that has injected `internal` fields.
 - Scenes are injected from a `SceneInjectionManifest` baked at build time and in Play Mode, instead of searching every MonoBehaviour. Scenes without a manifest fall back to `FindObjectsByType`.
 - Prefab data (`IInjectableForChildren<T>.Data`) and local references are set by generated code. Local references are now filled only for `internal` fields.
@@ -23,7 +23,7 @@ All notable changes to this package are documented in this file.
 ### Fixed
 
 - `IInjectableForChildren<T>.Data` is now set. It was never set before, because the runtime looked for an `Inject` method the interface doesn't have.
-- Injected fields were selected with a bit mask that also matched `private` fields, contrary to the documentation. Those fields keep working through the reflection fallback, with a warning.
+- Injected fields were selected with a bit mask that also matched `private` fields, contrary to the documentation. Only `internal` fields are injected now. Generation warns about `private` fields with a bound type, so you can make the real dependencies `internal`.
 - Inactive scene objects are injected in Unity 2023.1 and later.
 
 ## [0.3.0] - 2026-11-03
