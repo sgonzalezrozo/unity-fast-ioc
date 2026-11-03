@@ -11,12 +11,12 @@ namespace FastIoC.Tests.PlayMode
     {
         public override void InstallBindings()
         {
-            // Phase 1: Basic injection testing
+            // Basic injection testing
             Bind<ITestService>()
                 .To<TestService>()
                 .AsSingle();
 
-            // Phase 2: Async initialization testing
+            // Async initialization testing
             Bind<IAsyncService>()
                 .To<AsyncService>()
                 .AsTransient(); // New instance each resolve
@@ -25,7 +25,7 @@ namespace FastIoC.Tests.PlayMode
                 .To<LongRunningService>()
                 .AsTransient(); // New instance each resolve
 
-            // Phase 2: Scene transition testing
+            // Scene transition testing
             Bind<IQuickService>()
                 .To<QuickService>()
                 .AsSingle(); // Persist across scene transitions

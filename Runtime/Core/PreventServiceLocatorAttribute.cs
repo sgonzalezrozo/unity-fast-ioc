@@ -3,7 +3,7 @@ using System;
 namespace FastIoC.Core
 {
     /// <summary>
-    /// Phase 3: Compile-Time Guard - Attribute to prevent Service Locator wrapping.
+    /// Attribute to prevent Service Locator wrapping.
     ///
     /// Apply this to internal framework methods to prevent external access.
     /// The Roslyn analyzer will reject any calls from user code.

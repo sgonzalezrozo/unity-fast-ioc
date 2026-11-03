@@ -19,6 +19,13 @@
     "dependency-injection",
     "codegen"
   ],
+  "samples": [
+    {
+      "displayName": "Quick Start",
+      "description": "The README quick start: a service, an installer and an injected MonoBehaviour.",
+      "path": "Samples~/QuickStart"
+    }
+  ],
   "dependencies": {
     "com.sgonzalezrozo.core": "0.2.0",
     "com.unity.addressables": "1.21.21"

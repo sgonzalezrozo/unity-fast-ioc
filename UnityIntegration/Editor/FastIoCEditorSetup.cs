@@ -18,7 +18,6 @@ namespace FastIoC.UnityIntegration.Editor
 {
     /// <summary>
     /// Setup integration for FastIoC in Unity Editor.
-    /// Moved from Assets/Tools/FastIoC/Editor/FastIoCSetup.cs
     ///
     /// Provides menu items for:
     /// - Initial setup
@@ -127,15 +126,11 @@ namespace FastIoC.UnityIntegration.Editor
             Debug.Log("[FastIoC] Force regenerating... (clearing auto-detection cache)");
 
             // Clear the hash cache to force regeneration
-            EditorPrefs.DeleteKey("FastIoC_LastChangeHash");
-            EditorPrefs.DeleteKey("FastIoC_IsRegenerating");
+            FastIoCEditorAutoRegen.ClearLastHash();
 
             // Regenerate code
             GenerationCoordinator.GenerateAll();
 
-            // Compute and save the new hash so auto-regeneration stops looping
-            string newHash = ComputeHash();
-            EditorPrefs.SetString("FastIoC_LastChangeHash", newHash);
 
             EditorUtility.DisplayDialog(
                 "FastIoC Force Regenerate",
@@ -243,70 +238,6 @@ namespace FastIoC.UnityIntegration.Editor
                     return type;
             }
             return null;
-        }
-
-        private static string ComputeHash()
-        {
-            StringBuilder sb = new();
-            HashMonoBehaviourFields(sb);
-            return ComputeHashFromString(sb.ToString());
-        }
-
-        private static void HashMonoBehaviourFields(StringBuilder sb)
-        {
-            try
-            {
-                List<Type> monoBehaviours = new();
-
-                foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    if (string.IsNullOrEmpty(assembly.FullName))
-                        continue;
-
-                    if (assembly.FullName.Contains("Editor") && !assembly.FullName.Contains("ExternalCode"))
-                        continue;
-
-                    try
-                    {
-                        foreach (Type type in assembly.GetTypes())
-                        {
-                            if (typeof(MonoBehaviour).IsAssignableFrom(type)
-                                && !type.IsAbstract
-                                && !type.IsGenericTypeDefinition
-                                && !type.Name.EndsWith("Installer"))
-                                monoBehaviours.Add(type);
-                        }
-                    }
-                    catch { }
-                }
-
-                foreach (Type type in monoBehaviours.OrderBy(t => t.FullName))
-                {
-                    FieldInfo[] fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-
-                    IEnumerable<FieldInfo> injectableFields = fields.Where(f =>
-                        !f.IsStatic &&
-                        f.FieldType.IsClass &&
-                        !f.FieldType.IsGenericType)
-                        .OrderBy(f => f.Name);
-
-                    foreach (FieldInfo field in injectableFields)
-                        sb.Append(type.FullName).Append("|").Append(field.Name).Append(":").Append(field.FieldType.FullName).AppendLine();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[FastIoC] Error scanning MonoBehaviours for changes: {ex.Message}");
-            }
-        }
-
-        private static string ComputeHashFromString(string input)
-        {
-            using (var sha = SHA256.Create())
-            {
-                byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(input));
-                return Convert.ToBase64String(hash);
-            }
         }
     }
 }
