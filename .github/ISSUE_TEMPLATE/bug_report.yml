@@ -22,7 +22,7 @@ body:
     id: package-version
     attributes:
       label: Package version
-      placeholder: 0.2.0
+      placeholder: 0.3.0
     validations:
       required: true
   - type: input
