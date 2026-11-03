@@ -35,28 +35,34 @@ namespace FastIoC.API.Initialization
 
             try
             {
-                if (FastIoCReflectionCache.CreateSceneContextRuntime == null)
+                IGeneratedModule module = GeneratedModuleRegistry.Module;
+                if (module == null)
                     return;
 
-                ContextRuntime tempSceneRuntime = FastIoCReflectionCache.CreateSceneContextRuntime(sceneName) as ContextRuntime;
+                ContextRuntime tempSceneRuntime = module.CreateSceneContextRuntime(sceneName);
+                if (tempSceneRuntime != null)
+                {
+                    RecipeActivator[] sceneActivators = tempSceneRuntime.GetGlobalActivators();
+                    Lifetime[] sceneLifetimes = tempSceneRuntime.GetGlobalLifetimes();
 
-                if (tempSceneRuntime == null)
-                    return;
-
-                RecipeActivator[] sceneActivators = tempSceneRuntime.GetGlobalActivators();
-                Lifetime[] sceneLifetimes = tempSceneRuntime.GetGlobalLifetimes();
-
-                if (sceneActivators != null && sceneLifetimes != null)
-                    runtime.PushSceneContainer(sceneName, sceneActivators, sceneLifetimes);
+                    if (sceneActivators != null && sceneLifetimes != null)
+                        runtime.PushSceneContainer(sceneName, sceneActivators, sceneLifetimes);
+                }
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[FastIoC] Failed to load scene container for '{sceneName}': {ex.Message}");
             }
+
+            // Inject the MonoBehaviours of scenes loaded after startup.
+            // Scenes already injected (the first scene, injected by ProjectContext) are skipped.
+            SceneInjection.InjectScene(scene, runtime);
         }
 
         private void OnSceneUnloaded(Scene scene)
         {
+            SceneInjection.MarkUnloaded(scene);
+
             if (runtime == null)
                 return;
 

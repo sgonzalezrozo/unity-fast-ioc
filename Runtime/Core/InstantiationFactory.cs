@@ -10,7 +10,6 @@ namespace FastIoC.Core
         public InstantiationFactory(ContextRuntime context)
         {
             this.context = context ?? throw new ArgumentNullException(nameof(context));
-            GeneratedInjectorsCache.Initialize();
         }
 
         public T Instantiate<T>(GameObject prefab, Transform parent = null, object data = null) where T : MonoBehaviour, IInstanciable
@@ -63,56 +62,11 @@ namespace FastIoC.Core
         {
             MonoBehaviour[] allMonoBehaviours = root.GetComponentsInChildren<MonoBehaviour>(includeInactive: true);
 
-            foreach (MonoBehaviour mb in allMonoBehaviours)
-            {
-                if (data != null)
-                    InjectableDataHandler.TrySetInjectableData(mb, data);
-            }
-
             InstantiationScope scope = InstantiationScope.GetOrCreate(root);
+            for (int i = 0; i < allMonoBehaviours.Length; i++)
+                scope.RegisterLocal(allMonoBehaviours[i]);
 
-            foreach (MonoBehaviour mb in allMonoBehaviours)
-            {
-                if (mb == null)
-                    continue;
-
-                Type mbType = mb.GetType();
-                System.Reflection.MethodInfo registerMethod = typeof(InstantiationScope)
-                    .GetMethod("RegisterLocal")
-                    ?.MakeGenericMethod(mbType);
-
-                registerMethod?.Invoke(scope, new object[] { mb });
-            }
-
-            InjectAllMonoBehaviours(allMonoBehaviours);
-
-            LocalComponentResolver.InjectLocalReferencesWithScope(root, allMonoBehaviours);
-        }
-
-        private void InjectAllMonoBehaviours(MonoBehaviour[] allMonoBehaviours)
-        {
-            System.Reflection.MethodInfo injectMethod = GeneratedInjectorsCache.GetInjectMethod();
-            if (injectMethod == null)
-            {
-                Debug.LogWarning("[FastIoC] GeneratedMonoInjectors.Inject method not available. Injection skipped.");
-                return;
-            }
-
-            foreach (MonoBehaviour monoBehaviour in allMonoBehaviours)
-            {
-                if (monoBehaviour == null)
-                    continue;
-
-                try
-                {
-                    injectMethod.Invoke(null, new object[] { monoBehaviour, context });
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[FastIoC] Error injecting {monoBehaviour.GetType().Name}: {ex.InnerException?.Message ?? ex.Message}");
-                }
-            }
+            InjectionRunner.InjectHierarchy(allMonoBehaviours, context, data, scope);
         }
     }
 }
-

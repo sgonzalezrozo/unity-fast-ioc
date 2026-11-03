@@ -51,8 +51,10 @@ namespace FastIoC.Editor.Generation
                 string activatorsCode = ActivatorEmitter.GenerateActivators(reachableTypes, typeIdMap, typeLifetimes, instanceBindings, interfaceImplementations);
 
                 HashSet<Type> allMonoBehaviourTypes = MonoBehaviourTypeCollector.CollectAllMonoBehaviourTypes(reachableTypes, interfaceImplementations, instanceBindings);
-                string injectorCode = MonoInjectorEmitter.GenerateMonoInjectors(allMonoBehaviourTypes, typeIdMap, interfaceImplementations, instanceBindings);
-                string injectableMonoBehavioursCode = InjectableMonoBehavioursEmitter.GenerateRegistry(allMonoBehaviourTypes);
+                InternalsAccessPlan internalsAccess = InternalsAccessPlan.Create();
+                MonoInjectorEmitter.Result injectorResult = MonoInjectorEmitter.GenerateMonoInjectors(allMonoBehaviourTypes, typeIdMap, interfaceImplementations, instanceBindings, internalsAccess);
+                string injectorCode = injectorResult.Code;
+                string moduleCode = GeneratedModuleEmitter.GenerateModule();
 
                 string registryCode = RegistryEmitter.GenerateRegistry(
                     reachableTypes,
@@ -66,7 +68,9 @@ namespace FastIoC.Editor.Generation
                 Dictionary<Type, BindingInfo> allInstanceBindings = InstallerGraphCollector.GetCachedBindingInfo();
                 string instanceInitCode = InstanceRegistryPopulator.GenerateInstancePopulationCode(allInstanceBindings, typeIdMap);
 
-                WriteGeneratedFiles(typeIdsCode, activatorsCode, injectorCode, injectableMonoBehavioursCode, registryCode, instanceRegistryCode, instanceInitCode);
+                WriteGeneratedFiles(typeIdsCode, activatorsCode, injectorCode, moduleCode, registryCode, instanceRegistryCode, instanceInitCode);
+                internalsAccess.WriteFiles();
+                ReportInjectorResult(injectorResult);
 
                 Debug.Log("[FastIoC] Code generation completed successfully");
                 GenerationStatusWriter.WriteSuccessStatus();
@@ -170,21 +174,67 @@ namespace FastIoC.Editor.Generation
             string typeIdsCode,
             string activatorsCode,
             string injectorCode,
-            string injectableMonoBehavioursCode,
+            string moduleCode,
             string registryCode,
             string instanceRegistryCode,
             string instanceInitCode)
         {
             string generatedPath = FastIoCConstants.GENERATED_PATH;
             EnsureDirectory(generatedPath);
+            DeleteObsoleteGeneratedFiles(generatedPath);
 
             WriteFile(Path.Combine(generatedPath, "GeneratedTypeIds.cs"), typeIdsCode);
             WriteFile(Path.Combine(generatedPath, "GeneratedActivators.cs"), activatorsCode);
             WriteFile(Path.Combine(generatedPath, "GeneratedMonoInjectors.cs"), injectorCode);
-            WriteFile(Path.Combine(generatedPath, "GeneratedInjectableMonoBehaviours.cs"), injectableMonoBehavioursCode);
+            WriteFile(Path.Combine(generatedPath, "GeneratedModule.cs"), moduleCode);
             WriteFile(Path.Combine(generatedPath, "GeneratedRegistry.cs"), registryCode);
             WriteFile(Path.Combine(generatedPath, "GeneratedInstanceRegistry.cs"), instanceRegistryCode);
             WriteFile(Path.Combine(generatedPath, "InstanceRegistryInitializer.cs"), instanceInitCode);
+        }
+
+        private static readonly string[] ObsoleteGeneratedFiles =
+        {
+            // Earlier versions: the runtime found this list by reflection. Scene manifests and GeneratedModule replace it.
+            "GeneratedInjectableMonoBehaviours.cs"
+        };
+
+        private static void DeleteObsoleteGeneratedFiles(string generatedPath)
+        {
+            foreach (string fileName in ObsoleteGeneratedFiles)
+            {
+                string path = Path.Combine(generatedPath, fileName).Replace('\\', '/');
+                if (!File.Exists(path))
+                    continue;
+
+                AssetDatabase.DeleteAsset(path);
+                if (File.Exists(path))
+                    File.Delete(path);
+
+                Debug.Log($"[FastIoC] Deleted obsolete generated file: {path}");
+            }
+        }
+
+        private static void ReportInjectorResult(MonoInjectorEmitter.Result result)
+        {
+            Debug.Log($"[FastIoC] MonoBehaviour injectors: {result.InjectorCount} container, {result.LocalInjectorCount} local, {result.DataInjectorCount} data.");
+
+            if (result.SkippedTypes.Count > 0)
+            {
+                Debug.LogWarning("[FastIoC] These MonoBehaviours have injectable fields but generated code can't reference their type " +
+                                 "(make the type public, or add [assembly: InternalsVisibleTo(\"Assembly-CSharp\")] to its assembly):\n  • " +
+                                 string.Join("\n  • ", result.SkippedTypes));
+            }
+
+            if (result.ReflectionFallbackFields.Count > 0)
+            {
+                Debug.LogWarning($"[FastIoC] {result.ReflectionFallbackFields.Count} injected field(s) still use reflection. " +
+                                 "Make them `internal` (and, for package assemblies, add [assembly: InternalsVisibleTo(\"Assembly-CSharp\")]) to remove it:\n  • " +
+                                 string.Join("\n  • ", result.ReflectionFallbackFields));
+            }
+            else
+            {
+                Debug.Log("[FastIoC] MonoBehaviour injection uses no reflection.");
+            }
         }
 
         private static void EnsureDirectory(string path)

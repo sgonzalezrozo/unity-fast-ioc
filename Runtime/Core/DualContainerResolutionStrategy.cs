@@ -22,23 +22,6 @@ namespace FastIoC.Core
         {
             instance = null;
 
-            if (FastIoCReflectionCache.IsInitialized &&
-                FastIoCReflectionCache.GetInstanceFromRegistry != null)
-            {
-                try
-                {
-                    object registeredInstance = FastIoCReflectionCache.GetInstanceFromRegistry(typeIdValue);
-                    if (registeredInstance != null)
-                    {
-                        instance = registeredInstance;
-                        return true;
-                    }
-                }
-                catch (Exception)
-                {
-                }
-            }
-
             if (sceneStack.TryResolveFromScene(typeIdValue, out RecipeActivator sceneActivator, out Lifetime sceneLifetime))
             {
                 if (cache.TryGetCached(typeId, sceneLifetime, out object sceneCached))

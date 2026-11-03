@@ -7,8 +7,6 @@ namespace FastIoC.API.Initialization
         public void Initialize()
         {
             ServiceLocatorEnforcer.Initialize(ServiceLocatorEnforcementLevel.Strict);
-            FastIoCReflectionCache.Initialize();
         }
     }
 }
-
