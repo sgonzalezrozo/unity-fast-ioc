@@ -2,6 +2,16 @@
 
 All notable changes to this package are documented in this file.
 
+## [Unreleased]
+
+### Documentation
+
+- Corrected the `FromInstance(assetPath)` example, which needs `AsSingle()` and the asset's name or full path.
+- Corrected the description of automatic regeneration and missing-binding validation.
+- Added sections on binding assets, generated code, CI, failure examples and alternatives.
+- Added contributing, security and issue template files, and a Quick Start sample.
+- Removed internal development notes from code comments, and added XML documentation to the main binding APIs.
+
 ## [0.2.0] - Unreleased
 
 ### Changed

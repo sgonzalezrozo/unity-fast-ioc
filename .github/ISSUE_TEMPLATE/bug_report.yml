@@ -1,0 +1,57 @@
+name: Bug report
+description: Report something that doesn't work as documented.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Create a new project
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: Package version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: unity-version
+    attributes:
+      label: Unity version
+      placeholder: 2022.3.x
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Scripting backend
+      options:
+        - Mono
+        - IL2CPP
+        - Not applicable
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: Android, iOS, Windows, macOS...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console output
+      description: Paste any errors or warnings.
+      render: text

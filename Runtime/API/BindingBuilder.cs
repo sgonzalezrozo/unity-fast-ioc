@@ -3,6 +3,7 @@ using FastIoC.Core;
 
 namespace FastIoC.API
 {
+    /// <summary>Fluent API for declaring how a type is provided. Finish a binding with a lifetime method.</summary>
     public class BindingBuilder<T> where T : class
     {
         private readonly IBindingRecorder installer;
@@ -13,17 +14,20 @@ namespace FastIoC.API
         internal string AssetPath { get; private set; }
         internal bool IsPathBinding { get; private set; }
 
+        /// <summary>Creates a builder that records its binding on the given installer.</summary>
         public BindingBuilder(IBindingRecorder installer)
         {
             this.installer = installer ?? throw new ArgumentNullException(nameof(installer));
         }
 
+        /// <summary>Sets the concrete type to create for this binding.</summary>
         public BindingBuilder<T> To<TImpl>() where TImpl : class, T
         {
             ImplementationType = typeof(TImpl);
             return this;
         }
 
+        /// <summary>Records an instance. The value is not saved into generated code, so it does not reach the game. Use the asset path overload instead.</summary>
         public void FromInstance(T instance)
         {
             if (instance == null)
@@ -37,6 +41,7 @@ namespace FastIoC.API
             installer.RecordBinding(typeof(T), this);
         }
 
+        /// <summary>Binds a prefab or ScriptableObject by asset name or full path. Finish with AsSingle(). The asset must be in Resources or marked as Addressable.</summary>
         public BindingBuilder<T> FromInstance(string assetPath)
         {
             if (string.IsNullOrWhiteSpace(assetPath))
@@ -49,20 +54,24 @@ namespace FastIoC.API
             return this;
         }
 
+        /// <summary>Gets the concrete type for this binding.</summary>
         public Type GetImplementationType() => ImplementationType;
 
+        /// <summary>Records one shared instance, created on first resolve.</summary>
         public void AsSingle()
         {
             BindingLifetime = Lifetime.Singleton;
             installer.RecordBinding(typeof(T), this);
         }
 
+        /// <summary>Records one cached instance, cleared when a scene unloads.</summary>
         public void AsCached()
         {
             BindingLifetime = Lifetime.Cached;
             installer.RecordBinding(typeof(T), this);
         }
 
+        /// <summary>Records a new instance for each resolve.</summary>
         public void AsTransient()
         {
             BindingLifetime = Lifetime.Transient;

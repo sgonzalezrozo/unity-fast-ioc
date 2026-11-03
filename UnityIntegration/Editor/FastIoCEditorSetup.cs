@@ -18,7 +18,6 @@ namespace FastIoC.UnityIntegration.Editor
 {
     /// <summary>
     /// Setup integration for FastIoC in Unity Editor.
-    /// Moved from Assets/Tools/FastIoC/Editor/FastIoCSetup.cs
     ///
     /// Provides menu items for:
     /// - Initial setup

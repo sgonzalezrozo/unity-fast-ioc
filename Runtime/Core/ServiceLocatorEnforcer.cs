@@ -6,7 +6,7 @@ using Debug = UnityEngine.Debug;
 namespace FastIoC.Core
 {
     /// <summary>
-    /// Phase 2: Advanced Runtime Guard - Configurable Service Locator enforcement.
+    /// Configurable Service Locator enforcement.
     /// Provides multiple enforcement strategies for different development scenarios.
     ///
     /// Usage:

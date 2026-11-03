@@ -10,7 +10,6 @@ namespace FastIoC.Core.Abstraction
     /// - CLI: Listens to folder changes
     /// - IDE: Listens to project structure changes
     ///
-    /// Renamed from "ISceneLifecycleObserver" to be engine-agnostic.
     /// </summary>
     public interface IContextLifecycleObserver
     {

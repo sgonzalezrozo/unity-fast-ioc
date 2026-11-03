@@ -57,7 +57,7 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("                }");
             sb.AppendLine();
             sb.AppendLine("                // Instance bindings are loaded via path-based assets only (AOT - no reflection)");
-            sb.AppendLine("                // Components are injected later by SceneInjector in Phase 4");
+            sb.AppendLine("                // Components are injected later by SceneInjector");
               // Add path-based asset initialization code
               string pathBasedInitCode = PathBasedAssetInitializer.GeneratePathBasedAssetInitCode(bindings, typeIdMap);
               if (!string.IsNullOrEmpty(pathBasedInitCode))
