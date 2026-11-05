@@ -26,7 +26,7 @@ Thanks for helping out. Bug reports, documentation fixes and pull requests are w
 
 ## Test your change
 
-Add `"testables": ["com.sgonzalezrozo.fast-ioc"]` to `Packages/manifest.json`, then run the Play Mode tests in **Window > General > Test Runner**.
+The package has no automated test suite yet. Test your change in a Unity project, in Play Mode and in a player build.
 
 In your pull request, list the Unity version, scripting backend and platform you tested.
 

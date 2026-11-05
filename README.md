@@ -20,7 +20,7 @@ Game projects usually start out smooth. As features pile up, performance degrade
 
 Something else came up along the way. Since every declaration in Fast IoC happens at edit time, why should a binding be declared in more than one place? With Zenject, if I wanted to control a binding's lifetime without keeping the reference global, I had to repeat it in each scene context that needed it. In Fast IoC, one installer declares the binding and lists its scenes.
 
-I built and refined it on my own time, reusing it across my projects. In November 2026 I extracted it into this standalone package, with documentation and tests. Earlier history lives in a private repository.
+I built and refined it on my own time in personal projects. It isn't used in production yet. In November 2026 I extracted it into this standalone package and documented it. Earlier history lives in a private repository.
 
 ## Is it right for your project?
 
@@ -70,7 +70,7 @@ Git must be installed on your machine.
 
 ### 1. Install Tools Core
 
-Unity doesn't install Git dependencies automatically, so add [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core) first.
+This package requires [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core), the shared code that defines the injection interfaces used by Fast IoC, Screen System and Recyclable Scroller. Unity doesn't install Git dependencies automatically, so add it first.
 
 1. In Unity, open **Window > Package Manager**.
 2. Select **+ > Add package from git URL**.
@@ -561,14 +561,6 @@ These are the author's own measurements. The test setup and benchmark project ar
 
 **Choose Fast IoC** for feature-owned installers and edit-time generation. **Choose one of the others** if you want a proven container or no generated files. Each project publishes its own benchmarks, so compare them against your own workload.
 
-## Tests
-
-Add this to your project's `Packages/manifest.json` to run the package's Play Mode tests:
-
-```json
-"testables": ["com.sgonzalezrozo.fast-ioc"]
-```
-
 ## Troubleshooting
 
 | Problem | Try this |
@@ -596,7 +588,7 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 
 ## Project status
 
-This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`.
+This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. There's no automated test suite yet.
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 
@@ -614,7 +606,7 @@ Bug reports and pull requests are welcome. Please open an issue before starting 
 | [UI Tweens](https://github.com/sgonzalezrozo/unity-ui-tweens) | ECS-based UI animation |
 | [Recyclable Scroller](https://github.com/sgonzalezrozo/unity-recyclable-scroller) | Virtualized lists |
 | [Enhanced Console](https://github.com/sgonzalezrozo/unity-enhanced-console) | Unity Editor log triage |
-| [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core) | Shared injection interfaces |
+| [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core) | Shared injection code, required by this package |
 
 ## License
 

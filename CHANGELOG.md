@@ -8,8 +8,14 @@ All notable changes to this package are documented in this file.
 
 - Console and Editor messages use plain text instead of emojis.
 
+### Removed
+
+- Removed the unused `Analyzers` folder. It was never compiled or called. Service-locator detection at runtime is unchanged.
+- Removed the out-of-date Play Mode tests and benchmark suite. A new test suite will replace them.
+
 ### Documentation
 
+- Said that the package isn't used in production or in a shipped game yet, and described Tools Core as a required dependency.
 - Listed unsupported binding features under Limitations: named, value, factory, decorator and open generic bindings.
 
 ## [0.4.0] - 2026-11-03
