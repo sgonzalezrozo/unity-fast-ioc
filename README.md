@@ -590,7 +590,9 @@ Add this to your project's `Packages/manifest.json` to run the package's Play Mo
 - Generation doesn't check MonoBehaviour fields for missing bindings.
 - Installers with a `FromInstance(value)` binding run once more at startup.
 - A failed generation doesn't block player builds.
-- Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`.
+- Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`. Bindings are fixed when the code is generated and can't change at runtime.
+- Bindings are by type only. There are no named or ID bindings, and no value bindings: `Bind<T>()` takes a class, so put configuration such as an `int` or a URL in a typed config class and bind that.
+- There are no factory delegates, decorators or open generic bindings. Bind each closed type, such as `IRepository<Player>`, on its own.
 
 ## Project status
 

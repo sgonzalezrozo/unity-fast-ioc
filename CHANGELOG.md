@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented in this file.
 
+## [Unreleased]
+
+### Documentation
+
+- Listed unsupported binding features under Limitations: named, value, factory, decorator and open generic bindings.
+
 ## [0.4.0] - 2026-11-03
 
 ### Changed
