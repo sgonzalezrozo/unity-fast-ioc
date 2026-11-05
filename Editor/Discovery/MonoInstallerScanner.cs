@@ -31,9 +31,6 @@ namespace FastIoC.Editor.Discovery
                     installerTypes = typeProvider.GetTypesWithAttribute<MonoInstallerAttribute>().ToList();
                 }
 
-                if (installerTypes.Count == 0)
-                    Debug.LogWarning("[FastIoC] MonoInstallerScanner found 0 types with [MonoInstaller] attribute. Check if FAST_IoC define is set in your assembly and all files compiled successfully.");
-
                 foreach ((Type type, MonoInstallerAttribute attr) in installerTypes)
                 {
                     if (attr.Disabled)

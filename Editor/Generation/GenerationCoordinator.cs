@@ -26,7 +26,7 @@ namespace FastIoC.Editor.Generation
                 List<Type> installers = InstallerGraphCollector.CollectInstallers();
                 if (installers.Count == 0)
                 {
-                    Debug.LogWarning("[FastIoC] No installers found. Skipping generation.");
+                    Debug.Log("[FastIoC] No installers yet. Add one to generate code.");
                     return;
                 }
 

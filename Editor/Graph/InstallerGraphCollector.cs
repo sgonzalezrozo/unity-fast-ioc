@@ -46,7 +46,9 @@ namespace FastIoC.Editor.Graph
                 }
             }
 
-            Debug.Log($"[FastIoC] Found {allInstallers.Count} installers");
+            if (allInstallers.Count > 0)
+                Debug.Log($"[FastIoC] Found {allInstallers.Count} installers");
+
             return allInstallers;
         }
 

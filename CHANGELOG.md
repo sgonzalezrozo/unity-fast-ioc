@@ -13,6 +13,7 @@ All notable changes to this package are documented in this file.
 
 ### Fixed
 
+- A project with no installers yet no longer shows warnings.
 - A binding missing from the current scene no longer leaves the other fields of that MonoBehaviour null.
 - Generated code no longer logs each loaded ScriptableObject in player builds.
 
