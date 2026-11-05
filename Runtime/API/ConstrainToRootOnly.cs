@@ -35,7 +35,7 @@ namespace FastIoC.API
             }
 
             Debug.Log(
-                $"[ConstrainToRootOnly] ✅ {gameObject.name} validated: Prefab root, ready for binding.",
+                $"[ConstrainToRootOnly] {gameObject.name} validated: Prefab root, ready for binding.",
                 gameObject);
         }
 #endif

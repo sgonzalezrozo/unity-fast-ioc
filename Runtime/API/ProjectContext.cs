@@ -73,7 +73,7 @@ namespace FastIoC.API
             if (!GenerationStatusReader.WasLastGenerationFailed(out GenerationStatus status))
                 return;
 
-            string errorMessage = $"[FastIoC] ❌ CODE GENERATION FAILED\n" +
+            string errorMessage = $"[FastIoC] CODE GENERATION FAILED\n" +
                                   $"Last attempt: {status.lastUpdateTime}\n" +
                                   $"Error: {status.errorReason}";
 

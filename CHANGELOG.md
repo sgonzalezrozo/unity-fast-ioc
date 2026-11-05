@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Console and Editor messages use plain text instead of emojis.
+
 ### Documentation
 
 - Listed unsupported binding features under Limitations: named, value, factory, decorator and open generic bindings.

@@ -481,7 +481,7 @@ public class PaymentService
 If both are bound, generation fails, and Play Mode shows:
 
 ```text
-[FastIoC] ❌ CODE GENERATION FAILED
+[FastIoC] CODE GENERATION FAILED
 Last attempt: <time>
 Error: Dependency graph contains cycles
 
@@ -505,7 +505,7 @@ public class ShopService
 If `ShopService` is bound, generation fails, and Play Mode shows:
 
 ```text
-[FastIoC] ❌ CODE GENERATION FAILED
+[FastIoC] CODE GENERATION FAILED
 Last attempt: <time>
 Error: Dependency graph has missing bindings
 
