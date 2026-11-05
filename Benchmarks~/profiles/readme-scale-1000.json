@@ -1,0 +1,12 @@
+{
+  "profileName": "readme-scale-1000",
+  "seed": 3001,
+  "bindingCount": 1000,
+  "monoInjectableCount": 500,
+  "featureCount": 40,
+  "maxDepth": 8,
+  "crossFeatureDependencyRatio": 0.15,
+  "runtimePrefabInjectionCount": 80,
+  "multiInterfaceTypeCount": 65,
+  "description": "README-scale profile for initial public comparisons."
+}

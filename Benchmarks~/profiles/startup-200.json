@@ -1,0 +1,12 @@
+{
+  "profileName": "startup-200",
+  "seed": 1001,
+  "bindingCount": 200,
+  "monoInjectableCount": 120,
+  "featureCount": 24,
+  "maxDepth": 8,
+  "crossFeatureDependencyRatio": 0.18,
+  "runtimePrefabInjectionCount": 25,
+  "multiInterfaceTypeCount": 22,
+  "description": "ProjectContext-heavy startup profile used as optimization target."
+}

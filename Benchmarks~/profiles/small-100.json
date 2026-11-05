@@ -1,0 +1,12 @@
+{
+  "profileName": "small-100",
+  "seed": 501,
+  "bindingCount": 100,
+  "monoInjectableCount": 50,
+  "featureCount": 5,
+  "maxDepth": 4,
+  "crossFeatureDependencyRatio": 0.05,
+  "runtimePrefabInjectionCount": 10,
+  "multiInterfaceTypeCount": 6,
+  "description": "Smallest scaling profile. First point on the size curve."
+}

@@ -1,0 +1,12 @@
+{
+  "profileName": "large-team-5000",
+  "seed": 5001,
+  "bindingCount": 5000,
+  "monoInjectableCount": 2500,
+  "featureCount": 150,
+  "maxDepth": 14,
+  "crossFeatureDependencyRatio": 0.35,
+  "runtimePrefabInjectionCount": 260,
+  "multiInterfaceTypeCount": 220,
+  "description": "Two-year large team profile used to expose non-linear startup scaling."
+}

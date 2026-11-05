@@ -4,12 +4,18 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Added a `Benchmarks~/` scaffold with profiles, result folders and a summary script that stops on invalid results. It can't run benchmarks yet.
+- Added benchmark result schema documentation under `Documentation~/benchmarks/`.
+
 ### Changed
 
 - Console and Editor messages use plain text instead of emojis.
 - `ContextRuntime.Resolve` reads lifecycle interfaces only when it creates an instance, not on every cached resolve. Lifecycle tracking uses a hash set instead of searching a list.
 - Scene recipes are built the first time a scene needs them, and they share the global delegates.
 - Generated injectors use the new `ContextRuntime.TryResolve`, so a binding missing from the current scene no longer throws an exception. Run **Regenerate Code** after updating.
+- Benchmark README and performance docs now point raw evidence to `Benchmarks~/results/raw/` and keep schema validation in `Documentation~/benchmarks/`.
 
 ### Fixed
 

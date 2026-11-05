@@ -1,6 +1,12 @@
 # Unity package repository.
 # Based on GitHub's Unity .gitignore, adapted for a UPM package:
 # .meta files are part of the package and must be committed.
+!Samples~/
+!Samples~/**
+!Documentation~/
+!Documentation~/**
+!Benchmarks~/
+!Benchmarks~/**
 
 # Folders Unity generates when the package is opened inside a project
 [Ll]ibrary/
@@ -21,6 +27,7 @@
 .vscode/
 .idea/
 .consulo/
+__pycache__/
 *.csproj
 *.unityproj
 *.sln

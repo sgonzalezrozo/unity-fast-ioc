@@ -543,6 +543,8 @@ Test IL2CPP builds with code stripping enabled before shipping.
 ## Performance
 
 Benchmarks aren't published yet, so measure your own project.
+When benchmarks are published, each claim will link to raw JSON evidence under `Benchmarks~/results/raw/`, validated against `Documentation~/benchmarks/benchmark-result.schema.json`.
+A benchmark project scaffold for IL2CPP device measurements lives in `Benchmarks~/`. It can't run benchmarks yet.
 
 ## How it compares
 

@@ -1,0 +1,12 @@
+{
+  "profileName": "mature-2500",
+  "seed": 4001,
+  "bindingCount": 2500,
+  "monoInjectableCount": 1250,
+  "featureCount": 80,
+  "maxDepth": 10,
+  "crossFeatureDependencyRatio": 0.25,
+  "runtimePrefabInjectionCount": 150,
+  "multiInterfaceTypeCount": 120,
+  "description": "Mature project profile with long dependency chains and larger graph density."
+}

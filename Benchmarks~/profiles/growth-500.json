@@ -1,0 +1,12 @@
+{
+  "profileName": "growth-500",
+  "seed": 2001,
+  "bindingCount": 500,
+  "monoInjectableCount": 250,
+  "featureCount": 20,
+  "maxDepth": 6,
+  "crossFeatureDependencyRatio": 0.1,
+  "runtimePrefabInjectionCount": 40,
+  "multiInterfaceTypeCount": 30,
+  "description": "Early growth profile aligned to benchmark planning defaults."
+}
