@@ -20,6 +20,8 @@ Game projects usually start out smooth. As features pile up, performance degrade
 
 Something else came up along the way. Since every declaration in Fast IoC happens at edit time, why should a binding be declared in more than one place? With Zenject, if I wanted to control a binding's lifetime without keeping the reference global, I had to repeat it in each scene context that needed it. In Fast IoC, one installer declares the binding and lists its scenes.
 
+I built and refined it on my own time, reusing it across my projects. In November 2026 I extracted it into this standalone package, with documentation and tests. Earlier history lives in a private repository.
+
 ## Is it right for your project?
 
 **Use Fast IoC if you want:**
