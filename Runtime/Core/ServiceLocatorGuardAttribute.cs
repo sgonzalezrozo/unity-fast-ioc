@@ -6,11 +6,11 @@ namespace FastIoC.Core
     /// If you find yourself accessing this property directly, you're probably using the anti-pattern.
     ///
     /// Service Locator Anti-Pattern:
-    /// ❌ BAD
+    /// Bad:
     ///    var service = ProjectContext.Instance.Runtime.Resolve(typeId);
     ///
     /// Proper Dependency Injection:
-    /// ✅ GOOD
+    /// Good:
     ///    Constructor injection: public MyClass(IService service) { ... }
     ///    Field injection: Use IInstantiator for factories
     /// </summary>
@@ -29,7 +29,7 @@ namespace FastIoC.Core
         /// Create a guard with custom message.
         /// </summary>
         public ServiceLocatorGuardAttribute(string message =
-            "⚠️ Direct access to Runtime exposes container and may indicate Service Locator anti-pattern. " +
+            "Direct access to Runtime exposes container and may indicate Service Locator anti-pattern. " +
             "Use constructor injection or IInstantiator factory instead. " +
             "This is only for FastIoC framework use.")
         {

@@ -69,14 +69,14 @@ namespace FastIoC.Core
                 if (!AllowedCallers.Contains(callerFullName))
                 {
                     throw new InvalidOperationException(
-                        $"[FastIoC] ❌ SECURITY VIOLATION: Service Locator Anti-Pattern Detected!\n\n" +
+                        $"[FastIoC] SECURITY VIOLATION: Service Locator Anti-Pattern Detected!\n\n" +
                         $"Unauthorized Caller: {callerFullName}.{method.Name}\n\n" +
                         $"You attempted to call ContextRuntime.Resolve() from outside the FastIoC framework.\n" +
                         $"This is the Service Locator anti-pattern, which violates Dependency Injection principles.\n\n" +
-                        $"❌ WRONG - Service Locator:\n" +
+                        $"WRONG - Service Locator:\n" +
                         $"   var runtime = ProjectContext.Instance.Runtime;\n" +
                         $"   var service = runtime.Resolve(typeId);\n\n" +
-                        $"✅ RIGHT - Dependency Injection:\n" +
+                        $"RIGHT - Dependency Injection:\n" +
                         $"   public MyClass(IService service) {{ /* constructor injection */ }}\n" +
                         $"   var instance = instantiator.Instantiate<T>(prefab);\n\n" +
                         $"Allowed callers (FastIoC framework only):\n" +
