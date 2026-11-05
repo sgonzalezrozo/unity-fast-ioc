@@ -27,97 +27,17 @@ namespace FastIoC.Editor.Generation
 
             GenerateHeader(sb);
             GenerateActivatorFields(sb, installersByScene);
-            GenerateStaticConstructor(sb, installersByScene);
+            GenerateStaticConstructor(sb);
             GenerateEnsureInitializedMethod(sb);
             GenerateCreateSceneContextRuntimeMethod(sb, installersByScene);
             GenerateCreateProjectContextRuntimeMethod(sb);
             GenerateCreateSceneContextRuntimeFallbackMethod(sb);
 
-            GenerateSceneBindingMethods(sb, installersByScene, typeIdMap, typeLifetimes, typeToScopes);
             GeneratePerSceneRuntimeMethods(sb, installersByScene, typeIdMap, typeLifetimes, typeToScopes);
 
             GenerateFooter(sb);
 
             return sb.ToString();
-        }
-
-        private static void GenerateSceneBindingMethods(
-            StringBuilder sb,
-            Dictionary<string, List<Type>> installersByScene,
-            Dictionary<Type, int> typeIdMap,
-            Dictionary<Type, Lifetime> typeLifetimes,
-            Dictionary<Type, HashSet<string>> typeToScopes)
-        {
-            sb.AppendLine("        private static List<(RecipeActivator, Lifetime)> GetGlobalBindings()");
-            sb.AppendLine("        {");
-            sb.AppendLine("            List<(RecipeActivator, Lifetime)> bindings = new();");
-
-            List<Type> globalTypes = typeToScopes
-                .Where(kvp => kvp.Value.Contains(FastIoCConstants.GLOBAL_SCOPE))
-                .Select(kvp => kvp.Key)
-                .OrderBy(t => t.FullName ?? "")
-                .ToList();
-
-            foreach (Type type in globalTypes)
-            {
-                if (typeIdMap.TryGetValue(type, out _))
-                {
-                    string methodName = NamingConventions.GetActivationMethodName(type.FullName ?? "Unknown");
-                    Lifetime lifetime = typeLifetimes.TryGetValue(type, out Lifetime lt) ? lt : Lifetime.Transient;
-                    sb.AppendLine($"            bindings.Add((GeneratedActivators.Activate_{methodName}, Lifetime.{lifetime}));");
-                }
-            }
-
-            sb.AppendLine("            return bindings;");
-            sb.AppendLine("        }");
-            sb.AppendLine();
-
-            sb.AppendLine("        private static List<(RecipeActivator, Lifetime)> GetSceneBindings(string sceneName)");
-            sb.AppendLine("        {");
-            sb.AppendLine("            return sceneName switch");
-            sb.AppendLine("            {");
-
-            foreach (KeyValuePair<string, List<Type>> kvp in installersByScene.Where(kv => kv.Key != FastIoCConstants.GLOBAL_SCOPE))
-            {
-                string sceneName = kvp.Key;
-                sb.AppendLine($"                \"{sceneName}\" => GetBindings_{NamingConventions.EscapeSceneName(sceneName)}(),");
-            }
-
-            sb.AppendLine("                _ => new()");
-            sb.AppendLine("            };");
-            sb.AppendLine("        }");
-            sb.AppendLine();
-
-            foreach (KeyValuePair<string, List<Type>> sceneKvp in installersByScene.Where(kv => kv.Key != FastIoCConstants.GLOBAL_SCOPE))
-            {
-                string sceneName = sceneKvp.Key;
-
-                List<Type> sceneOnlyTypes = typeToScopes
-                    .Where(typeKvp =>
-                        typeKvp.Value.Contains(sceneName) &&
-                        !typeKvp.Value.Contains(FastIoCConstants.GLOBAL_SCOPE))
-                    .Select(typeKvp => typeKvp.Key)
-                    .OrderBy(t => t.FullName ?? "")
-                    .ToList();
-
-                sb.AppendLine($"        private static List<(RecipeActivator, Lifetime)> GetBindings_{NamingConventions.EscapeSceneName(sceneName)}()");
-                sb.AppendLine("        {");
-                sb.AppendLine("            List<(RecipeActivator, Lifetime)> bindings = new();");
-
-                foreach (Type type in sceneOnlyTypes)
-                {
-                    if (typeIdMap.TryGetValue(type, out _))
-                    {
-                        string methodName = NamingConventions.GetActivationMethodName(type.FullName ?? "Unknown");
-                        Lifetime lifetime = typeLifetimes.TryGetValue(type, out Lifetime lt) ? lt : Lifetime.Transient;
-                        sb.AppendLine($"            bindings.Add((GeneratedActivators.Activate_{methodName}, Lifetime.{lifetime}));");
-                    }
-                }
-
-                sb.AppendLine("            return bindings;");
-                sb.AppendLine("        }");
-                sb.AppendLine();
-            }
         }
 
         private static void GeneratePerSceneRuntimeMethods(
@@ -162,17 +82,20 @@ namespace FastIoC.Editor.Generation
                 string sceneName = kvp.Key;
                 string sceneNameSafe = NamingConventions.EscapeSceneName(sceneName);
 
+                sb.AppendLine($"        private static (RecipeActivator[] Activators, Lifetime[] Lifetimes) Get{sceneNameSafe}Recipe()");
+                sb.AppendLine("        {");
+                sb.AppendLine($"            if ({sceneNameSafe}Recipe.Activators == null)");
+                sb.AppendLine($"                {sceneNameSafe}Recipe = Create{sceneNameSafe}Recipe();");
+                sb.AppendLine();
+                sb.AppendLine($"            return {sceneNameSafe}Recipe;");
+                sb.AppendLine("        }");
+                sb.AppendLine();
                 sb.AppendLine($"        private static (RecipeActivator[], Lifetime[]) Create{sceneNameSafe}Recipe()");
                 sb.AppendLine("        {");
-                sb.AppendLine("            int maxTypeId = GeneratedTypeIds.MaxTypeId;");
-                sb.AppendLine("            RecipeActivator[] activators = new RecipeActivator[maxTypeId + 1];");
-                sb.AppendLine("            Lifetime[] lifetimes = new Lifetime[maxTypeId + 1];");
+                sb.AppendLine("            // Global bindings are copied by reference, so only scene-only bindings allocate a delegate.");
+                sb.AppendLine("            RecipeActivator[] activators = (RecipeActivator[])globalActivators.Clone();");
+                sb.AppendLine("            Lifetime[] lifetimes = (Lifetime[])globalLifetimes.Clone();");
                 sb.AppendLine();
-
-                List<Type> sceneGlobalTypes = typeToScopes
-                    .Where(typeKvp => typeKvp.Value.Contains(FastIoCConstants.GLOBAL_SCOPE))
-                    .Select(typeKvp => typeKvp.Key)
-                    .ToList();
 
                 List<Type> sceneTypes = typeToScopes
                     .Where(typeKvp =>
@@ -180,17 +103,6 @@ namespace FastIoC.Editor.Generation
                         !typeKvp.Value.Contains(FastIoCConstants.GLOBAL_SCOPE))
                     .Select(typeKvp => typeKvp.Key)
                     .ToList();
-
-                foreach (Type type in sceneGlobalTypes.OrderBy(t => t.FullName ?? ""))
-                {
-                    if (typeIdMap.TryGetValue(type, out int typeId))
-                    {
-                        string methodName = NamingConventions.GetActivationMethodName(type.FullName ?? "Unknown");
-                        Lifetime lifetime = typeLifetimes.TryGetValue(type, out Lifetime lt) ? lt : Lifetime.Transient;
-                        sb.AppendLine($"            activators[{typeId}] = GeneratedActivators.Activate_{methodName};");
-                        sb.AppendLine($"            lifetimes[{typeId}] = Lifetime.{lifetime};");
-                    }
-                }
 
                 foreach (Type type in sceneTypes.OrderBy(t => t.FullName ?? ""))
                 {
@@ -230,33 +142,25 @@ namespace FastIoC.Editor.Generation
 
         private static void GenerateActivatorFields(StringBuilder sb, Dictionary<string, List<Type>> installersByScene)
         {
-            sb.AppendLine("        // Pre-compiled activation arrays (readonly, reused across plays)");
+            sb.AppendLine("        // Global recipe, built once. Scene recipes are built the first time a scene needs them.");
             sb.AppendLine("        private static readonly RecipeActivator[] globalActivators;");
             sb.AppendLine("        private static readonly Lifetime[] globalLifetimes;");
 
             foreach (KeyValuePair<string, List<Type>> kvp in installersByScene.Where(kv => kv.Key != FastIoCConstants.GLOBAL_SCOPE))
             {
                 string sceneNameSafe = NamingConventions.EscapeSceneName(kvp.Key);
-                sb.AppendLine($"        private static readonly RecipeActivator[] {sceneNameSafe}Activators;");
-                sb.AppendLine($"        private static readonly Lifetime[] {sceneNameSafe}Lifetimes;");
+                sb.AppendLine($"        private static (RecipeActivator[] Activators, Lifetime[] Lifetimes) {sceneNameSafe}Recipe;");
             }
 
             sb.AppendLine();
         }
 
-        private static void GenerateStaticConstructor(StringBuilder sb, Dictionary<string, List<Type>> installersByScene)
+        private static void GenerateStaticConstructor(StringBuilder sb)
         {
-            sb.AppendLine("        // Static initializer: pre-compiles all activation recipes at edit-time");
+            sb.AppendLine("        // Static initializer: builds the global recipe");
             sb.AppendLine("        static GeneratedRegistry()");
             sb.AppendLine("        {");
             sb.AppendLine("            (globalActivators, globalLifetimes) = CreateGlobalRecipe();");
-
-            foreach (KeyValuePair<string, List<Type>> kvp in installersByScene.Where(kv => kv.Key != FastIoCConstants.GLOBAL_SCOPE))
-            {
-                string sceneNameSafe = NamingConventions.EscapeSceneName(kvp.Key);
-                sb.AppendLine($"            ({sceneNameSafe}Activators, {sceneNameSafe}Lifetimes) = Create{sceneNameSafe}Recipe();");
-            }
-
             sb.AppendLine("        }");
             sb.AppendLine();
         }
@@ -264,7 +168,7 @@ namespace FastIoC.Editor.Generation
         private static void GenerateEnsureInitializedMethod(StringBuilder sb)
         {
             sb.AppendLine("        /// <summary>");
-            sb.AppendLine("        /// Ensure all recipes are pre-compiled. Call this at bootstrap to trigger static constructor.");
+            sb.AppendLine("        /// Ensure the global recipe is built. Call this at bootstrap to trigger static constructor.");
             sb.AppendLine("        /// Accessing a static field forces the class initializer to run (if not already run).");
             sb.AppendLine("        /// </summary>");
             sb.AppendLine("        public static void EnsureInitialized()");
@@ -290,7 +194,7 @@ namespace FastIoC.Editor.Generation
             foreach (KeyValuePair<string, List<Type>> kvp in installersByScene.Where(kv => kv.Key != FastIoCConstants.GLOBAL_SCOPE))
             {
                 string sceneNameSafe = NamingConventions.EscapeSceneName(kvp.Key);
-                sb.AppendLine($"                \"{kvp.Key}\" => new ContextRuntime(GeneratedTypeIds.MaxTypeId, {sceneNameSafe}Activators, {sceneNameSafe}Lifetimes),");
+                sb.AppendLine($"                \"{kvp.Key}\" => CreateRuntime(Get{sceneNameSafe}Recipe()),");
             }
 
             sb.AppendLine($"                _ => new ContextRuntime(GeneratedTypeIds.MaxTypeId, globalActivators, globalLifetimes) // Unknown scene, use Global");
@@ -319,6 +223,11 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("        public static ContextRuntime CreateSceneContextRuntime()");
             sb.AppendLine("        {");
             sb.AppendLine("            return new ContextRuntime(GeneratedTypeIds.MaxTypeId, globalActivators, globalLifetimes); // Fallback to global");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        private static ContextRuntime CreateRuntime((RecipeActivator[] Activators, Lifetime[] Lifetimes) recipe)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            return new ContextRuntime(GeneratedTypeIds.MaxTypeId, recipe.Activators, recipe.Lifetimes);");
             sb.AppendLine("        }");
             sb.AppendLine();
         }

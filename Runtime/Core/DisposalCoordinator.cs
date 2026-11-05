@@ -6,6 +6,7 @@ namespace FastIoC.Core
     public class DisposalCoordinator
     {
         private readonly List<object> disposableInstances = new();
+        private readonly HashSet<object> trackedInstances = new(InstanceReferenceComparer.Instance);
         private readonly InstanceCacheArray cacheArray;
         private bool isDisposed;
 
@@ -19,7 +20,7 @@ namespace FastIoC.Core
             if (instance == null)
                 return;
 
-            if (instance is IDisposableHook && !disposableInstances.Contains(instance))
+            if (instance is IDisposableHook && trackedInstances.Add(instance))
                 disposableInstances.Add(instance);
         }
 
@@ -46,6 +47,7 @@ namespace FastIoC.Core
             cacheArray.ClearAllCached();
             cacheArray.ClearAllSingletons();
             disposableInstances.Clear();
+            trackedInstances.Clear();
             isDisposed = true;
         }
 
@@ -60,6 +62,7 @@ namespace FastIoC.Core
         public void Clear()
         {
             disposableInstances.Clear();
+            trackedInstances.Clear();
             isDisposed = false;
         }
 

@@ -86,22 +86,44 @@ namespace FastIoC.Core
                 ServiceLocatorEnforcer.CheckResolution(skipFrames: 2);
             #endif
 
+            if (TryResolveCore(typeId, out object instance))
+                return instance;
+
+            throw new InvalidOperationException($"TypeId {typeId.Id} is not registered in scene or global container.");
+        }
+
+        /// <summary>
+        /// Resolves <paramref name="typeId"/>, or returns false if it isn't bound in the active scopes.
+        /// Generated injectors use it, so a binding missing from a scene doesn't cost an exception.
+        /// </summary>
+        public bool TryResolve(TypeId typeId, out object instance)
+        {
+            #if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (ServiceLocatorEnforcer.EnforcementLevel != ServiceLocatorEnforcementLevel.Off)
+                ServiceLocatorEnforcer.CheckResolution(skipFrames: 2);
+            #endif
+
+            return TryResolveCore(typeId, out instance);
+        }
+
+        private bool TryResolveCore(TypeId typeId, out object instance)
+        {
             if (isDisposed)
                 throw new InvalidOperationException("Context has been disposed.");
 
-            int id = typeId.Id;
+            return resolutionStrategy.TryResolve(typeId, typeId.Id, globalActivators, globalLifetimes, cacheArray, this, out instance);
+        }
 
-            if (resolutionStrategy.TryResolve(typeId, id, globalActivators, globalLifetimes, cacheArray, this, out object instance))
-            {
-                if (instance is IInitializable or IAsyncInitializable)
-                    initCoordinator.TrackInstance(instance);
-                if (instance is IDisposableHook)
-                    disposeCoordinator.TrackInstance(instance);
-
-                return instance;
-            }
-
-            throw new InvalidOperationException($"TypeId {id} is not registered in scene or global container.");
+        /// <summary>
+        /// Registers a newly activated instance for its lifecycle hooks.
+        /// Called only on creation, so a cached instance costs no type checks on later resolves.
+        /// </summary>
+        internal void TrackCreatedInstance(object instance)
+        {
+            if (instance is IInitializable or IAsyncInitializable)
+                initCoordinator.TrackInstance(instance);
+            if (instance is IDisposableHook)
+                disposeCoordinator.TrackInstance(instance);
         }
 
         public void ReportCacheStatistics()

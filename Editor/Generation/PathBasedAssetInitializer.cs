@@ -90,7 +90,6 @@ namespace FastIoC.Editor.Generation
                 sb.AppendLine($"                if (asset != null)");
                 sb.AppendLine($"                {{");
                 sb.AppendLine($"                    GeneratedInstanceRegistry.RegisterInstance(GeneratedTypeIds.{typeIdName}.Id, asset);");
-                sb.AppendLine($"                    Debug.Log(\"[FastIoC] Loaded ScriptableObject: {assetInfo.InterfaceType.Name} from Resources/{resourcesPath}\");");
                 sb.AppendLine($"                }}");
                 sb.AppendLine($"                else");
                 sb.AppendLine($"                {{");
@@ -153,7 +152,6 @@ namespace FastIoC.Editor.Generation
                 sb.AppendLine($"                    if (result.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)");
                 sb.AppendLine($"                    {{");
                 sb.AppendLine($"                        GeneratedInstanceRegistry.RegisterInstance(GeneratedTypeIds.{typeIdName}.Id, result.Result);");
-                sb.AppendLine($"                        Debug.Log(\"[FastIoC] Loaded Addressable ScriptableObject: {assetInfo.InterfaceType.Name} ({addressKey})\");");
                 sb.AppendLine($"                    }}");
                 sb.AppendLine($"                    else");
                 sb.AppendLine($"                    {{");

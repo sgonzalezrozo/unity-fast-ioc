@@ -415,17 +415,22 @@ namespace FastIoC.Editor.Generation
                 sb.AppendLine();
                 sb.AppendLine($"        private static void {injector.MethodName}({typeName} target, {CONTEXT_RUNTIME} context)");
                 sb.AppendLine("        {");
+                int valueIndex = 0;
                 foreach (FieldInjection injection in injector.Fields)
                 {
-                    string resolve = $"context.Resolve(GeneratedTypeIds.{injection.TypeIdMember})";
+                    // A binding missing from the current scene leaves only this field null.
+                    string value = $"value{valueIndex++}";
+                    string resolve = $"if (context.TryResolve(GeneratedTypeIds.{injection.TypeIdMember}, out object {value}))";
                     if (injection.Direct)
                     {
                         string fieldTypeName = CodeGenTypeUtility.GetCSharpName(injection.Field.FieldType);
-                        sb.AppendLine($"            target.{CodeGenTypeUtility.EscapeIdentifier(injection.Field.Name)} = ({fieldTypeName}){resolve};");
+                        sb.AppendLine($"            {resolve}");
+                        sb.AppendLine($"                target.{CodeGenTypeUtility.EscapeIdentifier(injection.Field.Name)} = ({fieldTypeName}){value};");
                     }
                     else
                     {
-                        sb.AppendLine($"            SetFieldByReflection({injection.FallbackIndex}, typeof({typeName}), \"{injection.Field.Name}\", target, {resolve});");
+                        sb.AppendLine($"            {resolve}");
+                        sb.AppendLine($"                SetFieldByReflection({injection.FallbackIndex}, typeof({typeName}), \"{injection.Field.Name}\", target, {value});");
                     }
                 }
                 sb.AppendLine("        }");

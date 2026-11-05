@@ -13,6 +13,7 @@ namespace FastIoC.Core
     public class InitializationCoordinator
     {
         private readonly List<object> initializableInstances = new();
+        private readonly HashSet<object> trackedInstances = new(InstanceReferenceComparer.Instance);
         private bool isInitialized;
         private bool isAsyncInitialized;
 
@@ -27,7 +28,7 @@ namespace FastIoC.Core
             if (instance is not (IInitializable or IAsyncInitializable))
                 return;
 
-            if (!initializableInstances.Contains(instance))
+            if (trackedInstances.Add(instance))
                 initializableInstances.Add(instance);
         }
 
@@ -195,6 +196,7 @@ namespace FastIoC.Core
         public void Clear()
         {
             initializableInstances.Clear();
+            trackedInstances.Clear();
             isInitialized = false;
             isAsyncInitialized = false;
         }
