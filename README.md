@@ -542,11 +542,7 @@ Test IL2CPP builds with code stripping enabled before shipping.
 
 ## Performance
 
-| Test | Fast IoC | Zenject, default reflection mode |
-|---|---:|---:|
-| Startup with 1,000 bindings and 500+ objects | ~200 ms | ~1.2 s |
-
-These are the author's own measurements. The test setup and benchmark project aren't published yet, so treat them as indicative and measure your own project.
+Benchmarks aren't published yet, so measure your own project.
 
 ## How it compares
 

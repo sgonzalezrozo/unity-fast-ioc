@@ -20,12 +20,9 @@ namespace FastIoC.Core
         private static readonly List<ServiceLocatorViolation> violationLog = new();
         private const int MAX_LOG_ENTRIES = 100;
 
-        // ===== OPTIMIZATION: Cache caller type authorization results =====
-        // Avoid creating StackTrace on every Resolve() call by caching the calling type.
-        // After the first check, subsequent calls from the same type are O(1) dictionary lookup.
-        // This optimization reduces injection time from 3900ms to ~200ms.
+        // Caches the authorization result per caller type. The stack trace is still captured on every
+        // check, in the Editor and development builds only, to find the caller.
         private static readonly Dictionary<string, bool> authorizedCallerCache = new();
-        // ===== END OPTIMIZATION =====
 
         /// <summary>
         /// Get or set the current enforcement level.

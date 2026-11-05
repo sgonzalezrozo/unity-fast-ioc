@@ -23,6 +23,7 @@ All notable changes to this package are documented in this file.
 
 ### Documentation
 
+- Removed the unpublished startup comparison until a reproducible benchmark exists.
 - Said that the package isn't used in production or in a shipped game yet, and described Tools Core as a required dependency.
 - Listed unsupported binding features under Limitations: named, value, factory, decorator and open generic bindings.
 
