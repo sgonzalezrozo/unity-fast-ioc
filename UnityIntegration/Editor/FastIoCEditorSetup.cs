@@ -109,7 +109,7 @@ namespace FastIoC.UnityIntegration.Editor
                 "4. Use ProjectContext and scene contexts in your scenes",
                 "OK");
 
-            Debug.Log("[FastIoC] ✅ Setup complete!");
+            Debug.Log("[FastIoC] Setup complete!");
         }
 
         [MenuItem("Tools/FastIoC/Regenerate Code", priority = 2)]
@@ -138,7 +138,7 @@ namespace FastIoC.UnityIntegration.Editor
                 "The auto-detection cache has been cleared.\n" +
                 "Deleted types should now be detected and removed.",
                 "OK");
-            Debug.Log("[FastIoC] ✅ Force regeneration complete!");
+            Debug.Log("[FastIoC] Force regeneration complete!");
         }
 
         private static void AddCoreComponentsToPrefab()

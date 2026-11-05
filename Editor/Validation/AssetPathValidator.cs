@@ -130,7 +130,7 @@ namespace FastIoC.Editor.Validation
                     $"Path-based bindings only support prefabs and scriptable objects.");
             }
 
-            Debug.Log($"[FastIoC] Validated binding: {interfaceType.Name} -> {assetPath} ({strategy}) ✓");
+            Debug.Log($"[FastIoC] Validated binding: {interfaceType.Name} -> {assetPath} ({strategy})");
             return info;
         }
 
@@ -209,7 +209,7 @@ namespace FastIoC.Editor.Validation
                         continue;
 
                     address = entry.address;
-                    Debug.Log($"[FastIoC] ✓ Found Addressable: {entry.address} (GUID: {guid})");
+                    Debug.Log($"[FastIoC] Found Addressable: {entry.address} (GUID: {guid})");
                     return true;
                 }
 
