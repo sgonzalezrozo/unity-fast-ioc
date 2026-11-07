@@ -72,7 +72,7 @@ namespace FastIoCBench.Editor
             return false;
         }
 
-        /// <summary>Bakes the editor copy, so Play Mode measures it baked too. Needs the assembly loaded (after a compile).</summary>
+        /// <summary>Not used by the pipeline: a baked editor copy can stop loading after a later domain reload. Kept for manual checks.</summary>
         public static void BakeEditorCopy()
         {
             if (Bake(EDITOR_DLL))

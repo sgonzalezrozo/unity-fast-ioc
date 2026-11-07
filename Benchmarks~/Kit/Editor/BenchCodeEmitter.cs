@@ -92,6 +92,8 @@ namespace FastIoCBench.Editor
         private static string OptimizedFixture(BenchGraph g)
         {
             StringBuilder sb = new();
+            // A new value on every Generate makes Unity compile this assembly again, so a player build always bakes a fresh copy.
+            sb.Append($"    // Generated {System.DateTime.UtcNow:yyyy-MM-ddTHH:mm:ssZ}\n");
             sb.Append("    /// <summary>Entry point of the optimized copy. Registers itself, so no other assembly references this one.</summary>\n");
             sb.Append("    public sealed class OptimizedFixture : global::FastIoCBench.IBenchOptimizedFixture\n    {\n");
             sb.Append("        [global::UnityEngine.RuntimeInitializeOnLoadMethod(global::UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]\n");

@@ -148,9 +148,6 @@ namespace FastIoCBench.Editor
                 FastIoC.Editor.Generation.GenerationCoordinator.GenerateAll();
                 double fastIocSeconds = sw.Elapsed.TotalSeconds;
 
-                // Zenject bakes only when Unity compiles the assembly, which it skips when the code didn't change.
-                BenchZenjectBaking.BakeEditorCopy();
-
                 BenchEditorTimings timings = ReadTimings() ?? new BenchEditorTimings { profile = profileName };
                 timings.assetsSeconds = assetsSeconds;
                 timings.fastIocGenerationSeconds = fastIocSeconds;
@@ -209,7 +206,8 @@ namespace FastIoCBench.Editor
 
             SerializedObject so = new(settings);
             so.FindProperty("_isEnabledInBuilds").boolValue = true;
-            so.FindProperty("_isEnabledInEditor").boolValue = true;
+            // Builds only: a baked copy in Library/ScriptAssemblies can stop loading after a later domain reload.
+            so.FindProperty("_isEnabledInEditor").boolValue = false;
             so.FindProperty("_allGeneratedAssemblies").boolValue = false;
             // Zenject compares entries with Path.GetFileNameWithoutExtension, which would cut ".GenOpt": keep the ".dll".
             SetStrings(so.FindProperty("_includeAssemblies"), BenchCodeEmitter.OPT_ASSEMBLY + ".dll");
