@@ -83,7 +83,7 @@ def load_results(raw_folder: Path) -> List[Dict[str, object]]:
     results: List[Dict[str, object]] = []
     problems: List[str] = []
 
-    for file_path in sorted(raw_folder.glob("*.json")):
+    for file_path in sorted(raw_folder.rglob("*.json")):
         try:
             result = json.loads(file_path.read_text(encoding="utf-8"))
         except (OSError, ValueError) as error:

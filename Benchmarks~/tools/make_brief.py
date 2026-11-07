@@ -22,9 +22,19 @@ from pathlib import Path
 
 VARIANTS = ["fastioc", "vcontainer", "zenject"]
 BASELINE = "none"
-LABEL = {"fastioc": "Fast IoC", "vcontainer": "VContainer", "zenject": "Zenject (Extenject)", BASELINE: "No DI (baseline)"}
-SHORT = {"fastioc": "Fast IoC", "vcontainer": "VContainer", "zenject": "Zenject", BASELINE: "No DI"}
-COLOR = {"vcontainer": "#c2410c", "zenject": "#7e22ce"}
+OPTIMIZED = {"vcontainer": "vcontainer-sg", "zenject": "zenject-baked"}
+RIVALS = ["vcontainer", "vcontainer-sg", "zenject", "zenject-baked"]
+LABEL = {"fastioc": "Fast IoC", "vcontainer": "VContainer", "vcontainer-sg": "VContainer + source generator",
+         "zenject": "Zenject (Extenject)", "zenject-baked": "Zenject + reflection baking", BASELINE: "No DI (baseline)"}
+SHORT = {"fastioc": "Fast IoC", "vcontainer": "VContainer", "vcontainer-sg": "VContainer SG", "zenject": "Zenject",
+         "zenject-baked": "Zenject baked", BASELINE: "No DI"}
+COLOR = {"vcontainer": "#c2410c", "vcontainer-sg": "#9a3412", "zenject": "#7e22ce", "zenject-baked": "#581c87"}
+
+
+def best(c, family):
+    """Fastest-starting mode of a rival (default or optimized) present in this cell set."""
+    options = [k for k in (family, OPTIMIZED[family]) if k in c]
+    return min(options, key=lambda k: c[k].di()) if options else None
 PROFILE_ORDER = ["small-100", "startup-200", "growth-500", "readme-scale-1000", "mature-2500", "game-3000", "large-team-5000"]
 PROFILE_BLURB = {
     "small-100": "a small prototype",
@@ -198,7 +208,7 @@ def headline(device, tier, c):
     f = c.get("fastioc")
     if not f:
         return ""
-    rivals = [(k, c[k]) for k in ("vcontainer", "zenject") if k in c]
+    rivals = [(k, c[k]) for k in RIVALS if k in c]
     cards = [
         card("STARTUP COST", ms(f.di()), "DI work when the game launches: build the container and inject the first scene",
              f"{frames(f.di()):.1f} frames at 30 fps",
@@ -207,7 +217,7 @@ def headline(device, tier, c):
              f"p95 {ms(f.get('scene-reload-inject', 'p95'))}",
              [(k, f"{SHORT[k]}: {ms(r.get('scene-reload-inject', 'median'))}") for k, r in rivals]),
         card("MEMORY HELD", mb(f.get("heap-after-ready")), "managed memory after startup, including the game's own 4,000+ service objects",
-             f"No DI: {mb(c[BASELINE].get('heap-after-ready'))}" if BASELINE in c else "",
+             f"startup garbage {mb_bytes(f.get('startup-heap-growth'))} · {num(f.get('startup-gc-collections'), 0)} garbage collections (count)",
              [(k, f"{SHORT[k]}: {mb(r.get('heap-after-ready'))}") for k, r in rivals]),
         card("PREFAB SPIKES", ms(f.get("prefab-batch", "p95")), "worst-case (p95) frame cost to spawn 50 injected prefabs",
              f"typical (median) {ms(f.get('prefab-batch', 'median'))}",
@@ -221,7 +231,7 @@ def over_base(c, name, agg="single"):
     if BASELINE not in c:
         return {}
     b = c[BASELINE].get(name, agg)
-    return {k: (c[k].get(name, agg) - b) if (k in c and b is not None and c[k].get(name, agg) is not None) else None for k in VARIANTS}
+    return {k: (c[k].get(name, agg) - b) if (k in c and b is not None and c[k].get(name, agg) is not None) else None for k in ["fastioc"] + RIVALS}
 
 
 def signed_ms(v):
@@ -243,6 +253,21 @@ def differs(groups, profile, devices):
         li["startup"].append(
             f"{d}: Fast IoC {ms(f.get('container-build'))} to build + {ms(f.get('scene-first-inject'))} to inject the first scene; "
             f"VContainer {ms(v.get('container-build'))} + {ms(v.get('scene-first-inject'))}; Zenject {ms(z.get('container-build'))} + {ms(z.get('scene-first-inject'))}.")
+        for fam in ("vcontainer", "zenject"):
+            k = OPTIMIZED[fam]
+            if k in c:
+                o = c[k]
+                li["startup"].append(
+                    f"{d}: {LABEL[k]} {ms(o.get('container-build'))} + {ms(o.get('scene-first-inject'))} "
+                    f"(vs {ms(c[fam].di())} without it; Fast IoC {x(ratio(f.di(), o.di()))} faster). "
+                    f"Classes covered by the optimization: {num(o.get('optimization-coverage'), 0)}%.")
+        opt = [(fam, OPTIMIZED[fam]) for fam in ("vcontainer", "zenject") if OPTIMIZED[fam] in c]
+        if opt:
+            parts = "; ".join(
+                f"{SHORT[fam]}: first injection {ms(c[fam].get('scene-first-inject'))} → {ms(c[k].get('scene-first-inject'))}, "
+                f"container build {ms(c[fam].get('container-build'))} → {ms(c[k].get('container-build'))}"
+                for fam, k in opt)
+            li["startup"].append(f"{d}, effect of the optimized modes: {parts}. They speed up injection, not the registration of the bindings.")
         ob = over_base(c, "startup-total")
         if ob:
             li["first"].append(
@@ -384,17 +409,17 @@ def device_runs_table(profile, runs):
                                               + (" · DIRTY" if r["_notes"].get("fastiocDirty") == "true" else ""))),
         row("Versions", lambda rr: first(rr, lambda r: f"Fast IoC {r['_notes'].get('fastioc')}, VContainer {r['_notes'].get('vcontainer')}, Zenject {r['_notes'].get('zenject')}")),
         row("Stripping / incremental GC", lambda rr: first(rr, lambda r: f"{r['_notes'].get('stripping')} / {r['_notes'].get('incrementalGc', '?')}")),
-        row("Runs per variant", lambda rr: " / ".join(f"{SHORT[v]} {sum(1 for r in rr if r['workload']['variant'] == v)}" for v in VARIANTS + [BASELINE] if any(r['workload']['variant'] == v for r in rr))),
+        row("Runs per variant", lambda rr: " / ".join(f"{SHORT[v]} {sum(1 for r in rr if r['workload']['variant'] == v)}" for v in ["fastioc"] + RIVALS + [BASELINE] if any(r['workload']['variant'] == v for r in rr))),
         row("Files", lambda rr: str(len(rr))),
         row("Started (UTC)", lambda rr: ts(rr, min).strftime("%Y-%m-%d %H:%M")),
         row("Total time (first to last result)", duration),
-        row("Engine boot before first scene", lambda rr: ms(med([r["_m"].get(("boot-start", "single")) for r in rr]), 0)),
+        row("Engine boot and splash (same for all)", lambda rr: ms(med([r["_m"].get(("boot-start", "single")) for r in rr]), 0)),
     ]
     return f"<table><tr><th></th>{head}</tr>{''.join(rows)}</table>"
 
 
 def full_table(c):
-    columns = [(k, c.get(k)) for k in VARIANTS]
+    columns = [("fastioc", c.get("fastioc"))] + [(k, c[k]) for k in RIVALS if k in c]
 
     def cls(k):
         return "fi" if k == "fastioc" else ("base" if k == BASELINE else "")
@@ -420,24 +445,25 @@ def full_table(c):
         row("Startup cost (build + first injection)", lambda cl: f"{ms(cl.di())} · {frames(cl.di()):.1f} frames @30 fps", baseline=False),
         row("Launch to first scene ready", lambda cl: ms(cl.get("startup-total"))),
         row("Garbage created at startup", lambda cl: mb_bytes(cl.get("startup-heap-growth"))),
-        row("Garbage collections at startup", lambda cl: num(cl.get("startup-gc-collections"), 0)),
+        row("Garbage collections at startup (count, not MB)", lambda cl: num(cl.get("startup-gc-collections"), 0)),
         sec("2. Scene reload (5 unload/load cycles per run)"),
         row("Re-inject scene, median / p95", lambda cl: f"{ms(cl.get('scene-reload-inject', 'median'))} / {ms(cl.get('scene-reload-inject', 'p95'))}"),
         row("Reload including scene load, median", lambda cl: ms(cl.get("scene-reload-load", "median"))),
         row("Unload, median", lambda cl: ms(cl.get("scene-unload", "median"))),
-        row("Garbage / collections over 5 reloads", lambda cl: f"{kb(cl.get('reload-heap-growth'))} / {num(cl.get('reload-gc-collections'), 0)}"),
+        row("Garbage / collections (count) over 5 reloads", lambda cl: f"{kb(cl.get('reload-heap-growth'))} / {num(cl.get('reload-gc-collections'), 0)}"),
         sec("3. Memory"),
         row("Managed heap after startup", lambda cl: mb(cl.get("heap-after-ready"))),
         sec("4. Prefab spawning (1,000 injected prefabs, 50 per frame)"),
         row("Batch of 50, median / p95", lambda cl: f"{ms(cl.get('prefab-batch', 'median'))} / {ms(cl.get('prefab-batch', 'p95'))}"),
         row("First batch", lambda cl: ms(cl.get("prefab-first-batch"))),
         row("Per prefab", lambda cl: ms(cl.get("prefab-per-instance"), 3)),
-        row("Garbage / collections for 1,000 spawns", lambda cl: f"{kb(cl.get('prefab-heap-growth'))} / {num(cl.get('prefab-gc-collections'), 0)}"),
+        row("Garbage / collections (count) for 1,000 spawns", lambda cl: f"{kb(cl.get('prefab-heap-growth'))} / {num(cl.get('prefab-gc-collections'), 0)}"),
         sec("5. Whole scene load (mostly Unity)"),
         row("First scene load, call to ready", lambda cl: ms(cl.get("scene-first-load"), 0)),
         row("  of which before the first Awake (Unity)", lambda cl: ms(cl.get("scene-first-preawake"), 0)),
         sec("CORRECTNESS"),
         row("Instances / injected fields", lambda cl: f"{num(cl.get('distinct-instances'), 0)} / {num(cl.get('injected-fields'), 0)}", baseline=False),
+        row("Classes covered by the optimization", lambda cl: (num(cl.get("optimization-coverage"), 0) + "%") if cl.get("optimization-coverage") is not None else "–", baseline=False),
     ]
     head = "".join(f'<th class="{cls(k)}">{e(LABEL[k])}</th>' for k, _ in columns)
     return f"<table><tr><th>Metric</th>{head}</tr>{''.join(rows)}</table>"
@@ -497,23 +523,27 @@ def build(root: Path, profile_arg, commit_arg):
     # Headline sentence, computed.
     startup_v, startup_z, reload_v, reload_z, heap_v, heap_z = [], [], [], [], [], []
     spike_win_all = True
+    has_opt = False
     worst = None
     for d in devices:
         c = cells_for(groups, d, profile)
         if not all(k in c for k in VARIANTS):
             continue
         f = c["fastioc"]
-        startup_v.append(ratio(f.di(), c["vcontainer"].di()))
-        startup_z.append(ratio(f.di(), c["zenject"].di()))
-        reload_v.append(ratio(f.get("scene-reload-inject", "median"), c["vcontainer"].get("scene-reload-inject", "median")))
-        reload_z.append(ratio(f.get("scene-reload-inject", "median"), c["zenject"].get("scene-reload-inject", "median")))
-        heap_v.append(ratio(f.get("heap-after-ready"), c["vcontainer"].get("heap-after-ready")))
-        heap_z.append(ratio(f.get("heap-after-ready"), c["zenject"].get("heap-after-ready")))
-        spike_win_all &= f.get("prefab-batch", "p95") < min(c["vcontainer"].get("prefab-batch", "p95"), c["zenject"].get("prefab-batch", "p95"))
+        bv, bz = c[best(c, "vcontainer")], c[best(c, "zenject")]
+        startup_v.append(ratio(f.di(), bv.di()))
+        startup_z.append(ratio(f.di(), bz.di()))
+        reload_v.append(ratio(f.get("scene-reload-inject", "median"), bv.get("scene-reload-inject", "median")))
+        reload_z.append(ratio(f.get("scene-reload-inject", "median"), bz.get("scene-reload-inject", "median")))
+        heap_v.append(ratio(f.get("heap-after-ready"), bv.get("heap-after-ready")))
+        heap_z.append(ratio(f.get("heap-after-ready"), bz.get("heap-after-ready")))
+        spike_win_all &= f.get("prefab-batch", "p95") < min(bv.get("prefab-batch", "p95"), bz.get("prefab-batch", "p95"))
+        has_opt = any(k in c for k in OPTIMIZED.values())
         if worst is None or f.di() > worst[1]["fastioc"].di():
             worst = (d, c)
 
-    result = (f"Fast IoC does the DI work at launch {xrange(startup_v)} faster than VContainer and {xrange(startup_z)} faster than Zenject, "
+    vs = " (each in its fastest mode, optimized ones included)" if has_opt else ""
+    result = (f"Fast IoC does the DI work at launch {xrange(startup_v)} faster than VContainer and {xrange(startup_z)} faster than Zenject{vs}, "
               f"reloads scenes {xrange(reload_v + reload_z)} faster, and holds {xrange(heap_v + heap_z)} less managed memory"
               + (", and spawns prefabs without the frame spikes the other two show." if spike_win_all else "."))
     wait = ""
@@ -521,8 +551,16 @@ def build(root: Path, profile_arg, commit_arg):
         d, c = worst
         if BASELINE in c:
             ob = over_base(c, "startup-total")
-            wait = (f" On the {e(d)}, the player waits <b>{ms(ob['vcontainer'])}</b> longer for the first scene with VContainer and "
-                    f"<b>{ms(ob['zenject'])}</b> longer with Zenject than with no DI at all; with Fast IoC the extra wait is {e(signed_ms(ob['fastioc']))}.")
+            kv, kz = best(c, "vcontainer"), best(c, "zenject")
+            wait = (f" On the {e(d)}, the player waits <b>{ms(ob[kv])}</b> longer for the first scene with {e(LABEL[kv])} and "
+                    f"<b>{ms(ob[kz])}</b> longer with {e(LABEL[kz])} than with no DI at all; with Fast IoC the extra wait is {e(signed_ms(ob['fastioc']))}.")
+
+    present = {k for (d, p), vv in groups.items() if p == profile for k in vv}
+    missing_opt = [LABEL[k] for k in OPTIMIZED.values() if k not in present]
+    opt_note = ("The comparison includes each rival's optimized mode (VContainer's source generator, Zenject's reflection baking); "
+                "every optimized run checks on the device that the generated code covers all classes. Not measured yet: the two iPhones."
+                if not missing_opt else
+                f"Not measured yet: {', '.join(missing_opt)}, designed to cut exactly the startup cost measured here, and the two iPhones.")
 
     heads = "".join(headline(d, t, cells_for(groups, d, profile)) for d, t, _ in DEVICES if (d, profile) in groups)
 
@@ -561,8 +599,7 @@ next to a version of the project with no DI at all.</p>
 {differs(groups, profile, devices)}
 <p class="honest"><b>Honest summary:</b> at the size of a real mobile game, Fast IoC removes nearly all of the DI cost at launch and on scene loads, which is the cost
 players feel, holds far less memory and avoids spawn spikes. Its price is paid in the editor: code regenerates after a compile ({e(n.get('fastiocGenerationSeconds', '?'))} s here),
-and it supports fewer binding features than Zenject. Not measured yet: Zenject's reflection baking and VContainer's source generator, which are designed
-to cut exactly the startup cost measured here, and the two iPhones.</p>
+and it supports fewer binding features than Zenject. {opt_note}</p>
 {excluded_note}
 {setup_section(n)}
 <div class="page"></div>
@@ -581,11 +618,12 @@ A run that fails the check is discarded.</p>
 <tr><td><b>No-DI baseline</b></td><td>Same scene and prefabs, nothing injected: what Unity costs on its own</td><td>Same sizes</td></tr>
 </table>
 <p class="note">Measured with a high-resolution timer inside the app, from the first managed code that runs. Each container uses its default, documented setup:
-Fast IoC with edit-time generated code, Zenject with reflection, VContainer with reflection. Lifetimes are singleton and transient. Values are medians of the runs.</p>
+Fast IoC with edit-time generated code; Zenject and VContainer with reflection, and, when listed, with reflection baking and the source generator,
+which run on a copy of the same project in its own assembly so they don't change the default variants. Lifetimes are singleton and transient. Values are medians of the runs.</p>
 
 <h2>Device runs (for manual comparison)</h2>
 {device_runs_table(profile, runs)}
-<p class="note">Engine boot is Unity starting up and showing its splash screen before the first scene; it is the same for every variant.</p>
+
 
 <div class="page"></div>
 <h2>Full comparison per device</h2>

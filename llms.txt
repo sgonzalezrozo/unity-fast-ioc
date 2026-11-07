@@ -1,0 +1,19 @@
+# Fast IoC
+
+> Dependency injection framework (IoC container) for Unity 6. It generates registries, activators and injectors at edit time, so the runtime uses no reflection, and it reports missing bindings and dependency cycles before Play Mode. Bindings live in per-feature installers (`[MonoInstaller]` classes extending `BindingRecorder`) that are discovered automatically. MonoBehaviours receive dependencies through `internal` fields; plain classes through one public constructor. Verified in IL2CPP Release builds on Android and iOS. MIT licensed, pre-release (0.x).
+
+## Docs
+
+- [README](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/README.md): installation, quick start, binding reference, prefabs, lifecycle, generated code, limitations, FAQ
+- [Rules for AI coding agents](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/agent-rules.md): copy into AGENTS.md, CLAUDE.md or Cursor rules
+- [Changelog](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/CHANGELOG.md)
+- [Quick start sample](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Samples~/QuickStart/README.md)
+
+## Benchmarks
+
+- [Performance results](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/README.md#performance): IL2CPP Release on two Android phones and two iPhones, 3,000 bindings and 1,500 injected MonoBehaviours
+- [Benchmark kit and how to run it](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Benchmarks~/README.md)
+
+## Optional
+
+- [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core): required dependency with the shared injection interfaces

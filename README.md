@@ -1,10 +1,12 @@
 # Fast IoC
 
-**Code-generated dependency injection for Unity, with installer-based bindings.**
+**Dependency injection for Unity with generated code and no runtime reflection.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
 [![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
+
+Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones. See [Performance](#performance).
 
 Fast IoC generates registries, activators and injectors at edit time. The runtime uses no reflection: the generated code registers itself at startup, MonoBehaviour fields are assigned by generated code, and scene objects are listed in a manifest baked into each scene. See [Runtime reflection](#runtime-reflection).
 
@@ -58,9 +60,9 @@ I built and refined it on my own time in personal projects. It isn't used in pro
 | Requirement | Supported |
 |---|---|
 | Unity | Tested on Unity 6 (`6000.3.16f1`). The package declares `2022.3` as its minimum, but older versions aren't tested yet. |
-| Scripting backend | Not verified yet. See [Runtime reflection](#runtime-reflection) before using IL2CPP. |
-| Platforms | Not verified yet |
-| Managed code stripping | Not verified yet. Generated code is referenced directly and marked `[Preserve]`, so no `link.xml` should be needed. Test your stripping level in a player build. |
+| Scripting backend | IL2CPP (Release) verified in Android and iOS player builds with Unity `6000.3.6f1`. Mono player builds aren't tested yet. |
+| Platforms | Android verified on a Pixel 5 and a Samsung Galaxy A02s, iOS on an iPhone 13 mini (iOS 26) and an iPhone Air (iOS 27). Other platforms aren't verified yet. |
+| Managed code stripping | `Minimal` verified on Android and iOS, with no `link.xml`. Generated code is referenced directly and marked `[Preserve]`, but test higher stripping levels in your own player build. |
 | Enter Play Mode with domain reload disabled | Not verified yet. The generated module and scene injection reset their static state on each Play Mode start, but test it before relying on it. |
 | Dependencies | [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core), Addressables |
 
@@ -542,9 +544,22 @@ Test IL2CPP builds with code stripping enabled before shipping.
 
 ## Performance
 
-Benchmarks aren't published yet, so measure your own project.
-When benchmarks are published, each claim will link to raw JSON evidence under `Benchmarks~/results/raw/`, validated against `Documentation~/benchmarks/benchmark-result.schema.json`.
-A benchmark project scaffold for IL2CPP device measurements lives in `Benchmarks~/`. It can't run benchmarks yet.
+Measured in IL2CPP Release builds on four phones, with Unity `6000.3.6f1`, `Minimal` stripping and incremental GC. The test project has 3,000 bindings, 1,500 injected MonoBehaviours in 100 features and dependency chains up to 12 deep, roughly the size of a mobile multiplayer game. Each value is the median of 5 cold launches.
+
+| Metric | Pixel 5 (mid-range Android) | Galaxy A02s (low-end Android) | iPhone 13 mini (2021) | iPhone Air (2025) |
+|---|---|---|---|---|
+| Build the global container | 9.7 ms | 21.2 ms | 6.4 ms | 4.2 ms |
+| Inject the first scene (1,500 objects) | 28.9 ms | 102.5 ms | 8.1 ms | 6.4 ms |
+| Re-inject the scene after a reload, median / p95 | 11.5 / 15.3 ms | 23.0 / 25.9 ms | 2.0 / 3.2 ms | 4.1 / 4.8 ms |
+| Spawn 50 injected prefabs, median / p95 | 3.3 / 6.3 ms | 7.2 / 10.4 ms | 3.0 / 5.0 ms | 2.3 / 3.4 ms |
+| Managed heap after startup (same scene without DI) | 1.81 MB (0.89 MB) | 1.19 MB (0.69 MB) | 1.80 MB (0.89 MB) | 1.81 MB (0.89 MB) |
+| Garbage for 1,000 prefab spawns (same scene without DI) | 116 KB (108 KB) | 56 KB (48 KB) | 124 KB (116 KB) | 120 KB (120 KB) |
+
+- **Startup runs once, while the first scene loads.** On the same phones, Unity itself takes about 430 ms (Pixel 5) and 770 ms (A02s) to load that scene. On both iPhones, the whole startup costs Fast IoC less than one 30 fps frame.
+- **Spawning fits in a frame.** A batch of 50 prefabs stays well under the 33 ms of a 30 fps frame, even on the A02s.
+- **Garbage stays close to plain Unity.** Spawning 1,000 prefabs allocates at most 8 KB more than the same prefabs without DI.
+
+The raw results for every run are in [`Benchmarks~/results/raw/`](Benchmarks~/results/raw/), and [`Benchmarks~/README.md`](Benchmarks~/README.md) explains how to run the same tests on your own devices. Numbers from your own project will differ, so measure it.
 
 ## How it compares
 
@@ -558,6 +573,92 @@ A benchmark project scaffold for IL2CPP device measurements lives in `Benchmarks
 | Track record | Pre-release, single author | Long-established, large community | Established, active community | Established, active community |
 
 **Choose Fast IoC** for feature-owned installers and edit-time generation. **Choose one of the others** if you want a proven container or no generated files. Each project publishes its own benchmarks, so compare them against your own workload.
+
+## Use it with AI coding agents
+
+Coding agents follow the patterns they find in a project. Without instructions, they tend to share services in Unity through singletons, `FindObjectOfType` and Inspector references. Give them the Fast IoC rules and they wire dependencies the same way you do:
+
+1. Copy [`Documentation~/agent-rules.md`](Documentation~/agent-rules.md) into your project's agent rules, for example `AGENTS.md`, `CLAUDE.md` or `.cursor/rules/fast-ioc.md`.
+2. Keep the generated folder committed, so the agent can read which bindings exist.
+
+Fast IoC suits agents for a few reasons:
+
+- **Dependencies are visible in code.** A constructor or an `internal` field shows what a class needs, without opening scenes or prefabs.
+- **The agent can check its own work.** After a compile, `Assets/FastIoC/Generated/GenerationStatus.json` reports missing bindings and dependency cycles, and generation can run in batch mode. See [Run it in CI](#run-it-in-ci).
+- **Each feature owns its installer.** An agent adds a feature without editing a shared file.
+- **Plain classes are easy to test.** Pass fakes to the constructor in a unit test.
+
+There are no MCP tools for Fast IoC yet. The rules file works with any agent that reads project files.
+
+## FAQ
+
+### How do I do dependency injection in Unity?
+
+Bind each service in an installer, then receive it through a constructor (plain classes) or an `internal` field (MonoBehaviours). Fast IoC generates the code that connects them. See [Quick start](#quick-start).
+
+### Fast IoC vs Zenject (Extenject) vs VContainer: which should I use?
+
+All three are dependency injection containers for Unity. Fast IoC generates its injection code in the Editor, so it uses no reflection at runtime, catches missing bindings and cycles before Play Mode, and finds feature installers on its own. Zenject and VContainer have more binding features and a long track record, and they don't add generated files to your project. See [How it compares](#how-it-compares) and [Limitations](#limitations).
+
+### Does it work with IL2CPP and mobile?
+
+Yes. It's verified in IL2CPP Release builds with `Minimal` code stripping on Android (a mid-range and a low-end phone) and iOS (an iPhone 13 mini and an iPhone Air). WebGL isn't verified yet. See [Performance](#performance).
+
+### Does it work with Unity 6?
+
+Yes. It's tested on Unity `6000.3`. The package declares `2022.3` as its minimum, but older versions aren't tested yet.
+
+### Does it use reflection?
+
+Not at runtime. Registries, activators and injectors are generated at edit time, and scenes are injected from a baked manifest. See [Runtime reflection](#runtime-reflection).
+
+### How do I inject into a MonoBehaviour?
+
+Declare the dependency as an `internal` field and use it from `Start()`. There's no `[Inject]` attribute:
+
+```csharp
+public class InventoryView : MonoBehaviour
+{
+    internal IInventoryService inventory;
+}
+```
+
+### Can I inject ScriptableObjects?
+
+Yes. Bind the asset with `FromInstance` and finish with `AsSingle()`. The asset must be in a `Resources` folder or marked as Addressable. See [Bind assets](#bind-assets).
+
+```csharp
+Bind<GameConfig>().FromInstance("GameConfig").AsSingle();
+```
+
+### How do I spawn prefabs with dependencies?
+
+Inject `IInstantiator` and call `Instantiate<T>`. You can also pass data that's ready in `Awake()`. See [Instantiating prefabs](#instantiating-prefabs).
+
+### How do I make Unity code testable?
+
+Move logic out of MonoBehaviours into plain classes that receive their dependencies through the constructor. A unit test creates the class with `new` and passes fakes, with no container or scene. Fast IoC doesn't include test helpers yet.
+
+```csharp
+var shop = new ShopService(new FakeInventory(itemCount: 0));
+Assert.IsFalse(shop.CanBuy());
+```
+
+### How much does it cost at startup?
+
+With 3,000 bindings and 1,500 injected MonoBehaviours, building the container and injecting the first scene takes about 11 ms on an iPhone Air, 15 ms on an iPhone 13 mini, 39 ms on a Pixel 5 and 124 ms on a Galaxy A02s. See [Performance](#performance).
+
+### Can it run alongside another container?
+
+Yes. Set `FastIoCUnityBootstrapper.AutoStart` to `false` from a `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` method, then call `FastIoCUnityBootstrapper.Start()` when you want it. The benchmark project uses this to run several containers in one build.
+
+### Does it work with AI coding agents?
+
+Yes, through a rules file you copy into your project. See [Use it with AI coding agents](#use-it-with-ai-coding-agents).
+
+### Is it production-ready?
+
+Not yet. It's a pre-release package (`0.x`) by a single author, not yet used in a shipped game. See [Project status](#project-status).
 
 ## Troubleshooting
 

@@ -2,7 +2,7 @@
   "name": "com.sgonzalezrozo.fast-ioc",
   "version": "0.4.0",
   "displayName": "Fast IoC",
-  "description": "Code-generated dependency injection for Unity with installer-based bindings.",
+  "description": "Dependency injection (IoC container) for Unity with edit-time generated code: no runtime reflection, missing bindings and cycles reported before Play Mode, per-feature installers. Verified with IL2CPP on Android and iOS.",
   "unity": "2022.3",
   "license": "MIT",
   "author": {
@@ -14,10 +14,18 @@
     "url": "https://github.com/sgonzalezrozo/unity-fast-ioc.git"
   },
   "keywords": [
-    "ioc",
-    "di",
+    "unity",
+    "unity3d",
     "dependency-injection",
-    "codegen"
+    "di",
+    "ioc",
+    "ioc-container",
+    "inversion-of-control",
+    "codegen",
+    "il2cpp",
+    "no-reflection",
+    "zenject-alternative",
+    "vcontainer-alternative"
   ],
   "samples": [
     {
