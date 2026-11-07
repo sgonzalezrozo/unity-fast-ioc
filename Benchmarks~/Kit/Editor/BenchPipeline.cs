@@ -124,8 +124,8 @@ namespace FastIoCBench.Editor
             if (BenchSceneBuilder.FindType(BenchCodeEmitter.NAMESPACE + ".GeneratedBenchFixture") == null
                 || BenchSceneBuilder.FindType(BenchCodeEmitter.OPT_NAMESPACE + ".OptimizedFixture") == null)
             {
-                Status = "The generated code didn't compile. Fix the errors in the Console, then Generate again.";
-                Debug.LogError("[FastIoCBench] " + Status);
+                Status = "The generated assemblies are not loaded. See the [FastIoCBench] diagnostics in the Console.";
+                Debug.LogError("[FastIoCBench] " + Status + "\n" + DiagnoseAssemblies());
                 return;
             }
 
@@ -222,6 +222,42 @@ namespace FastIoCBench.Editor
             list.arraySize = values.Length;
             for (int i = 0; i < values.Length; i++)
                 list.GetArrayElementAtIndex(i).stringValue = values[i];
+        }
+
+        [MenuItem("Tools/FastIoC Benchmark Diagnostics")]
+        private static void LogDiagnostics() => Debug.Log("[FastIoCBench] " + DiagnoseAssemblies());
+
+        /// <summary>What is loaded versus what was compiled, to tell a compile error from an assembly that didn't load.</summary>
+        public static string DiagnoseAssemblies()
+        {
+            System.Text.StringBuilder sb = new();
+            sb.AppendLine("Loaded assemblies of interest:");
+            foreach (System.Reflection.Assembly a in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                string name = a.GetName().Name;
+                if (name == "Assembly-CSharp" || name.StartsWith("FastIoCBench"))
+                {
+                    string location;
+                    try { location = a.IsDynamic ? "dynamic" : a.Location; } catch (Exception) { location = "?"; }
+                    sb.AppendLine($"  {name}  location='{location}'");
+                }
+            }
+
+            foreach (string name in new[] { "Assembly-CSharp", BenchCodeEmitter.OPT_ASSEMBLY })
+            {
+                string path = $"Library/ScriptAssemblies/{name}.dll";
+                sb.AppendLine(File.Exists(path) ? $"Compiled: {path} ({new FileInfo(path).Length} bytes, {File.GetLastWriteTime(path):HH:mm:ss})" : $"Missing: {path}");
+            }
+
+            sb.AppendLine($"GeneratedBenchFixture found: {BenchSceneBuilder.FindType(BenchCodeEmitter.NAMESPACE + ".GeneratedBenchFixture") != null}");
+            sb.AppendLine($"OptimizedFixture found: {BenchSceneBuilder.FindType(BenchCodeEmitter.OPT_NAMESPACE + ".OptimizedFixture") != null}");
+            foreach (var assembly in UnityEditor.Compilation.CompilationPipeline.GetAssemblies(UnityEditor.Compilation.AssembliesType.Editor))
+            {
+                if (assembly.name == BenchCodeEmitter.OPT_ASSEMBLY)
+                    sb.AppendLine($"CompilationPipeline knows {assembly.name}: output {assembly.outputPath}, flags {assembly.flags}");
+            }
+
+            return sb.ToString();
         }
 
         public static BenchEditorTimings ReadTimings()
