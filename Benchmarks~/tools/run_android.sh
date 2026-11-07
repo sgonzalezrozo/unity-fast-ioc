@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Runs the whole plan on one Android phone: one cold launch per run, then pulls the results.
-# Usage: tools/run_android.sh <adb-serial> <device-folder-name> [launches=20]
+# Usage: tools/run_android.sh <adb-serial> <device-folder-name> [launches=30]
 set -euo pipefail
-S="${1:?adb serial (adb devices)}"; DEVICE="${2:?folder name, e.g. pixel5}"; LAUNCHES="${3:-20}"
+S="${1:?adb serial (adb devices)}"; DEVICE="${2:?folder name, e.g. pixel5}"; LAUNCHES="${3:-30}"
 PKG=com.sgrozo.fastiocbenchmark
 OUT="$HOME/Library/Logs/Unity/fastioc-compare/$DEVICE"
 mkdir -p "$OUT"

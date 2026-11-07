@@ -34,6 +34,9 @@ def main():
             continue  # baseline: nothing injected, nothing to check
         if metric(r, "graph-valid") != 1 or metric(r, "graph-valid-after-reload") != 1:
             problems.append(f"{key} run {r['workload']['runIndex']}: wrong graph ({notes})")
+        coverage = metric(r, "optimization-coverage")
+        if r["workload"]["variant"] in ("zenject-baked", "vcontainer-sg") and (coverage is None or coverage < 100):
+            problems.append(f"{key} run {r['workload']['runIndex']}: optimization covers {coverage}% of the classes, not 100%")
         if (metric(r, "prefab-null-fields") or 0) != 0:
             problems.append(f"{key} run {r['workload']['runIndex']}: prefab fields not injected")
         if "fastiocDirty=true" in notes:

@@ -17,22 +17,32 @@ namespace FastIoCBench.Editor
     /// </summary>
     public static class BenchSceneBuilder
     {
-        public static readonly string[] Variants = { "none", "fastioc", "zenject", "vcontainer" };
+        public static readonly string[] Variants = { "none", "fastioc", "zenject", "zenject-baked", "vcontainer", "vcontainer-sg" };
+
+        /// <summary>vcontainer-sg needs VContainer.SourceGenerator.dll; without it the variant is left out.</summary>
+        public static string[] VariantsFor(bool withSourceGenerator) =>
+            withSourceGenerator ? Variants : Variants.Where(v => v != "vcontainer-sg").ToArray();
+
+        private static bool IsOptimized(string variant) => variant == "zenject-baked" || variant == "vcontainer-sg";
+
         private const int GROUP_SIZE = 50;
 
-        public static List<string> Build(BenchGraph g)
+        public static List<string> Build(BenchGraph g, bool withSourceGenerator)
         {
             Directory.CreateDirectory(BenchPaths.PREFABS);
             Directory.CreateDirectory(BenchPaths.SCENES);
             Directory.CreateDirectory(BenchPaths.RESOURCES + "/FastIoCBench");
 
-            GameObject[] prefabs = BuildPrefabs(g);
+            GameObject[] prefabs = BuildPrefabs(g, BenchCodeEmitter.NAMESPACE, BenchPaths.PREFABS);
+            Directory.CreateDirectory(BenchPaths.PREFABS + "/Opt");
+            GameObject[] optPrefabs = BuildPrefabs(g, BenchCodeEmitter.OPT_NAMESPACE, BenchPaths.PREFABS + "/Opt");
             BuildZenjectProjectContext();
-            BuildVContainerRoot();
+            BuildVContainerRoot(BenchCodeEmitter.NAMESPACE, "VContainerRoot");
+            BuildVContainerRoot(BenchCodeEmitter.OPT_NAMESPACE, "VContainerRootSG");
 
             List<string> scenes = new() { BuildBootScene() };
-            foreach (string variant in Variants)
-                scenes.Add(BuildInjectScene(g, variant, prefabs));
+            foreach (string variant in VariantsFor(withSourceGenerator))
+                scenes.Add(BuildInjectScene(g, variant, IsOptimized(variant) ? optPrefabs : prefabs));
 
             EditorBuildSettings.scenes = scenes.Select(s => new EditorBuildSettingsScene(s, true)).ToArray();
             AssetDatabase.SaveAssets();
@@ -59,21 +69,23 @@ namespace FastIoCBench.Editor
 
         private static Type Gen(string name) => Required(BenchCodeEmitter.NAMESPACE + "." + name);
 
-        private static GameObject[] BuildPrefabs(BenchGraph g)
+        private static Type In(string ns, string name) => Required(ns + "." + name);
+
+        private static GameObject[] BuildPrefabs(BenchGraph g, string ns, string folder)
         {
             List<GameObject> assets = new();
             foreach (BenchGraph.PrefabType prefab in g.Prefabs)
             {
                 GameObject root = new(prefab.Name);
-                root.AddComponent(Gen(prefab.Name));
+                root.AddComponent(In(ns, prefab.Name));
                 if (prefab.HasChild)
                 {
                     GameObject child = new("Child");
                     child.transform.SetParent(root.transform, false);
-                    child.AddComponent(Gen(prefab.Name + "Child"));
+                    child.AddComponent(In(ns, prefab.Name + "Child"));
                 }
 
-                string path = $"{BenchPaths.PREFABS}/{prefab.Name}.prefab";
+                string path = $"{folder}/{prefab.Name}.prefab";
                 assets.Add(PrefabUtility.SaveAsPrefabAsset(root, path));
                 Object.DestroyImmediate(root);
             }
@@ -91,11 +103,11 @@ namespace FastIoCBench.Editor
             Object.DestroyImmediate(go);
         }
 
-        private static void BuildVContainerRoot()
+        private static void BuildVContainerRoot(string ns, string prefabName)
         {
-            GameObject go = new("VContainerRoot");
-            go.AddComponent(Gen("VContainerRootScope"));
-            PrefabUtility.SaveAsPrefabAsset(go, $"{BenchPaths.RESOURCES}/FastIoCBench/VContainerRoot.prefab");
+            GameObject go = new(prefabName);
+            go.AddComponent(In(ns, "VContainerRootScope"));
+            PrefabUtility.SaveAsPrefabAsset(go, $"{BenchPaths.RESOURCES}/FastIoCBench/{prefabName}.prefab");
             Object.DestroyImmediate(go);
         }
 
@@ -115,6 +127,7 @@ namespace FastIoCBench.Editor
         private static string BuildInjectScene(BenchGraph g, string variant, GameObject[] prefabs)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            string ns = IsOptimized(variant) ? BenchCodeEmitter.OPT_NAMESPACE : BenchCodeEmitter.NAMESPACE;
 
             new GameObject("BenchSceneMarker").AddComponent(Gen("BenchSceneMarker"));
 
@@ -123,7 +136,7 @@ namespace FastIoCBench.Editor
             {
                 GameObject go = new(g.Probes[f].Name);
                 go.transform.SetParent(probes.transform, false);
-                SetInt(go.AddComponent(Gen(g.Probes[f].Name)), "benchIndex", f);
+                SetInt(go.AddComponent(In(ns, g.Probes[f].Name)), "benchIndex", f);
             }
 
             // Scene objects grouped like a real hierarchy, not one flat list.
@@ -140,31 +153,31 @@ namespace FastIoCBench.Editor
                 BenchGraph.MonoType type = g.MonoTypes[g.MonoInstanceTypes[i]];
                 GameObject go = new($"{type.Name}_{i}");
                 go.transform.SetParent(group, false);
-                SetInt(go.AddComponent(Gen(type.Name)), "benchIndex", g.Probes.Count + i);
+                SetInt(go.AddComponent(In(ns, type.Name)), "benchIndex", g.Probes.Count + i);
             }
 
             GameObject spawner = new("Spawner");
             string spawnerType = variant switch
             {
                 "fastioc" => "FastIoCSpawner",
-                "zenject" => "ZenjectSpawner",
-                "vcontainer" => "VContainerSpawner",
+                "zenject" or "zenject-baked" => "ZenjectSpawner",
+                "vcontainer" or "vcontainer-sg" => "VContainerSpawner",
                 _ => "NoneSpawner",
             };
-            SetObjects(spawner.AddComponent(Gen(spawnerType)), "prefabs", prefabs);
+            SetObjects(spawner.AddComponent(In(ns, spawnerType)), "prefabs", prefabs);
 
-            if (variant == "zenject")
+            if (variant == "zenject" || variant == "zenject-baked")
             {
                 new GameObject("SceneContext").AddComponent(Required("Zenject.SceneContext"));
             }
-            else if (variant == "vcontainer")
+            else if (variant == "vcontainer" || variant == "vcontainer-sg")
             {
-                Component scope = new GameObject("LifetimeScope").AddComponent(Gen("VContainerSceneScope"));
+                Component scope = new GameObject("LifetimeScope").AddComponent(In(ns, "VContainerSceneScope"));
                 SerializedObject so = new(scope);
                 SerializedProperty typeName = so.FindProperty("parentReference.TypeName");
                 if (typeName == null)
                     throw new InvalidOperationException("[FastIoCBench] VContainer LifetimeScope has no parentReference.TypeName. Check the VContainer version.");
-                typeName.stringValue = Gen("VContainerRootScope").FullName;
+                typeName.stringValue = In(ns, "VContainerRootScope").FullName;
                 so.ApplyModifiedPropertiesWithoutUndo();
                 SetObjects(scope, "autoInjectGameObjects", new Object[] { probes, injectables, spawner });
             }

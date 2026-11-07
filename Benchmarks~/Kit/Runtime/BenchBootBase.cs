@@ -198,6 +198,15 @@ namespace FastIoCBench
                 Debug.LogError($"[FastIoCBench] {variant}: no spawner in {sceneName}.");
             }
 
+            // Proof that the optimized rivals ran optimized: share of their classes that carry the generated code.
+            if (variant == "zenject-baked" || variant == "vcontainer-sg")
+            {
+                double coverage = BenchOptimizationCheck.CoveragePercent(variant);
+                metrics.Add("optimization-coverage", coverage, "percent");
+                if (coverage < 100)
+                    Debug.LogWarning($"[FastIoCBench] {variant}: only {coverage:0.#}% of the classes carry the optimization; the rest fall back to reflection.");
+            }
+
             string notes = string.Join("; ",
                 $"buildId={info.buildId}",
                 $"launch={launch + 1}/{plan.TotalLaunches}",
@@ -223,7 +232,14 @@ namespace FastIoCBench
             plan.Save();
 
             Debug.Log($"[FastIoCBench] {variant} run {runIndex}: wrote {path}");
-            Finish($"{variant} run {runIndex}/{plan.rounds} done ({plan.launchesCompleted}/{plan.TotalLaunches}).\n{(isBaseline ? "Baseline (no DI)" : graphValid ? "Graph OK" : "WRONG GRAPH")}");
+            Finish($"{variant} run {runIndex}/{plan.rounds} done ({plan.launchesCompleted}/{plan.TotalLaunches}).\n{(isBaseline ? "Baseline (no DI)" : graphValid ? "Graph OK" : "WRONG GRAPH")}{OptimizationText(variant)}");
+        }
+
+        private static string OptimizationText(string variant)
+        {
+            if (variant != "zenject-baked" && variant != "vcontainer-sg")
+                return "";
+            return $"\nOptimization coverage {BenchOptimizationCheck.CoveragePercent(variant):0.#}%";
         }
 
         private static bool IsValid(BenchVerifier.Result r, IBenchFixture fixture)

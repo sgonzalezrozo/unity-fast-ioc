@@ -18,6 +18,14 @@ namespace FastIoCBench.Editor
         public const string RESOURCES = ROOT + "/Resources";
         public const string PROFILE_FILE = ROOT + "/profile.txt";
         public const string TIMINGS_FILE = ROOT + "/editor-timings.json";
+        public const string OPTIMIZED = ROOT + "/Optimized";
+
+        /// <summary>Download VContainer.SourceGenerator.dll from the VContainer release that matches the package and put it here. The "~" keeps Unity from importing it as a plugin.</summary>
+        public const string SOURCE_GENERATOR_SOURCE = "Assets/Benchmark/SourceGenerator~/VContainer.SourceGenerator.dll";
+        public const string SOURCE_GENERATOR_COPY = OPTIMIZED + "/VContainer.SourceGenerator.dll";
+        public const string BAKING_SETTINGS = "Assets/Benchmark/ZenjectReflectionBakingSettings.asset";
+
+        public static bool HasSourceGenerator => System.IO.File.Exists(SOURCE_GENERATOR_SOURCE);
     }
 
     [Serializable]
@@ -71,7 +79,9 @@ namespace FastIoCBench.Editor
             DeleteFastIoCGeneratedCode();
 
             Directory.CreateDirectory(BenchPaths.ROOT);
-            var files = BenchCodeEmitter.Emit(graph, BenchPaths.CODE);
+            bool withSourceGenerator = BenchPaths.HasSourceGenerator;
+            var files = BenchCodeEmitter.Emit(graph, BenchPaths.CODE, withSourceGenerator);
+            files.AddRange(BenchCodeEmitter.EmitOptimized(graph, BenchPaths.OPTIMIZED));
             File.WriteAllText(BenchPaths.PROFILE_FILE, profile.profileName);
             File.WriteAllText(BenchPaths.ROOT + "/link.xml",
                 "<linker>\n" +
@@ -79,6 +89,7 @@ namespace FastIoCBench.Editor
                 "  <assembly fullname=\"Assembly-CSharp\">\n" +
                 "    <namespace fullname=\"" + BenchCodeEmitter.NAMESPACE + "\" preserve=\"all\"/>\n" +
                 "  </assembly>\n" +
+                "  <assembly fullname=\"" + BenchCodeEmitter.OPT_ASSEMBLY + "\" preserve=\"all\"/>\n" +
                 "</linker>\n");
 
             BenchEditorTimings timings = new()
@@ -91,6 +102,8 @@ namespace FastIoCBench.Editor
 
             Status = $"{profile.profileName}: wrote {files.Count} files ({graph.InterfaceCount} bindings, {graph.Impls.Count} classes, {graph.MonoInstanceTypes.Count} scene objects). Compiling...";
             Debug.Log("[FastIoCBench] " + Status);
+
+            SetUpOptimizations(withSourceGenerator);
 
             SessionState.SetString(PENDING_KEY, profile.profileName);
             AssetDatabase.Refresh();
@@ -108,7 +121,8 @@ namespace FastIoCBench.Editor
 
             SessionState.EraseString(PENDING_KEY);
 
-            if (BenchSceneBuilder.FindType(BenchCodeEmitter.NAMESPACE + ".GeneratedBenchFixture") == null)
+            if (BenchSceneBuilder.FindType(BenchCodeEmitter.NAMESPACE + ".GeneratedBenchFixture") == null
+                || BenchSceneBuilder.FindType(BenchCodeEmitter.OPT_NAMESPACE + ".OptimizedFixture") == null)
             {
                 Status = "The generated code didn't compile. Fix the errors in the Console, then Generate again.";
                 Debug.LogError("[FastIoCBench] " + Status);
@@ -127,12 +141,15 @@ namespace FastIoCBench.Editor
             {
                 Stopwatch sw = Stopwatch.StartNew();
                 BenchGraph graph = BenchGraph.Build(profile);
-                BenchSceneBuilder.Build(graph);
+                BenchSceneBuilder.Build(graph, BenchPaths.HasSourceGenerator);
                 double assetsSeconds = sw.Elapsed.TotalSeconds;
 
                 sw.Restart();
                 FastIoC.Editor.Generation.GenerationCoordinator.GenerateAll();
                 double fastIocSeconds = sw.Elapsed.TotalSeconds;
+
+                // Zenject bakes only when Unity compiles the assembly, which it skips when the code didn't change.
+                BenchZenjectBaking.BakeEditorCopy();
 
                 BenchEditorTimings timings = ReadTimings() ?? new BenchEditorTimings { profile = profileName };
                 timings.assetsSeconds = assetsSeconds;
@@ -148,6 +165,65 @@ namespace FastIoCBench.Editor
                 Status = "Building scenes failed: " + ex.Message;
                 Debug.LogException(ex);
             }
+        }
+
+        /// <summary>
+        /// VContainer source generator: copied next to the optimized copy's asmdef, so it only runs on that assembly
+        /// (nothing references it). Zenject reflection baking: one settings asset, limited to the same assembly and namespace.
+        /// </summary>
+        private static void SetUpOptimizations(bool withSourceGenerator)
+        {
+            if (withSourceGenerator)
+            {
+                File.Copy(BenchPaths.SOURCE_GENERATOR_SOURCE, BenchPaths.SOURCE_GENERATOR_COPY, true);
+                AssetDatabase.ImportAsset(BenchPaths.SOURCE_GENERATOR_COPY, ImportAssetOptions.ForceSynchronousImport);
+                if (AssetImporter.GetAtPath(BenchPaths.SOURCE_GENERATOR_COPY) is PluginImporter plugin)
+                {
+                    // An analyzer, not a plugin: no platform at all, and the label Unity looks for.
+                    plugin.SetCompatibleWithAnyPlatform(false);
+                    plugin.SetCompatibleWithEditor(false);
+                    foreach (BuildTarget target in new[] { BuildTarget.Android, BuildTarget.iOS, BuildTarget.StandaloneOSX, BuildTarget.StandaloneWindows64 })
+                        plugin.SetCompatibleWithPlatform(target, false);
+                    AssetDatabase.SetLabels(AssetDatabase.LoadMainAssetAtPath(BenchPaths.SOURCE_GENERATOR_COPY), new[] { "RoslynAnalyzer" });
+                    plugin.SaveAndReimport();
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[FastIoCBench] {BenchPaths.SOURCE_GENERATOR_SOURCE} not found: the vcontainer-sg variant is left out. Download VContainer.SourceGenerator.dll from the VContainer release that matches the package version.");
+            }
+
+            System.Type settingsType = BenchSceneBuilder.FindType("Zenject.ReflectionBaking.ZenjectReflectionBakingSettings");
+            if (settingsType == null)
+            {
+                Debug.LogError("[FastIoCBench] Zenject reflection baking not found. The zenject-baked variant will run without baking.");
+                return;
+            }
+
+            ScriptableObject settings = AssetDatabase.LoadAssetAtPath<ScriptableObject>(BenchPaths.BAKING_SETTINGS);
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance(settingsType);
+                AssetDatabase.CreateAsset(settings, BenchPaths.BAKING_SETTINGS);
+            }
+
+            SerializedObject so = new(settings);
+            so.FindProperty("_isEnabledInBuilds").boolValue = true;
+            so.FindProperty("_isEnabledInEditor").boolValue = true;
+            so.FindProperty("_allGeneratedAssemblies").boolValue = false;
+            // Zenject compares entries with Path.GetFileNameWithoutExtension, which would cut ".GenOpt": keep the ".dll".
+            SetStrings(so.FindProperty("_includeAssemblies"), BenchCodeEmitter.OPT_ASSEMBLY + ".dll");
+            SetStrings(so.FindProperty("_excludeAssemblies"));
+            SetStrings(so.FindProperty("_namespacePatterns"), "^" + BenchCodeEmitter.OPT_NAMESPACE.Replace(".", "\\."));
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void SetStrings(SerializedProperty list, params string[] values)
+        {
+            list.arraySize = values.Length;
+            for (int i = 0; i < values.Length; i++)
+                list.GetArrayElementAtIndex(i).stringValue = values[i];
         }
 
         public static BenchEditorTimings ReadTimings()

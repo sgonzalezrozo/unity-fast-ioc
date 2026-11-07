@@ -16,17 +16,111 @@ namespace FastIoCBench.Editor
         private const string NODE = "global::FastIoCBench.IBenchNode";
         private const string INJECT = "[global::Zenject.Inject, global::VContainer.Inject]";
 
-        public static List<string> Emit(BenchGraph g, string folder)
+        public const string OPT_NAMESPACE = "FastIoCBench.GenOpt";
+        public const string OPT_ASSEMBLY = "FastIoCBench.GenOpt";
+
+        private static System.Action<string, string> Writer(BenchGraph g, string folder, string ns, List<string> files)
         {
             Directory.CreateDirectory(folder);
-            List<string> files = new();
-
-            void Write(string name, string body)
+            return (name, body) =>
             {
                 string path = Path.Combine(folder, name + ".cs");
-                File.WriteAllText(path, Header(g) + "namespace " + NAMESPACE + "\n{\n" + body + "}\n");
+                File.WriteAllText(path, Header(g) + "namespace " + ns + "\n{\n" + body + "}\n");
                 files.Add(path);
+            };
+        }
+
+        /// <summary>
+        /// A second copy of the same graph for the optimized rivals (Zenject reflection baking, VContainer source
+        /// generator), in its own assembly. Both optimizations change the compiled types, so the default variants
+        /// must not share these types. The baking is limited to this namespace and the source generator to this
+        /// assembly, which nothing references: it registers itself at startup.
+        /// </summary>
+        public static List<string> EmitOptimized(BenchGraph g, string folder)
+        {
+            List<string> files = new();
+            var Write = Writer(g, folder, OPT_NAMESPACE, files);
+
+            for (int f = 0; f < g.Profile.featureCount; f++)
+            {
+                List<BenchGraph.Impl> impls = g.Impls.Where(i => i.Feature == f).OrderBy(i => i.Id).ToList();
+                if (impls.Count > 0)
+                    Write($"Services_F{f:000}", Services(impls));
             }
+
+            Write("ZenjectBindings", ZenjectBindings(g));
+            Write("VContainerBindings", VContainerBindings(g));
+            Write("VContainerRootScope", VContainerRootScope(g));
+            Write("VContainerSceneScope", VContainerSceneScope());
+
+            foreach (BenchGraph.MonoType probe in g.Probes)
+                Write(probe.Name, Injectable(probe));
+            foreach (BenchGraph.MonoType type in g.MonoTypes)
+                Write(type.Name, Injectable(type));
+
+            foreach (BenchGraph.PrefabType prefab in g.Prefabs)
+            {
+                Write(prefab.Name, PrefabPart(prefab.Name, prefab.RootFields, isRoot: false));
+                if (prefab.HasChild)
+                    Write(prefab.Name + "Child", PrefabPart(prefab.Name + "Child", prefab.ChildFields, isRoot: false));
+            }
+
+            Write("ZenjectSpawner", ZenjectSpawner());
+            Write("VContainerSpawner", VContainerSpawner());
+            Write("OptimizedFixture", OptimizedFixture(g));
+
+            string asmdef = Path.Combine(folder, OPT_ASSEMBLY + ".asmdef");
+            File.WriteAllText(asmdef,
+                "{\n" +
+                $"    \"name\": \"{OPT_ASSEMBLY}\",\n" +
+                $"    \"rootNamespace\": \"{OPT_NAMESPACE}\",\n" +
+                "    \"references\": [\"FastIoCBench.Runtime\", \"Zenject\", \"VContainer\"],\n" +
+                "    \"includePlatforms\": [],\n" +
+                "    \"excludePlatforms\": [],\n" +
+                "    \"allowUnsafeCode\": false,\n" +
+                "    \"overrideReferences\": false,\n" +
+                "    \"precompiledReferences\": [],\n" +
+                "    \"autoReferenced\": false,\n" +
+                "    \"defineConstraints\": [],\n" +
+                "    \"versionDefines\": [],\n" +
+                "    \"noEngineReferences\": false\n" +
+                "}\n");
+            files.Add(asmdef);
+            return files;
+        }
+
+        private static string OptimizedFixture(BenchGraph g)
+        {
+            StringBuilder sb = new();
+            sb.Append("    /// <summary>Entry point of the optimized copy. Registers itself, so no other assembly references this one.</summary>\n");
+            sb.Append("    public sealed class OptimizedFixture : global::FastIoCBench.IBenchOptimizedFixture\n    {\n");
+            sb.Append("        [global::UnityEngine.RuntimeInitializeOnLoadMethod(global::UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]\n");
+            sb.Append("        private static void Register() => global::FastIoCBench.BenchRegistry.Optimized = new OptimizedFixture();\n\n");
+            sb.Append("        public void InstallZenject(object diContainer)\n        {\n");
+            sb.Append("            var c = (global::Zenject.DiContainer)diContainer;\n");
+            foreach (IGrouping<int, BenchGraph.Impl> feature in ByFeature(g))
+                sb.Append($"            ZenjectBindings.InstallF{feature.Key:000}(c);\n");
+            sb.Append("        }\n\n");
+            sb.Append("        /// <summary>Every class the optimizations should cover, to check on the device that they did.</summary>\n");
+            sb.Append("        public global::System.Type[] InjectableTypes => new global::System.Type[]\n        {\n");
+            foreach (BenchGraph.Impl impl in g.Impls.OrderBy(i => i.Id))
+                sb.Append($"            typeof({impl.Name}),\n");
+            foreach (BenchGraph.MonoType t in g.Probes.Concat(g.MonoTypes))
+                sb.Append($"            typeof({t.Name}),\n");
+            foreach (BenchGraph.PrefabType prefab in g.Prefabs)
+            {
+                sb.Append($"            typeof({prefab.Name}),\n");
+                if (prefab.HasChild)
+                    sb.Append($"            typeof({prefab.Name}Child),\n");
+            }
+            sb.Append("        };\n    }\n");
+            return sb.ToString();
+        }
+
+        public static List<string> Emit(BenchGraph g, string folder, bool withSourceGenerator)
+        {
+            List<string> files = new();
+            var Write = Writer(g, folder, NAMESPACE, files);
 
             for (int f = 0; f < g.Profile.featureCount; f++)
             {
@@ -58,7 +152,7 @@ namespace FastIoCBench.Editor
             Write("ZenjectSpawner", ZenjectSpawner());
             Write("VContainerSpawner", VContainerSpawner());
             Write("NoneSpawner", NoneSpawner());
-            Write("GeneratedBenchFixture", Fixture(g));
+            Write("GeneratedBenchFixture", Fixture(g, withSourceGenerator));
             Write("BenchBoot", "    public sealed class BenchBoot : global::FastIoCBench.BenchBootBase { }\n");
             Write("BenchSceneMarker", "    [global::UnityEngine.DefaultExecutionOrder(-32000)]\n    public sealed class BenchSceneMarker : global::FastIoCBench.BenchSceneMarkerBase { }\n");
 
@@ -146,8 +240,12 @@ namespace FastIoCBench.Editor
         private static string ZenjectRootInstaller(BenchGraph g)
         {
             StringBuilder sb = new();
+            sb.Append("    /// <summary>The ProjectContext prefab is shared by both Zenject variants; this picks the copy to install.</summary>\n");
             sb.Append("    public sealed class ZenjectRootInstaller : global::Zenject.MonoInstaller\n    {\n");
             sb.Append("        public override void InstallBindings()\n        {\n");
+            sb.Append("            if (global::FastIoCBench.BenchRegistry.ZenjectOptimized)\n            {\n");
+            sb.Append("                global::FastIoCBench.BenchRegistry.Optimized.InstallZenject(Container);\n");
+            sb.Append("                return;\n            }\n\n");
             foreach (IGrouping<int, BenchGraph.Impl> feature in ByFeature(g))
                 sb.Append($"            ZenjectBindings.InstallF{feature.Key:000}(Container);\n");
             sb.Append("        }\n    }\n");
@@ -262,7 +360,7 @@ namespace FastIoCBench.Editor
             "        public global::UnityEngine.GameObject Spawn(int prefabIndex, global::UnityEngine.Transform parent)\n" +
             "            => global::VContainer.Unity.ObjectResolverUnityExtensions.Instantiate(resolver, prefabs[prefabIndex], parent);\n    }\n";
 
-        private static string Fixture(BenchGraph g)
+        private static string Fixture(BenchGraph g, bool withSourceGenerator)
         {
             BenchProfile p = g.Profile;
             StringBuilder sb = new();
@@ -279,7 +377,8 @@ namespace FastIoCBench.Editor
             sb.Append($"        public int MonoInjectableCount => {g.MonoInstanceTypes.Count};\n");
             sb.Append($"        public int FeatureCount => {p.featureCount};\n");
             sb.Append($"        public int MaxDepth => {p.maxDepth};\n");
-            sb.Append("        public string[] Variants => new[] { \"none\", \"fastioc\", \"zenject\", \"vcontainer\" };\n");
+            string variants = string.Join(", ", BenchSceneBuilder.VariantsFor(withSourceGenerator).Select(v => "\"" + v + "\""));
+            sb.Append($"        public string[] Variants => new[] {{ {variants} }};\n");
             sb.Append($"        public uint ExpectedGraphHash => {g.ExpectedHash}u;\n");
             sb.Append($"        public int ExpectedDistinctInstances => {g.ExpectedDistinctInstances};\n");
             sb.Append($"        public int ExpectedInjectedFields => {g.ExpectedInjectedFields};\n\n");
@@ -296,6 +395,18 @@ namespace FastIoCBench.Editor
             sb.Append("                    // Loads Resources/ProjectContext and installs ZenjectRootInstaller.\n");
             sb.Append("                    _ = global::Zenject.ProjectContext.Instance;\n");
             sb.Append("                    break;\n");
+            sb.Append("                case \"zenject-baked\":\n");
+            sb.Append("                    // Same ProjectContext prefab; its installer installs the baked copy.\n");
+            sb.Append("                    global::FastIoCBench.BenchRegistry.ZenjectOptimized = true;\n");
+            sb.Append("                    _ = global::Zenject.ProjectContext.Instance;\n");
+            sb.Append("                    break;\n");
+            sb.Append("                case \"vcontainer-sg\":\n");
+            sb.Append("                {\n");
+            sb.Append("                    var prefab = global::UnityEngine.Resources.Load<global::UnityEngine.GameObject>(\"FastIoCBench/VContainerRootSG\");\n");
+            sb.Append("                    var root = global::UnityEngine.Object.Instantiate(prefab);\n");
+            sb.Append("                    global::UnityEngine.Object.DontDestroyOnLoad(root);\n");
+            sb.Append("                    break;\n");
+            sb.Append("                }\n");
             sb.Append("                case \"vcontainer\":\n");
             sb.Append("                {\n");
             sb.Append("                    var prefab = global::UnityEngine.Resources.Load<global::UnityEngine.GameObject>(\"FastIoCBench/VContainerRoot\");\n");

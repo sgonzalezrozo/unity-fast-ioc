@@ -16,7 +16,7 @@ The Unity project itself is disposable and lives outside the repo (`../FastIoCBe
 
 ## What one build measures
 
-One build contains the three containers plus a `none` baseline (same scene and prefabs, no container, nothing injected) that measures what Unity costs on its own. Each launch runs **one** variant from a cold process, following a plan stored on the device (`persistentDataPath/FastIoCBenchmarks/plan.json`). The order rotates every round. Fast IoC is kept dormant with `FastIoCUnityBootstrapper.AutoStart = false`; Zenject and VContainer only start when their scene or root scope loads.
+One build contains the three containers, the optimized modes of Zenject (`zenject-baked`, reflection baking) and VContainer (`vcontainer-sg`, source generator), plus a `none` baseline (same scene and prefabs, no container, nothing injected) that measures what Unity costs on its own. Each launch runs **one** variant from a cold process, following a plan stored on the device (`persistentDataPath/FastIoCBenchmarks/plan.json`). The order rotates every round. Fast IoC is kept dormant with `FastIoCUnityBootstrapper.AutoStart = false`; Zenject and VContainer only start when their scene or root scope loads.
 
 Per launch, in this order:
 
@@ -45,13 +45,13 @@ Requirements: Unity 6000.3, Android SDK/`adb`, Xcode 15+ for iOS.
 4. **Tools > FastIoC Benchmark**: Apply player settings, pick a profile, Generate. Wait until the window says the profile is ready (two compiles).
 5. Enter Play Mode once on the Boot scene: the Console must say `Graph OK` for the variant it ran.
 6. Build Android or iOS from the same window. Builds go to `Builds/`.
-7. Install and run the plan (4 variants x runs per variant launches, 20 by default):
+7. Install and run the plan (6 variants x runs per variant launches, 30 by default):
 
    ```bash
    adb -s <SERIAL> install -r Builds/Android/FastIoCBench-<profile>.apk
-   ../unity-fast-ioc/Benchmarks~/tools/run_android.sh <SERIAL> <device> 20
+   ../unity-fast-ioc/Benchmarks~/tools/run_android.sh <SERIAL> <device> 30
    # iOS: build and install the Xcode project, then
-   ../unity-fast-ioc/Benchmarks~/tools/run_ios.sh <DEVICE_ID> <device> 20
+   ../unity-fast-ioc/Benchmarks~/tools/run_ios.sh <DEVICE_ID> <device> 30
    ```
 
 8. Check, copy and summarize:
@@ -68,7 +68,8 @@ Each result records device, OS, Unity version, Fast IoC commit (and whether the 
 
 - Fast IoC bakes an injection manifest into every scene in the build, including the Zenject and VContainer scenes, where it is never read. Its load cost there is a few serialized references.
 - VContainer registers its PlayerLoop systems at startup in every launch, whichever variant runs.
-- Zenject reflection baking and the VContainer source generator are not included yet.
+- The optimized rivals run on a copy of the graph in its own assembly (`FastIoCBench.GenOpt`), so baking and the source generator don't touch the default variants. Each run records `optimization-coverage`: the share of classes that carry the generated code. `check_variants.py` rejects anything below 100%.
+- `vcontainer-sg` needs `VContainer.SourceGenerator.dll` from the VContainer release matching the package, at `Assets/Benchmark/SourceGenerator~/` in the benchmark project.
 - `startup-200` is an optimization target and should not be mixed into scaling charts.
 - `game-3000` is the size of a typical mobile multiplayer game (about 3x the README profile) and is the headline profile for the brief.
 

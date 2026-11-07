@@ -35,7 +35,11 @@ namespace FastIoCBench.Editor
             BenchProfile profile = profiles[selected];
             EditorGUILayout.LabelField(profile.description ?? "", EditorStyles.wordWrappedMiniLabel);
             BenchPipeline.Rounds = EditorGUILayout.IntField("Runs per variant", BenchPipeline.Rounds);
-            EditorGUILayout.LabelField("Launches per device", $"{BenchPipeline.Rounds * BenchSceneBuilder.Variants.Length} ({string.Join(", ", BenchSceneBuilder.Variants)})");
+            string[] variants = BenchSceneBuilder.VariantsFor(BenchPaths.HasSourceGenerator);
+            EditorGUILayout.LabelField("Launches per device", $"{BenchPipeline.Rounds * variants.Length}");
+            EditorGUILayout.LabelField("Variants", string.Join(", ", variants), EditorStyles.wordWrappedLabel);
+            if (!BenchPaths.HasSourceGenerator)
+                EditorGUILayout.HelpBox($"vcontainer-sg is off: put VContainer.SourceGenerator.dll (from the VContainer release matching the package) at {BenchPaths.SOURCE_GENERATOR_SOURCE}, then Generate.", MessageType.Warning);
             EditorGUILayout.LabelField("Stripping (Android / iOS)", $"{BenchBuild.StrippingLevel(BuildTarget.Android)} / {BenchBuild.StrippingLevel(BuildTarget.iOS)}");
 
             EditorGUILayout.Space();
