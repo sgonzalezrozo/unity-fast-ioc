@@ -1,0 +1,11 @@
+{
+  "name": "com.sgonzalezrozo.fast-ioc.benchmark-kit",
+  "version": "0.1.0",
+  "displayName": "Fast IoC Benchmark Kit",
+  "description": "Fixture generator, runner and result writer for the Fast IoC benchmark project. Not part of the Fast IoC package.",
+  "unity": "6000.0",
+  "license": "MIT",
+  "dependencies": {
+    "com.sgonzalezrozo.fast-ioc": "0.4.0"
+  }
+}

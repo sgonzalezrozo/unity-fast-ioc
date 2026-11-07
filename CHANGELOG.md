@@ -6,6 +6,7 @@ All notable changes to this package are documented in this file.
 
 ### Added
 
+- `FastIoCUnityBootstrapper.AutoStart` and `FastIoCUnityBootstrapper.Start()`. Set `AutoStart` to false from a `SubsystemRegistration` method to start Fast IoC later, for example when another container runs in the same build.
 - Added a `Benchmarks~/` scaffold with profiles, result folders and a summary script that stops on invalid results. It can't run benchmarks yet.
 - Added benchmark result schema documentation under `Documentation~/benchmarks/`.
 
