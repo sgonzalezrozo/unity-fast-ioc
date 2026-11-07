@@ -25,7 +25,12 @@
     "il2cpp",
     "no-reflection",
     "zenject-alternative",
-    "vcontainer-alternative"
+    "vcontainer-alternative",
+    "unity6",
+    "unity-package",
+    "upm",
+    "csharp",
+    "gamedev"
   ],
   "samples": [
     {

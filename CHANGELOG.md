@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Documentation
+
+- More package keywords.
+
 ### Added
 
 - `FastIoCUnityBootstrapper.AutoStart` and `FastIoCUnityBootstrapper.Start()`. Set `AutoStart` to false from a `SubsystemRegistration` method to start Fast IoC later, for example when another container runs in the same build.
