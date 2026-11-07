@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "com.sgonzalezrozo.fast-ioc": "file:../../..",
+    "com.sgonzalezrozo.core": "https://github.com/sgonzalezrozo/unity-tools-core.git",
+    "com.unity.test-framework": "1.6.0"
+  },
+  "testables": [
+    "com.sgonzalezrozo.fast-ioc"
+  ]
+}
