@@ -113,7 +113,7 @@ namespace FastIoCBench.Editor
             Stopwatch sw = Stopwatch.StartNew();
             BuildReport report = BuildPipeline.BuildPlayer(options);
             BuildSummary summary = report.summary;
-            string message = $"[FastIoCBench] {target} build {summary.result} in {sw.Elapsed.TotalSeconds:0} s: {location}{PlayerSize(location)}";
+            string message = $"[FastIoCBench] {target} build {summary.result} in {sw.Elapsed.TotalSeconds:0} s: {location}{(summary.result == BuildResult.Succeeded ? PlayerSize(location) : " (the file there, if any, is from an earlier build)")}";
             if (summary.result == BuildResult.Succeeded)
                 Debug.Log(message);
             else
