@@ -61,9 +61,9 @@ I built and refined it on my own time in personal projects. It isn't used in pro
 | Requirement | Supported |
 |---|---|
 | Unity | Tested on Unity 6 (`6000.3.16f1`). The package declares `2022.3` as its minimum, but older versions aren't tested yet. |
-| Scripting backend | IL2CPP (Release) verified in Android and iOS player builds with Unity `6000.3.6f1`. Mono player builds aren't tested yet. |
-| Platforms | Android verified on a Pixel 5 and a Samsung Galaxy A02s, iOS on an iPhone 13 mini (iOS 26) and an iPhone Air (iOS 27). Other platforms aren't verified yet. |
-| Managed code stripping | `Minimal` verified on Android and iOS, with no `link.xml`. Generated code is referenced directly and marked `[Preserve]`, but test higher stripping levels in your own player build. |
+| Scripting backend | IL2CPP (Release) verified in Android, iOS and WebGL player builds with Unity `6000.3.6f1`. Mono player builds aren't tested yet. |
+| Platforms | Android verified on a Pixel 5 and a Samsung Galaxy A02s, iOS on an iPhone 13 mini (iOS 26) and an iPhone Air (iOS 27), and WebGL in a browser. Desktop and consoles aren't verified yet. To check a platform yourself, import the **Platform Check** sample. |
+| Managed code stripping | `Minimal` verified on Android and iOS, and `High` on WebGL, with no `link.xml`. Generated code is referenced directly and marked `[Preserve]`. |
 | Enter Play Mode with domain reload disabled | Not verified yet. The generated module and scene injection reset their static state on each Play Mode start, but test it before relying on it. |
 | Dependencies | [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core), Addressables |
 
@@ -497,6 +497,8 @@ if grep -q '"status": *1' Assets/FastIoC/Generated/GenerationStatus.json; then e
 - The previous generated files stay in place.
 - Entering Play Mode logs `CODE GENERATION FAILED` and pauses the Editor.
 - Player builds aren't blocked, so a build can ship with the last good generated code.
+
+A player build does stop if Fast IoC generated new code that the Editor hasn't loaded yet, for example when you build right after **Regenerate Code**. Wait for Unity to finish compiling, then build again. Scenes are baked from the generated code loaded in the Editor, so building earlier would bake them from the old code.
 
 ### Example: a dependency cycle
 

@@ -32,6 +32,11 @@
       "displayName": "Quick Start",
       "description": "The README quick start: a service, an installer and an injected MonoBehaviour.",
       "path": "Samples~/QuickStart"
+    },
+    {
+      "displayName": "Platform Check",
+      "description": "Checks injection, Lazy/Func, prefabs and initialization in a player build on any platform, with results on screen.",
+      "path": "Samples~/PlatformCheck"
     }
   ],
   "dependencies": {

@@ -15,10 +15,16 @@ namespace FastIoC.API
     {
         private static readonly HashSet<int> s_injectedScenes = new();
 
+        // Objects injected while their scene was still loading (the first scene, injected from ProjectContext
+        // before Awake). Their scene isn't marked as injected until it finishes loading, so objects that weren't
+        // reachable yet still get injected then; these are skipped so nothing is injected twice.
+        private static readonly HashSet<int> s_injectedEarly = new();
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
             s_injectedScenes.Clear();
+            s_injectedEarly.Clear();
         }
 
         /// <summary>Injects every loaded scene that hasn't been injected yet.</summary>
@@ -55,19 +61,21 @@ namespace FastIoC.API
                     break;
             }
 
+            HashSet<int> skip = s_injectedEarly.Count > 0 ? s_injectedEarly : null;
             if (manifest != null)
-                manifest.InjectAll(context);
+                manifest.InjectAll(context, skip, null);
             else
-                ScanRoots(context);
+                ScanRoots(context, skip);
 
             s_roots.Clear();
             s_injectedScenes.Add(scene.handle);
+            s_injectedEarly.Clear();
         }
 
         private static readonly List<GameObject> s_roots = new();
         private static readonly List<MonoBehaviour> s_scanBuffer = new();
 
-        private static void ScanRoots(ContextRuntime context)
+        private static void ScanRoots(ContextRuntime context, HashSet<int> skip)
         {
             IGeneratedModule module = GeneratedModuleRegistry.Module;
             for (int r = 0; r < s_roots.Count; r++)
@@ -78,6 +86,9 @@ namespace FastIoC.API
                 {
                     MonoBehaviour mb = s_scanBuffer[i];
                     if (mb == null || mb is ProjectContext)
+                        continue;
+
+                    if (skip != null && skip.Contains(mb.GetInstanceID()))
                         continue;
 
                     int injectorId = module.GetInjectorId(mb.GetType());
@@ -107,6 +118,7 @@ namespace FastIoC.API
             }
 
             HashSet<int> injectedNow = new();
+            HashSet<int> loadingScenes = new();
 
             SceneInjectionManifest[] manifests = Object.FindObjectsByType<SceneInjectionManifest>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (SceneInjectionManifest manifest in manifests)
@@ -115,12 +127,24 @@ namespace FastIoC.API
                 if (!ShouldInject(scene, filter, injectedNow))
                     continue;
 
-                injectedNow.Add(scene.handle);
-                manifest.InjectAll(context);
+                if (scene.isLoaded)
+                {
+                    injectedNow.Add(scene.handle);
+                    manifest.InjectAll(context);
+                }
+                else
+                {
+                    // Still loading (ProjectContext starts before the first scene finishes loading):
+                    // inject what's there now, and finish when the scene's load event arrives.
+                    manifest.InjectAll(context, s_injectedEarly, s_injectedEarly);
+                    loadingScenes.Add(scene.handle);
+                }
             }
 
             // A manifest covers its whole scene. Only scan when a scene we need has no manifest.
-            bool needsScan = filter.HasValue ? !injectedNow.Contains(filter.Value.handle) && !s_injectedScenes.Contains(filter.Value.handle) : injectedNow.Count == 0;
+            bool needsScan = filter.HasValue
+                ? !injectedNow.Contains(filter.Value.handle) && !loadingScenes.Contains(filter.Value.handle) && !s_injectedScenes.Contains(filter.Value.handle)
+                : injectedNow.Count == 0 && loadingScenes.Count == 0;
             if (needsScan)
                 ScanAndInject(context, filter, injectedNow);
 
@@ -154,9 +178,18 @@ namespace FastIoC.API
                 if (!ShouldInject(scene, filter, injectedNow))
                     continue;
 
-                injectedNow.Add(scene.handle);
-
                 int injectorId = module.GetInjectorId(mb.GetType());
+
+                if (!scene.isLoaded)
+                {
+                    // The scene is still loading: inject this object now, and leave the scene unmarked so
+                    // its load event injects whatever wasn't reachable yet.
+                    if (injectorId >= 0 && s_injectedEarly.Add(mb.GetInstanceID()))
+                        InjectionRunner.InjectAt(injectorId, mb, context);
+                    continue;
+                }
+
+                injectedNow.Add(scene.handle);
                 if (injectorId >= 0)
                     InjectionRunner.InjectAt(injectorId, mb, context);
             }

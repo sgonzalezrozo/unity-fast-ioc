@@ -271,7 +271,12 @@ namespace FastIoC.Editor.Generation
 
         private static void WriteFile(string path, string content)
         {
+            // Unchanged files are left alone, so regenerating the same code doesn't trigger a recompile.
+            if (File.Exists(path) && File.ReadAllText(path) == content)
+                return;
+
             File.WriteAllText(path, content);
+            GeneratedCodeBuildGuard.MarkGeneratedCodeChanged();
             Debug.Log($"[FastIoC] Generated: {path}");
         }
     }

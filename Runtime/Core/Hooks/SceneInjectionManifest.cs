@@ -27,7 +27,13 @@ namespace FastIoC.Core
             injectorIds = bakedInjectorIds;
         }
 
-        public void InjectAll(ContextRuntime context)
+        public void InjectAll(ContextRuntime context) => InjectAll(context, null, null);
+
+        /// <summary>
+        /// Injects every target except those in <paramref name="skip"/> (instance IDs).
+        /// Each injected target's instance ID is added to <paramref name="injected"/> when it isn't null.
+        /// </summary>
+        public void InjectAll(ContextRuntime context, System.Collections.Generic.HashSet<int> skip, System.Collections.Generic.HashSet<int> injected)
         {
             if (targets == null || injectorIds == null)
                 return;
@@ -39,7 +45,12 @@ namespace FastIoC.Core
                 if (target == null)
                     continue;
 
+                int id = target.GetInstanceID();
+                if (skip != null && skip.Contains(id))
+                    continue;
+
                 InjectionRunner.InjectAt(injectorIds[i], target, context);
+                injected?.Add(id);
             }
         }
     }
