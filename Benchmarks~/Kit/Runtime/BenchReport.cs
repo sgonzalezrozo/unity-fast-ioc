@@ -105,11 +105,9 @@ namespace FastIoCBench
             return path;
         }
 
-        private static string DeviceName()
-        {
-            string name = SystemInfo.deviceName;
-            return string.IsNullOrWhiteSpace(name) || name == SystemInfo.unsupportedIdentifier ? NonEmpty(SystemInfo.deviceModel) : name;
-        }
+        // SystemInfo.deviceName is the name the owner gave the phone (it can include a person's or a company's name),
+        // and results are published, so only the model is recorded.
+        private static string DeviceName() => NonEmpty(SystemInfo.deviceModel);
 
         private static string NonEmpty(string value) => string.IsNullOrWhiteSpace(value) ? "unknown" : value;
 
