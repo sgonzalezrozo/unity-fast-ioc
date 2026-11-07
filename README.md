@@ -736,17 +736,45 @@ Not yet. It's a pre-release package (`0.x`) by a single author, not yet used in 
 - Bindings are by type only. There are no named or ID bindings, and no value bindings: `Bind<T>()` takes a class, so put configuration such as an `int` or a URL in a typed config class and bind that.
 - `Func<T>` takes no arguments: there are no factories with runtime parameters yet. There are no decorators or open generic bindings either. Bind each closed type, such as `IRepository<Player>`, on its own.
 
+## Planned features
+
+These are missing today and planned for upcoming versions, roughly in this order:
+
+1. **Inject every implementation of an interface.** A constructor or field asking for `IEnumerable<IFeature>` or `IFeature[]` gets every bound `IFeature`, for example to start all features in one place.
+2. **Factories with runtime parameters.** `Func<T>` takes no arguments today, so there's no way to pass a value, such as an enemy's level, when creating `T`.
+3. **Optional dependencies.** A way to mark a constructor parameter or field as optional, so a missing binding leaves it `null` without an error or warning.
+4. **Test helpers.** A small API to build a container in a unit test and swap a binding for a fake.
+5. **Named bindings.** More than one binding of the same type, told apart by an ID.
+6. **Decorators and open generic bindings.** Wrapping a service in another one, and binding `IRepository<>` once for every `T`.
+
+Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-fast-ioc/issues).
+
 ## Project status
 
-This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. There's no automated test suite yet.
+This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite covers the container, the generators and graph validation. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 
-There's no public roadmap yet. Known gaps are listed under [Limitations](#limitations), and planned work is tracked in [issues](https://github.com/sgonzalezrozo/unity-fast-ioc/issues).
+Known gaps are listed under [Limitations](#limitations), and the next features under [Planned features](#planned-features). Planned work is tracked in [issues](https://github.com/sgonzalezrozo/unity-fast-ioc/issues).
 
 ## Contributing
 
-Bug reports and pull requests are welcome. Please open an issue before starting a large change. See the [contributing guide](.github/CONTRIBUTING.md) and [security policy](.github/SECURITY.md).
+Bug reports and pull requests are welcome. Please open an issue before starting a large change.
+
+### Run the tests
+
+The tests live in `Tests/` and run in Edit Mode. Unity compiles a package's tests only in a project that lists it as testable:
+
+1. In a project that uses Fast IoC, add the [Test Framework](https://docs.unity3d.com/Packages/com.unity.test-framework@latest) package.
+2. Add this to `Packages/manifest.json`, next to `dependencies`:
+
+   ```json
+   "testables": ["com.sgonzalezrozo.fast-ioc"]
+   ```
+
+3. Open **Window > General > Test Runner**, select **EditMode** and **Run All**.
+
+The test types live in their own `FastIoC.Fixtures` assembly, because generation skips assemblies whose name contains `Test`. See the [contributing guide](.github/CONTRIBUTING.md) and [security policy](.github/SECURITY.md).
 
 ## Related packages
 

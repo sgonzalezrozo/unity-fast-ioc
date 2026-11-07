@@ -1,0 +1,21 @@
+{
+    "name": "FastIoC.Fixtures",
+    "rootNamespace": "",
+    "references": [
+        "FastIoC",
+        "FastIoC.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
