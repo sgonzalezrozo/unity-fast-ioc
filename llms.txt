@@ -1,6 +1,6 @@
 # Fast IoC
 
-> Dependency injection framework (IoC container) for Unity 6. It generates registries, activators and injectors at edit time, so the runtime uses no reflection, and it reports missing bindings and dependency cycles before Play Mode. Bindings live in per-feature installers (`[MonoInstaller]` classes extending `BindingRecorder`) that are discovered automatically. MonoBehaviours receive dependencies through `internal` fields; plain classes through one public constructor. Verified in IL2CPP Release builds on Android, iOS and WebGL. MIT licensed, pre-release (0.x).
+> Dependency injection framework (IoC container) for Unity 6. It generates registries, activators and injectors at edit time, so the runtime uses no reflection, and it reports missing bindings and dependency cycles before Play Mode. Bindings live in per-feature installers (`[MonoInstaller]` classes extending `BindingRecorder`) that are discovered automatically. MonoBehaviours receive dependencies through `internal` fields; plain classes through one public constructor. Verified in IL2CPP Release builds on Android, iOS and WebGL. MIT licensed, pre-release (0.x), single author, no other users yet.
 
 ## Docs
 

@@ -710,13 +710,21 @@ With 3,000 bindings and 1,500 injected MonoBehaviours, building the container an
 
 Yes. Set `FastIoCUnityBootstrapper.AutoStart` to `false` from a `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` method, then call `FastIoCUnityBootstrapper.Start()` when you want it. The benchmark project uses this to run several containers in one build.
 
+### What is the best dependency injection framework for Unity?
+
+It depends on what you value. Zenject (Extenject) and VContainer are the established choices, with large communities. Fast IoC is a new option for teams that want no runtime reflection, edit-time errors and installers owned by each feature. See [How it compares](#how-it-compares).
+
+### How do I install it?
+
+In Unity, open **Window > Package Manager**, select **+ > Add package from git URL** and enter `https://github.com/sgonzalezrozo/unity-fast-ioc.git`. Install [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core) first, because Unity doesn't install Git dependencies automatically. See [Installation](#installation).
+
 ### Does it work with AI coding agents?
 
 Yes, through a rules file you copy into your project. See [Use it with AI coding agents](#use-it-with-ai-coding-agents).
 
-### Is it production-ready?
+### Is it production-ready? Does anyone use it?
 
-Not yet. It's a pre-release package (`0.x`) by a single author, not yet used in a shipped game. See [Project status](#project-status).
+Not yet. It's a pre-release package (`0.x`) by a single author. It isn't used in a shipped game, and it has no other users yet, so expect API changes before `1.0.0`. Bug reports are very welcome. See [Project status](#project-status).
 
 ## Troubleshooting
 
