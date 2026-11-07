@@ -6,7 +6,7 @@
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
 [![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
 
-Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones. See [Performance](#performance).
+Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones and on WebGL. See [Performance](#performance).
 
 Fast IoC generates registries, activators and injectors at edit time. The runtime uses no reflection: the generated code registers itself at startup, MonoBehaviour fields are assigned by generated code, and scene objects are listed in a manifest baked into each scene. See [Runtime reflection](#runtime-reflection).
 
@@ -435,6 +435,7 @@ public class RemoteConfigService : IAsyncInitializable
 ```
 
 - Async initialization doesn't block the first scene, so check that a service is ready before using it.
+- Async initialization runs on the main thread. On WebGL, which has no background threads, don't use `Task.Run` or wait on a task in `InitializeAsync`.
 
 ## Generated code
 
@@ -655,7 +656,11 @@ All three are dependency injection containers for Unity. Fast IoC generates its 
 
 ### Does it work with IL2CPP and mobile?
 
-Yes. It's verified in IL2CPP Release builds with `Minimal` code stripping on Android (a mid-range and a low-end phone) and iOS (an iPhone 13 mini and an iPhone Air). WebGL isn't verified yet. See [Performance](#performance).
+Yes. It's verified in IL2CPP Release builds with `Minimal` code stripping on Android (a mid-range and a low-end phone) and iOS (an iPhone 13 mini and an iPhone Air). See [Performance](#performance).
+
+### Does it work with WebGL?
+
+Yes. It's verified in a WebGL release build with `High` code stripping, using the **Platform Check** sample: constructor and field injection, singletons, `Lazy<T>` and `Func<T>`, prefab instantiation, and sync and async initialization all pass. WebGL runs everything on one thread, and so does Fast IoC, but keep your own `IAsyncInitializable` code off background threads: don't use `Task.Run` or block on a task. Desktop and consoles aren't verified yet. The same sample checks them in one build.
 
 ### Does it work with Unity 6?
 
