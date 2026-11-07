@@ -751,7 +751,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite covers the container, the generators and graph validation. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 23 tests covers the container, graph validation, the code generators and prefab instantiation. All 23 pass in Unity `6000.3.6f1`. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 
@@ -773,6 +773,13 @@ The tests live in `Tests/` and run in Edit Mode. Unity compiles a package's test
    ```
 
 3. Open **Window > General > Test Runner**, select **EditMode** and **Run All**.
+
+| Area | Tests | What they check |
+|---|---|---|
+| Container | 7 | Singleton, transient and cached lifetimes, scene bindings, and resolving an unbound type |
+| Graph validation | 6 | Constructor cycles, cycles through `Lazy<T>`, missing bindings and their messages, parameters with default values |
+| Code generation | 10 | Generated activators and MonoBehaviour injectors for plain, `Lazy<T>` and `Func<T>` dependencies, private fields, installer analysis |
+| Prefab instantiation | 5 | Active state of copies, the prefab restored after copying, the parent, `InstantiateAndInject` |
 
 The test types live in their own `FastIoC.Fixtures` assembly, because generation skips assemblies whose name contains `Test`. See the [contributing guide](.github/CONTRIBUTING.md) and [security policy](.github/SECURITY.md).
 

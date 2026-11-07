@@ -1,9 +1,8 @@
 name: Tests
 
+# Manual for now: Tools Core is private, so Unity can't clone it without the GIT_PRIVATE_TOKEN secret.
+# Add push and pull_request triggers back once that works.
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
 
 concurrency:
