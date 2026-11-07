@@ -26,6 +26,7 @@ All notable changes to this package are documented in this file.
 
 ### Fixed
 
+- `IPrefabInstantiator` (used by tools such as the recyclable scroller and the screen system) now returns the copy active when the prefab is active, like `Object.Instantiate`. It used to return it inactive, so callers that didn't activate it themselves showed nothing. Awake and OnEnable still run after injection, the prefab is restored before injection runs, `Instantiate<T>` injects the whole copy even when `T` isn't a MonoBehaviour, and spawning no longer allocates a component array. `InstantiateAndInject` now leaves the copy inactive, as documented, instead of running Awake before injection.
 - Deleting a script no longer leaves generated code that doesn't compile. Generation used to run before the recompile and read the deleted types still in memory; the generated code is now removed and regenerated after the compile.
 - Player builds no longer fail with CS0234 in `ConstrainToRootOnly.cs`: its `UnityEditor` usings are now Editor-only.
 - A project with no installers yet no longer shows warnings.
