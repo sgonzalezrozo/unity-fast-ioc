@@ -227,9 +227,13 @@ namespace FastIoC.Editor.Generation
 
             if (result.UnboundFields.Count > 0)
             {
+                const int shown = 20;
+                string list = string.Join("\n  • ", result.UnboundFields.Take(shown));
+                if (result.UnboundFields.Count > shown)
+                    list += $"\n  … and {result.UnboundFields.Count - shown} more, listed in GenerationStatus.json";
+
                 Debug.LogWarning($"[FastIoC] {result.UnboundFields.Count} `internal` field(s) have a service type that isn't bound in any installer, " +
-                                 "so they stay null. Bind the type, or ignore this if you assign the field yourself:\n  • " +
-                                 string.Join("\n  • ", result.UnboundFields));
+                                 "so they stay null. Bind the type, or ignore this if you assign the field yourself:\n  • " + list);
             }
 
             if (result.IgnoredPrivateFields.Count > 0)

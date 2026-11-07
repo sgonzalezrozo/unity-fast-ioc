@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FastIoC.Editor.Generation;
 
 namespace FastIoC.Editor.Graph
 {
@@ -35,7 +36,8 @@ namespace FastIoC.Editor.Graph
                     ParameterInfo[] parameters = ctor.GetParameters();
                     foreach (ParameterInfo param in parameters)
                     {
-                        Type paramType = param.ParameterType;
+                        // Lazy<T> and Func<T> still need T to be generated.
+                        DeferredDependency.Unwrap(param.ParameterType, out Type paramType);
 
                         if (!reachable.Contains(paramType) && !paramType.IsValueType && !paramType.IsPrimitive)
                         {

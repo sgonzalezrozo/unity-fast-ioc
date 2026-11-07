@@ -26,7 +26,7 @@ public class ShopInstaller : BindingRecorder
 
 - Lifetimes: `AsSingle()` (one shared instance), `AsCached()` (one instance, cleared when a scene unloads), `AsTransient()` (new instance each time, the default).
 - A ScriptableObject or prefab used as a service: `Bind<ShopConfig>().FromInstance("ShopConfig").AsSingle();` The asset must be in a `Resources` folder or marked as Addressable.
-- Bindings are by type only. There are no named bindings, factory delegates, decorators or open generic bindings. Put settings such as numbers or URLs in a config class and bind that.
+- Bindings are by type only. There are no named bindings, factories with runtime parameters, decorators or open generic bindings. Put settings such as numbers or URLs in a config class and bind that.
 
 ## Inject dependencies
 
@@ -62,6 +62,10 @@ Use injected fields from `Start()` or later.
 - Pass data: implement `IInjectableForChildren<TData>` and call `Instantiate<T>(prefab, parent, data: value)`. `Data` is set before `Awake()`.
 - An object created with `Object.Instantiate` or `AddComponent`: call `SceneInjector.InjectIfNeeded(component)` (namespace `FastIoC.API`).
 - Don't resolve services from `ContextRuntime` in game code. Fast IoC treats it as a service locator and throws in the Editor and development builds.
+
+## Create dependencies later
+
+Use `Lazy<T>` (resolved the first time `.Value` is read) or `Func<T>` (resolved on every call) as a constructor parameter or `internal` field when `T` shouldn't be created with the class. `T` must still be bound. Don't read `.Value` inside a constructor. `Func<T>` takes no arguments.
 
 ## Lifecycle
 

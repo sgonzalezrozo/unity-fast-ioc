@@ -39,6 +39,8 @@ namespace FastIoC.Editor.Generation
         {
             public FieldInfo Field;
             public string TypeIdMember;
+            public DeferredDependency.Kind Deferred;
+            public Type DeferredType;
             public bool Direct;
             public int FallbackIndex = -1;
         }
@@ -159,7 +161,8 @@ namespace FastIoC.Editor.Generation
                     if (!isPrivate && !IsInjectionCandidateAccess(field))
                         continue;
 
-                    Type fieldType = field.FieldType;
+                    // Lazy<T> / Func<T> fields get a wrapper that resolves T when used.
+                    DeferredDependency.Kind deferred = DeferredDependency.Unwrap(field.FieldType, out Type fieldType);
                     Type resolveType = fieldType;
 
                     Type interfaceKey = FindKey(fieldType, interfaceImplementations);
@@ -184,7 +187,9 @@ namespace FastIoC.Editor.Generation
                     {
                         Field = field,
                         TypeIdMember = CodeGenTypeUtility.GetTypeIdMemberName(typeIdKey != null ? resolveType : fieldType),
-                        Direct = CodeGenTypeUtility.CanAssignDirectly(field, access.Grants) && CodeGenTypeUtility.IsTypeAccessible(fieldType, access.Grants)
+                        Deferred = deferred,
+                        DeferredType = fieldType,
+                        Direct = CodeGenTypeUtility.CanAssignDirectly(field, access.Grants) && CodeGenTypeUtility.IsTypeAccessible(field.FieldType, access.Grants)
                     });
                 }
 
@@ -248,10 +253,13 @@ namespace FastIoC.Editor.Generation
                 // DeclaredOnly: a field of a base class is reported once, under the class that declares it.
                 foreach (FieldInfo field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
                 {
-                    if (!CodeGenTypeUtility.IsInternal(field) || field.Name.IndexOf('<') >= 0 || !LooksLikeService(field.FieldType))
+                    DeferredDependency.Unwrap(field.FieldType, out Type fieldType);
+                    if (!CodeGenTypeUtility.IsInternal(field) || field.Name.IndexOf('<') >= 0 || !LooksLikeService(fieldType))
                         continue;
 
-                    Type fieldType = field.FieldType;
+                    if (HasInjectAttribute(field))
+                        continue; // filled by another container, for example during a migration
+
                     Type resolveType = fieldType;
                     Type interfaceKey = FindKey(fieldType, interfaceImplementations);
                     if (interfaceKey != null)
@@ -260,12 +268,24 @@ namespace FastIoC.Editor.Generation
                     if (FindKey(resolveType, typeIdMap) != null || FindKey(fieldType, instanceBindings) != null)
                         continue;
 
-                    found.Add($"{type.FullName}.{field.Name} ({CodeGenTypeUtility.GetCSharpName(fieldType).Replace("global::", string.Empty)})");
+                    found.Add($"{type.FullName}.{field.Name} ({CodeGenTypeUtility.GetCSharpName(field.FieldType).Replace("global::", string.Empty)})");
                 }
             }
 
             found.Sort(string.CompareOrdinal);
             result.UnboundFields.AddRange(found);
+        }
+
+        /// <summary>True if the field has an attribute named Inject from any library (Zenject, VContainer, Reflex...).</summary>
+        private static bool HasInjectAttribute(FieldInfo field)
+        {
+            foreach (CustomAttributeData attribute in field.CustomAttributes)
+            {
+                if (attribute.AttributeType.Name == "InjectAttribute")
+                    return true;
+            }
+
+            return false;
         }
 
         private static bool LooksLikeService(Type type)
@@ -484,6 +504,17 @@ namespace FastIoC.Editor.Generation
                 int valueIndex = 0;
                 foreach (FieldInjection injection in injector.Fields)
                 {
+                    if (injection.Deferred != DeferredDependency.Kind.None)
+                    {
+                        // The wrapper resolves when used, so a binding missing from the scene throws then.
+                        string expression = DeferredDependency.Expression(injection.Deferred, injection.DeferredType, "context", injection.TypeIdMember);
+                        if (injection.Direct)
+                            sb.AppendLine($"            target.{CodeGenTypeUtility.EscapeIdentifier(injection.Field.Name)} = {expression};");
+                        else
+                            sb.AppendLine($"            SetFieldByReflection({injection.FallbackIndex}, typeof({typeName}), \"{injection.Field.Name}\", target, {expression});");
+                        continue;
+                    }
+
                     // A binding missing from the current scene leaves only this field null.
                     string value = $"value{valueIndex++}";
                     string resolve = $"if (context.TryResolve(GeneratedTypeIds.{injection.TypeIdMember}, out object {value}))";

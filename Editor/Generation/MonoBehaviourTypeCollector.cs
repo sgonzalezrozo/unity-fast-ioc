@@ -76,9 +76,10 @@ namespace FastIoC.Editor.Generation
 
             foreach (FieldInfo field in fields)
             {
-                bool isDirectlyReachable = reachableTypes.Contains(field.FieldType);
-                bool isInterfaceWithImpl = interfaceImplementations.ContainsKey(field.FieldType);
-                bool isInstanceBinding = instanceBindings.ContainsKey(field.FieldType);
+                DeferredDependency.Unwrap(field.FieldType, out Type fieldType);
+                bool isDirectlyReachable = reachableTypes.Contains(fieldType);
+                bool isInterfaceWithImpl = interfaceImplementations.ContainsKey(fieldType);
+                bool isInstanceBinding = instanceBindings.ContainsKey(fieldType);
 
                 if (isDirectlyReachable || isInterfaceWithImpl || isInstanceBinding)
                     return true;

@@ -48,6 +48,7 @@ I built and refined it on my own time in personal projects. It isn't used in pro
 - Automatic regeneration after a script compile, when installers, bindings, constructors or injected fields change
 - Cycle, missing-binding and asset validation during generation, plus warnings for unbound MonoBehaviour fields
 - Constructor injection for plain classes
+- `Lazy<T>` and `Func<T>` dependencies, to create a service later or on demand
 - `internal` field injection for MonoBehaviours
 - `AsSingle`, `AsCached`, `AsTransient` and `FromInstance` bindings
 - Global and scene-specific installers with priorities
@@ -374,6 +375,37 @@ Fields you assign in the Inspector are left as they are.
 
 Scenes loaded at any time are injected when they load. For an object you create with `Object.Instantiate` or `AddComponent`, call `SceneInjector.InjectIfNeeded(component)`.
 
+## Create dependencies later
+
+Ask for `Lazy<T>` or `Func<T>` instead of `T` when a dependency shouldn't be created with the class, or when you need a new instance on demand:
+
+```csharp
+using System;
+
+public class SaveService
+{
+    private readonly Lazy<ICloudSync> cloud;
+    private readonly Func<EnemyAI> createEnemyAI;
+
+    public SaveService(Lazy<ICloudSync> cloud, Func<EnemyAI> createEnemyAI)
+    {
+        this.cloud = cloud;
+        this.createEnemyAI = createEnemyAI;
+    }
+
+    public void Upload() => cloud.Value.Push();      // ICloudSync is created here, the first time
+    public EnemyAI Spawn() => createEnemyAI();       // resolves EnemyAI on every call
+}
+```
+
+- **`Lazy<T>`** resolves `T` the first time you read `.Value`, then keeps it.
+- **`Func<T>`** resolves `T` on every call, so `T`'s lifetime decides what you get: a new instance for `AsTransient()`, the same one for `AsSingle()`.
+- **Both work in constructors and in `internal` MonoBehaviour fields**, such as `internal Lazy<IShopService> shop;`.
+- **`T` must be bound.** Generation fails for a constructor parameter and warns for a field, as it does for `T` itself.
+- **They don't count as cycles.** Nothing is created in a loop at startup, so `A(Lazy<B>)` with `B(A)` is allowed. Don't read `.Value` in the constructor, or the loop comes back.
+- **They resolve when used.** A field whose `T` is bound only in another scene throws when it's used, instead of staying `null`.
+- `Func<T>` takes no arguments. Factories with runtime parameters aren't supported yet.
+
 ## Lifecycle
 
 ```csharp
@@ -537,7 +569,7 @@ Generation still succeeds, because an `internal` field isn't always a dependency
   • ShopView.shop (IShopService)
 ```
 
-Fields of concrete classes aren't checked, because they're often plain state.
+Fields of concrete classes aren't checked, because they're often plain state. Fields with another container's `[Inject]` attribute are skipped too, so a project moving from Zenject or VContainer doesn't get a warning for every field the old container still fills.
 
 ## Editor commands
 
@@ -702,7 +734,7 @@ Not yet. It's a pre-release package (`0.x`) by a single author, not yet used in 
 - A failed generation doesn't block player builds.
 - Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`. Bindings are fixed when the code is generated and can't change at runtime.
 - Bindings are by type only. There are no named or ID bindings, and no value bindings: `Bind<T>()` takes a class, so put configuration such as an `int` or a URL in a typed config class and bind that.
-- There are no factory delegates, decorators or open generic bindings. Bind each closed type, such as `IRepository<Player>`, on its own.
+- `Func<T>` takes no arguments: there are no factories with runtime parameters yet. There are no decorators or open generic bindings either. Bind each closed type, such as `IRepository<Player>`, on its own.
 
 ## Project status
 

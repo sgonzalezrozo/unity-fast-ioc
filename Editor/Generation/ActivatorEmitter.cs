@@ -109,6 +109,23 @@ namespace FastIoC.Editor.Generation
                                 {
                                     sb.AppendLine($"            var {paramName} = context;");
                                 }
+                                else if (DeferredDependency.Unwrap(paramType, out Type innerType) != DeferredDependency.Kind.None)
+                                {
+                                    // Lazy<T> / Func<T>: resolve T when the wrapper is used, not now.
+                                    Type resolveType = !typeIdMap.ContainsKey(innerType) && interfaceImplementations != null && interfaceImplementations.TryGetValue(innerType, out Type impl)
+                                        ? impl
+                                        : innerType;
+                                    if (typeIdMap.ContainsKey(resolveType))
+                                    {
+                                        string expression = DeferredDependency.Expression(DeferredDependency.Unwrap(paramType, out _), innerType, "context", CodeGenTypeUtility.GetTypeIdMemberName(resolveType));
+                                        sb.AppendLine($"            var {paramName} = {expression};");
+                                    }
+                                    else
+                                    {
+                                        sb.AppendLine($"            // WARNING: Parameter type {innerType.Name} not in registry");
+                                        sb.AppendLine($"            {CodeGenTypeUtility.GetCSharpName(paramType)} {paramName} = null;");
+                                    }
+                                }
                                 else if (typeIdMap.ContainsKey(paramType))
                                 {
                                     string typeIdName = paramType.FullName?.Replace(".", "_").Replace("+", "_") ?? "Unknown";

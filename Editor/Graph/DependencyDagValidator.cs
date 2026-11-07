@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using FastIoC.API;
+using FastIoC.Editor.Generation;
 
 namespace FastIoC.Editor.Graph
 {
@@ -30,6 +31,11 @@ namespace FastIoC.Editor.Graph
                     ParameterInfo[] parameters = constructors[0].GetParameters();
                     foreach (ParameterInfo param in parameters)
                     {
+                        // Lazy<T> and Func<T> resolve T later, so they don't create T with this class
+                        // and can't form a construction cycle.
+                        if (DeferredDependency.Unwrap(param.ParameterType, out _) != DeferredDependency.Kind.None)
+                            continue;
+
                         Type dependency = ResolveDependency(param.ParameterType, bindings);
                         if (reachableTypes.Contains(dependency))
                             node.Dependencies.Add(dependency);
@@ -135,10 +141,16 @@ namespace FastIoC.Editor.Graph
 
                 foreach (ParameterInfo param in constructors[0].GetParameters())
                 {
-                    if (param.HasDefaultValue || availableTypes.Contains(param.ParameterType))
+                    if (param.HasDefaultValue)
                         continue;
 
-                    errors.Add($"{type.Name} requires {param.ParameterType.Name}, which isn't bound in any installer.");
+                    DeferredDependency.Kind kind = DeferredDependency.Unwrap(param.ParameterType, out Type needed);
+                    if (availableTypes.Contains(needed))
+                        continue;
+
+                    errors.Add(kind == DeferredDependency.Kind.None
+                        ? $"{type.Name} requires {needed.Name}, which isn't bound in any installer."
+                        : $"{type.Name} requires {kind}<{needed.Name}>, but {needed.Name} isn't bound in any installer.");
                 }
             }
 
