@@ -191,6 +191,7 @@ namespace FastIoCBench
                 $"zenject={info.zenjectVersion}",
                 $"vcontainer={info.vcontainerVersion}",
                 $"stripping={info.strippingLevel}",
+                $"incrementalGc={info.incrementalGc.ToString().ToLowerInvariant()}",
                 $"bindings={fixture.BindingCount}",
                 $"implementations={fixture.ImplementationCount}",
                 $"monoInjectables={fixture.MonoInjectableCount}",

@@ -20,6 +20,7 @@ All notable changes to this package are documented in this file.
 
 ### Fixed
 
+- Player builds no longer fail with CS0234 in `ConstrainToRootOnly.cs`: its `UnityEditor` usings are now Editor-only.
 - A project with no installers yet no longer shows warnings.
 - A binding missing from the current scene no longer leaves the other fields of that MonoBehaviour null.
 - Generated code no longer logs each loaded ScriptableObject in player builds.

@@ -17,6 +17,7 @@ namespace FastIoCBench
         public string zenjectVersion = "";
         public string vcontainerVersion = "";
         public string strippingLevel = "";
+        public bool incrementalGc;
         public string builtAtUtc = "";
         public int rounds = 5;
         public double fastIocGenerationSeconds;

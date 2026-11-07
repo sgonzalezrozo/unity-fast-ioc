@@ -70,6 +70,7 @@ namespace FastIoCBench.Editor
                 zenjectVersion = LockedVersion("Extenject.git") ?? (Directory.Exists("Assets/Plugins/Zenject") ? "Assets/Plugins/Zenject" : "missing"),
                 vcontainerVersion = LockedVersion("VContainer.git") ?? "missing",
                 strippingLevel = StrippingLevel(target),
+                incrementalGc = PlayerSettings.gcIncremental,
                 builtAtUtc = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 rounds = BenchPipeline.Rounds,
                 fastIocGenerationSeconds = timings?.fastIocGenerationSeconds ?? 0,
@@ -182,7 +183,7 @@ namespace FastIoCBench.Editor
                 Debug.LogWarning("[FastIoCBench] Development Build is on. Use its results only for allocations, never for timings.");
 
             BenchBuildInfo info = BenchBuild.WriteBuildInfo(report.summary.platform, forPlayer: true);
-            Debug.Log($"[FastIoCBench] Build info: profile {info.profile}, commit {info.gitCommit.Substring(0, 7)}{(info.gitDirty ? " (dirty)" : "")}, Zenject {info.zenjectVersion}, VContainer {info.vcontainerVersion}, stripping {info.strippingLevel}, {info.rounds} rounds.");
+            Debug.Log($"[FastIoCBench] Build info: profile {info.profile}, commit {info.gitCommit.Substring(0, 7)}{(info.gitDirty ? " (dirty)" : "")}, Zenject {info.zenjectVersion}, VContainer {info.vcontainerVersion}, stripping {info.strippingLevel}, incremental GC {(info.incrementalGc ? "on" : "off")}, {info.rounds} rounds.");
         }
     }
 
