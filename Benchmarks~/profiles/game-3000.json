@@ -1,0 +1,12 @@
+{
+  "profileName": "game-3000",
+  "seed": 6001,
+  "bindingCount": 3000,
+  "monoInjectableCount": 1500,
+  "featureCount": 100,
+  "maxDepth": 12,
+  "crossFeatureDependencyRatio": 0.25,
+  "runtimePrefabInjectionCount": 200,
+  "multiInterfaceTypeCount": 180,
+  "description": "Mobile multiplayer game scale: about 3x the README profile (meta-game, live-ops, networking and gameplay features)."
+}

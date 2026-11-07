@@ -42,15 +42,16 @@ namespace FastIoCBench.Editor
             if (GUILayout.Button("1. Apply player settings"))
                 BenchBuild.ApplyPlayerSettings();
             if (GUILayout.Button($"2. Generate {profile.profileName}"))
-                BenchPipeline.Generate(profile);
+                EditorApplication.delayCall += () => BenchPipeline.Generate(profile);
 
             using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(BenchPipeline.CurrentProfile) || EditorApplication.isCompiling))
             {
+                // Builds run after this GUI pass: a build inside OnGUI breaks the layout ("EndLayoutGroup").
                 EditorGUILayout.BeginHorizontal();
                 if (GUILayout.Button("3. Build Android"))
-                    BenchBuild.BuildPlayer(BuildTarget.Android);
+                    EditorApplication.delayCall += () => BenchBuild.BuildPlayer(BuildTarget.Android);
                 if (GUILayout.Button("3. Build iOS"))
-                    BenchBuild.BuildPlayer(BuildTarget.iOS);
+                    EditorApplication.delayCall += () => BenchBuild.BuildPlayer(BuildTarget.iOS);
                 EditorGUILayout.EndHorizontal();
             }
 

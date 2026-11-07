@@ -30,6 +30,7 @@ namespace FastIoC.Editor.Generation
             GenerateStaticConstructor(sb);
             GenerateEnsureInitializedMethod(sb);
             GenerateCreateSceneContextRuntimeMethod(sb, installersByScene);
+            GenerateTryGetSceneRecipeMethod(sb, installersByScene);
             GenerateCreateProjectContextRuntimeMethod(sb);
             GenerateCreateSceneContextRuntimeFallbackMethod(sb);
 
@@ -199,6 +200,33 @@ namespace FastIoC.Editor.Generation
 
             sb.AppendLine($"                _ => new ContextRuntime(GeneratedTypeIds.MaxTypeId, globalActivators, globalLifetimes) // Unknown scene, use Global");
             sb.AppendLine("            };");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        private static void GenerateTryGetSceneRecipeMethod(StringBuilder sb, Dictionary<string, List<Type>> installersByScene)
+        {
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine("        /// Recipe of a scene with its own bindings. False, without allocating, for scenes that only use global bindings.");
+            sb.AppendLine("        /// </summary>");
+            sb.AppendLine("        public static bool TryGetSceneRecipe(string sceneName, out RecipeActivator[] activators, out Lifetime[] lifetimes)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            switch (sceneName)");
+            sb.AppendLine("            {");
+
+            foreach (KeyValuePair<string, List<Type>> kvp in installersByScene.Where(kv => kv.Key != FastIoCConstants.GLOBAL_SCOPE))
+            {
+                string sceneNameSafe = NamingConventions.EscapeSceneName(kvp.Key);
+                sb.AppendLine($"                case \"{kvp.Key}\":");
+                sb.AppendLine($"                    (activators, lifetimes) = Get{sceneNameSafe}Recipe();");
+                sb.AppendLine("                    return true;");
+            }
+
+            sb.AppendLine("                default:");
+            sb.AppendLine("                    activators = null;");
+            sb.AppendLine("                    lifetimes = null;");
+            sb.AppendLine("                    return false;");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine();
         }

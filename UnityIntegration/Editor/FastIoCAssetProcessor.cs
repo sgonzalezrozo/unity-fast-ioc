@@ -1,5 +1,4 @@
 #if UNITY_EDITOR
-using FastIoC.Editor.Generation;
 using UnityEditor;
 using UnityEngine;
 
@@ -37,12 +36,33 @@ namespace FastIoC.UnityIntegration.Editor
             if (!hasDeletedScripts)
                 return;
 
-            Debug.Log("[FastIoC] Script deletion detected - regenerating code to remove stale type references...");
+            // Regenerating now would read the types still loaded in memory, deleted ones included,
+            // and write references that no longer compile. Remove the generated code instead, so the
+            // project compiles; FastIoCEditorAutoRegen regenerates it after the domain reload.
+            Debug.Log("[FastIoC] Script deletion detected - removing generated code; it regenerates after the next compile.");
             EditorApplication.delayCall += () =>
             {
-                GenerationCoordinator.GenerateAll();
+                RemoveGeneratedScripts();
                 FastIoCEditorAutoRegen.ClearLastHash();
             };
+        }
+
+        private static void RemoveGeneratedScripts()
+        {
+            string folder = FastIoC.Core.FastIoCConstants.GENERATED_PATH;
+            if (!System.IO.Directory.Exists(folder))
+                return;
+
+            AssetDatabase.StartAssetEditing();
+            try
+            {
+                foreach (string file in System.IO.Directory.GetFiles(folder, "*.cs"))
+                    AssetDatabase.DeleteAsset(file.Replace('\\', '/'));
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+            }
         }
     }
 }

@@ -52,8 +52,12 @@ namespace FastIoC.API
             sceneSubscriber = new(runtime);
             sceneSubscriber.Subscribe();
 
-            bootstrapCts = new CancellationTokenSource();
-            _ = InitializeAsyncServicesAsync();
+            // Nothing created so far needs initializing: skip the task, token and semaphore.
+            if (runtime.InitializableCount > 0)
+            {
+                bootstrapCts = new CancellationTokenSource();
+                _ = InitializeAsyncServicesAsync();
+            }
         }
 
         private void ValidateRootConstraint()

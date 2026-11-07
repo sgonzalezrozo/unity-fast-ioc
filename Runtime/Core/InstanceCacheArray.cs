@@ -4,26 +4,24 @@ namespace FastIoC.Core
 {
     public class InstanceCacheArray
     {
+        private readonly int length;
         private readonly object[] singletonCache;
-        private readonly object[] sceneSingletonCache;
-        private readonly object[] cachedCache;
+        // Allocated the first time an instance with that lifetime is cached: most projects use singletons only.
+        private object[] sceneSingletonCache;
+        private object[] cachedCache;
 
         public InstanceCacheArray(int maxTypeId)
         {
-            singletonCache = new object[maxTypeId + 1];
-            sceneSingletonCache = new object[maxTypeId + 1];
-            cachedCache = new object[maxTypeId + 1];
+            length = maxTypeId + 1;
+            singletonCache = new object[length];
         }
 
         public bool TryGetCached(TypeId typeId, Lifetime lifetime, out object instance)
         {
             instance = null;
 
-            if (lifetime == Lifetime.Transient)
-                return false;
-
             int index = typeId.Id;
-            if (index < 0 || index >= singletonCache.Length)
+            if (index < 0 || index >= length)
                 return false;
 
             object[] cache = lifetime switch
@@ -34,56 +32,55 @@ namespace FastIoC.Core
                 _ => null
             };
 
-            if (cache != null)
-            {
-                instance = cache[index];
-                return instance != null;
-            }
+            if (cache == null)
+                return false;
 
-            return false;
+            instance = cache[index];
+            return instance != null;
         }
 
         public void SetCached(TypeId typeId, Lifetime lifetime, object instance)
         {
-            if (lifetime == Lifetime.Transient)
-                return;
-
             int index = typeId.Id;
-            if (index < 0 || index >= singletonCache.Length)
+            if (index < 0 || index >= length)
                 return;
 
-            object[] cache = lifetime switch
+            switch (lifetime)
             {
-                Lifetime.Singleton => singletonCache,
-                Lifetime.SceneSingleton => sceneSingletonCache,
-                Lifetime.Cached => cachedCache,
-                _ => null
-            };
-
-            if (cache != null)
-                cache[index] = instance;
+                case Lifetime.Singleton:
+                    singletonCache[index] = instance;
+                    break;
+                case Lifetime.SceneSingleton:
+                    (sceneSingletonCache ??= new object[length])[index] = instance;
+                    break;
+                case Lifetime.Cached:
+                    (cachedCache ??= new object[length])[index] = instance;
+                    break;
+            }
         }
 
         public void ClearCached(TypeId typeId)
         {
             int index = typeId.Id;
-            if (index >= 0 && index < cachedCache.Length)
+            if (cachedCache != null && index >= 0 && index < length)
                 cachedCache[index] = null;
         }
 
         public void ClearAllCached()
         {
-            Array.Clear(cachedCache, 0, cachedCache.Length);
+            if (cachedCache != null)
+                Array.Clear(cachedCache, 0, length);
         }
 
         public void ClearSceneSingletons()
         {
-            Array.Clear(sceneSingletonCache, 0, sceneSingletonCache.Length);
+            if (sceneSingletonCache != null)
+                Array.Clear(sceneSingletonCache, 0, length);
         }
 
         public void ClearAllSingletons()
         {
-            Array.Clear(singletonCache, 0, singletonCache.Length);
+            Array.Clear(singletonCache, 0, length);
         }
     }
 }

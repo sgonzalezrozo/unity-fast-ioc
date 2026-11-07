@@ -113,11 +113,38 @@ namespace FastIoCBench.Editor
             Stopwatch sw = Stopwatch.StartNew();
             BuildReport report = BuildPipeline.BuildPlayer(options);
             BuildSummary summary = report.summary;
-            string message = $"[FastIoCBench] {target} build {summary.result} in {sw.Elapsed.TotalSeconds:0} s: {location}, {summary.totalSize / (1024.0 * 1024.0):0.0} MB";
+            string message = $"[FastIoCBench] {target} build {summary.result} in {sw.Elapsed.TotalSeconds:0} s: {location}{PlayerSize(location)}";
             if (summary.result == BuildResult.Succeeded)
                 Debug.Log(message);
             else
                 Debug.LogError(message);
+        }
+
+        /// <summary>Size on disk (BuildReport.totalSize also counts intermediate files), plus IL2CPP code size for an APK.</summary>
+        private static string PlayerSize(string location)
+        {
+            const double MB = 1024.0 * 1024.0;
+            if (File.Exists(location))
+            {
+                string text = $", {new FileInfo(location).Length / MB:0.0} MB";
+                try
+                {
+                    using var zip = System.IO.Compression.ZipFile.OpenRead(location);
+                    foreach (var entry in zip.Entries)
+                    {
+                        if (entry.Name == "libil2cpp.so")
+                            text += $", {entry.FullName.Split('/')[1]} libil2cpp.so {entry.Length / MB:0.0} MB";
+                    }
+                }
+                catch (Exception)
+                {
+                    // Size only; the breakdown is a convenience.
+                }
+
+                return text;
+            }
+
+            return Directory.Exists(location) ? " (Xcode project)" : "";
         }
 
         /// <summary>Version of a git package from packages-lock.json: the tag in its URL (or HEAD) plus the locked commit.</summary>

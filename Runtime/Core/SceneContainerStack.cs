@@ -40,27 +40,24 @@ namespace FastIoC.Core
 
         public void Pop(string sceneName)
         {
-            if (containers.Count == 0)
-                return;
-
-            if (containers.Peek().SceneName == sceneName)
+            if (containers.Count > 0)
             {
-                containers.Pop();
-                cacheArray.ClearSceneSingletons();
-                cacheArray.ClearAllCached();
+                if (containers.Peek().SceneName == sceneName)
+                {
+                    containers.Pop();
+                }
+                else
+                {
+                    List<SceneContainer> list = new(containers);
+                    if (list.RemoveAll(c => c.SceneName == sceneName) > 0)
+                        containers = new Stack<SceneContainer>(list.AsEnumerable().Reverse());
+                }
             }
-            else
-            {
-                List<SceneContainer> list = new(containers);
-                int removed = list.RemoveAll(c => c.SceneName == sceneName);
 
-                if (removed <= 0)
-                    return;
-
-                containers = new Stack<SceneContainer>(list.AsEnumerable().Reverse());
-                cacheArray.ClearSceneSingletons();
-                cacheArray.ClearAllCached();
-            }
+            // Scene singletons and cached instances end when any scene unloads, whether or not it
+            // had a scene container (scenes without bindings of their own don't get one).
+            cacheArray.ClearSceneSingletons();
+            cacheArray.ClearAllCached();
         }
 
         public bool TryResolveFromScene(int typeIdValue, out RecipeActivator activator, out Lifetime lifetime)

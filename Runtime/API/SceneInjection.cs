@@ -27,7 +27,67 @@ namespace FastIoC.API
 
         /// <summary>Injects <paramref name="scene"/> unless it has already been injected.</summary>
         public static void InjectScene(Scene scene, ContextRuntime context)
-            => Inject(context, scene);
+        {
+            // A loaded scene is injected from its own root objects: no search over every object
+            // in memory and no allocation. Scenes not fully loaded yet take the general path.
+            if (context == null || !scene.IsValid() || !scene.isLoaded)
+            {
+                Inject(context, scene);
+                return;
+            }
+
+            if (s_injectedScenes.Contains(scene.handle))
+                return;
+
+            if (!GeneratedModuleRegistry.IsRegistered)
+            {
+                Debug.LogWarning("[FastIoC] Generated code is not registered. Run 'Tools > FastIoC > Regenerate Code'.");
+                return;
+            }
+
+            s_roots.Clear();
+            scene.GetRootGameObjects(s_roots);
+
+            SceneInjectionManifest manifest = null;
+            for (int i = 0; i < s_roots.Count; i++)
+            {
+                if (s_roots[i].TryGetComponent(out manifest))
+                    break;
+            }
+
+            if (manifest != null)
+                manifest.InjectAll(context);
+            else
+                ScanRoots(context);
+
+            s_roots.Clear();
+            s_injectedScenes.Add(scene.handle);
+        }
+
+        private static readonly List<GameObject> s_roots = new();
+        private static readonly List<MonoBehaviour> s_scanBuffer = new();
+
+        private static void ScanRoots(ContextRuntime context)
+        {
+            IGeneratedModule module = GeneratedModuleRegistry.Module;
+            for (int r = 0; r < s_roots.Count; r++)
+            {
+                s_scanBuffer.Clear();
+                s_roots[r].GetComponentsInChildren(true, s_scanBuffer);
+                for (int i = 0; i < s_scanBuffer.Count; i++)
+                {
+                    MonoBehaviour mb = s_scanBuffer[i];
+                    if (mb == null || mb is ProjectContext)
+                        continue;
+
+                    int injectorId = module.GetInjectorId(mb.GetType());
+                    if (injectorId >= 0)
+                        InjectionRunner.InjectAt(injectorId, mb, context);
+                }
+            }
+
+            s_scanBuffer.Clear();
+        }
 
         /// <summary>Forgets a scene so it is injected again if it is loaded again.</summary>
         public static void MarkUnloaded(Scene scene)

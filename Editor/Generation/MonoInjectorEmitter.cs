@@ -314,6 +314,8 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("    public static class GeneratedMonoInjectors");
             sb.AppendLine("    {");
             sb.AppendLine($"        public const int InjectorCount = {injectors.Count};");
+            sb.AppendLine($"        public const int LocalInjectorCount = {localInjectors.Count};");
+            sb.AppendLine($"        public const int DataInjectorCount = {dataInjectors.Count};");
             sb.AppendLine();
             sb.AppendLine("        /// <summary>Fields that can't be assigned directly and still use reflection. 0 means no reflection at all.</summary>");
             sb.AppendLine($"        public const int ReflectionFallbackFieldCount = {fallbackCount};");

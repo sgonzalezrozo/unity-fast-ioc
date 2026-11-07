@@ -17,7 +17,7 @@ namespace FastIoCBench.Editor
     /// </summary>
     public static class BenchSceneBuilder
     {
-        public static readonly string[] Variants = { "fastioc", "zenject", "vcontainer" };
+        public static readonly string[] Variants = { "none", "fastioc", "zenject", "vcontainer" };
         private const int GROUP_SIZE = 50;
 
         public static List<string> Build(BenchGraph g)
@@ -148,7 +148,8 @@ namespace FastIoCBench.Editor
             {
                 "fastioc" => "FastIoCSpawner",
                 "zenject" => "ZenjectSpawner",
-                _ => "VContainerSpawner",
+                "vcontainer" => "VContainerSpawner",
+                _ => "NoneSpawner",
             };
             SetObjects(spawner.AddComponent(Gen(spawnerType)), "prefabs", prefabs);
 

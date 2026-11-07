@@ -20,6 +20,7 @@ namespace FastIoCBench
         public const int PREFAB_INSTANCES = 1000;
         public const int PREFAB_BATCH = 50;
         public const int FRAMES_BEFORE_SPAWN = 10;
+        public const string BASELINE = "none";
 
         private string status = "";
         private bool showStatus;
@@ -73,23 +74,31 @@ namespace FastIoCBench
                 yield return null;
 
             long ready = BenchSceneMarkerBase.Ready;
+            long firstAwake = BenchSceneMarkerBase.FirstAwake;
+            bool isBaseline = variant == BASELINE;
             long heapAfterStartup = GC.GetTotalMemory(false);
             int gen0AfterStartup = GC.CollectionCount(0);
 
             metrics.Add("container-build", BenchClock.Ms(buildStart, buildEnd), "ms");
             metrics.Add("scene-first-inject", BenchClock.Ms(BenchSceneMarkerBase.FirstAwake, ready), "ms");
             metrics.Add("scene-first-load", BenchClock.Ms(loadStart, ready), "ms");
+            metrics.Add("scene-first-preawake", BenchClock.Ms(loadStart, firstAwake), "ms");
             metrics.Add("startup-total", BenchClock.Ms(BenchClock.T0, ready), "ms");
             metrics.Add("startup-heap-growth", heapAfterStartup - BenchClock.HeapAtT0, "bytes");
             metrics.Add("startup-gc-collections", gen0AfterStartup - BenchClock.Gen0AtT0, "count");
 
             Scene scene = SceneManager.GetSceneByName(sceneName);
-            BenchVerifier.Result check = BenchVerifier.Verify(scene);
-            bool graphValid = IsValid(check, fixture);
-            metrics.Add("graph-valid", graphValid ? 1 : 0, "count");
-            metrics.Add("distinct-instances", check.DistinctInstances, "count");
-            metrics.Add("injected-fields", check.InjectedFields, "count");
-            metrics.Add("null-fields", check.NullFields, "count");
+            // The baseline injects nothing, so there is no graph to check.
+            BenchVerifier.Result check = isBaseline ? default : BenchVerifier.Verify(scene);
+            bool graphValid = isBaseline || IsValid(check, fixture);
+            if (!isBaseline)
+            {
+                metrics.Add("graph-valid", graphValid ? 1 : 0, "count");
+                metrics.Add("distinct-instances", check.DistinctInstances, "count");
+                metrics.Add("injected-fields", check.InjectedFields, "count");
+                metrics.Add("null-fields", check.NullFields, "count");
+            }
+
             if (!graphValid)
                 Debug.LogError($"[FastIoCBench] {variant}: wrong graph. hash {check.Hash} (expected {fixture.ExpectedGraphHash}), instances {check.DistinctInstances} (expected {fixture.ExpectedDistinctInstances}), fields {check.InjectedFields} (expected {fixture.ExpectedInjectedFields}), null {check.NullFields}, inconsistent {check.InconsistentNodes}");
 
@@ -101,6 +110,7 @@ namespace FastIoCBench
             List<double> reloadInject = new();
             List<double> reloadLoad = new();
             List<double> unload = new();
+            List<double> reloadPreawake = new();
             long heapBeforeReloads = GC.GetTotalMemory(false);
             int gen0BeforeReloads = GC.CollectionCount(0);
 
@@ -120,6 +130,7 @@ namespace FastIoCBench
                     yield return null;
 
                 reloadInject.Add(BenchClock.Ms(BenchSceneMarkerBase.FirstAwake, BenchSceneMarkerBase.Ready));
+                reloadPreawake.Add(BenchClock.Ms(start, BenchSceneMarkerBase.FirstAwake));
                 reloadLoad.Add(BenchClock.Ms(start, BenchSceneMarkerBase.Ready));
                 scene = SceneManager.GetSceneByName(sceneName);
                 yield return null;
@@ -128,11 +139,15 @@ namespace FastIoCBench
             metrics.AddStats("scene-reload-inject", reloadInject, "ms");
             metrics.AddStats("scene-reload-load", reloadLoad, "ms");
             metrics.AddStats("scene-unload", unload, "ms");
+            metrics.AddStats("scene-reload-preawake", reloadPreawake, "ms");
             metrics.Add("reload-heap-growth", GC.GetTotalMemory(false) - heapBeforeReloads, "bytes");
             metrics.Add("reload-gc-collections", GC.CollectionCount(0) - gen0BeforeReloads, "count");
 
-            BenchVerifier.Result recheck = BenchVerifier.Verify(scene);
-            metrics.Add("graph-valid-after-reload", IsValid(recheck, fixture) ? 1 : 0, "count");
+            if (!isBaseline)
+            {
+                BenchVerifier.Result recheck = BenchVerifier.Verify(scene);
+                metrics.Add("graph-valid-after-reload", IsValid(recheck, fixture) ? 1 : 0, "count");
+            }
             yield return Settle();
 
             // --- Gameplay: spawn injected prefabs in batches, a few frames after the scene is ready.
@@ -174,7 +189,8 @@ namespace FastIoCBench
                 metrics.AddStats("prefab-batch", batches, "ms");
                 metrics.Add("prefab-total", totalMs, "ms");
                 metrics.Add("prefab-per-instance", totalMs / spawned, "ms");
-                metrics.Add("prefab-null-fields", BenchVerifier.CountPrefabNullFields(parent), "count");
+                if (!isBaseline)
+                    metrics.Add("prefab-null-fields", BenchVerifier.CountPrefabNullFields(parent), "count");
                 Destroy(parentObject);
             }
             else
@@ -207,7 +223,7 @@ namespace FastIoCBench
             plan.Save();
 
             Debug.Log($"[FastIoCBench] {variant} run {runIndex}: wrote {path}");
-            Finish($"{variant} run {runIndex}/{plan.rounds} done ({plan.launchesCompleted}/{plan.TotalLaunches}).\n{(graphValid ? "Graph OK" : "WRONG GRAPH")}");
+            Finish($"{variant} run {runIndex}/{plan.rounds} done ({plan.launchesCompleted}/{plan.TotalLaunches}).\n{(isBaseline ? "Baseline (no DI)" : graphValid ? "Graph OK" : "WRONG GRAPH")}");
         }
 
         private static bool IsValid(BenchVerifier.Result r, IBenchFixture fixture)

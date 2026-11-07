@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Runs the whole plan on one Android phone: one cold launch per run, then pulls the results.
-# Usage: tools/run_android.sh <adb-serial> <device-folder-name> [launches=15]
+# Usage: tools/run_android.sh <adb-serial> <device-folder-name> [launches=20]
 set -euo pipefail
-S="${1:?adb serial (adb devices)}"; DEVICE="${2:?folder name, e.g. pixel5}"; LAUNCHES="${3:-15}"
+S="${1:?adb serial (adb devices)}"; DEVICE="${2:?folder name, e.g. pixel5}"; LAUNCHES="${3:-20}"
 PKG=com.sgrozo.fastiocbenchmark
 OUT="$HOME/Library/Logs/Unity/fastioc-compare/$DEVICE"
 mkdir -p "$OUT"
@@ -11,10 +11,9 @@ for i in $(seq 1 "$LAUNCHES"); do
   echo "Launch $i/$LAUNCHES"
   adb -s "$S" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
   sleep 3
-  waited=0
+  # No time limit: each launch runs until the app quits by itself.
   while adb -s "$S" shell pidof "$PKG" >/dev/null 2>&1; do
-    sleep 2; waited=$((waited + 2))
-    if [ "$waited" -ge 300 ]; then echo "  still running after 300 s, stopping it"; adb -s "$S" shell am force-stop "$PKG"; break; fi
+    sleep 2
   done
   sleep 3
 done

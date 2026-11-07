@@ -16,7 +16,7 @@ The Unity project itself is disposable and lives outside the repo (`../FastIoCBe
 
 ## What one build measures
 
-One build contains all three variants. Each launch runs **one** variant from a cold process, following a plan stored on the device (`persistentDataPath/FastIoCBenchmarks/plan.json`). The order rotates every round. Fast IoC is kept dormant with `FastIoCUnityBootstrapper.AutoStart = false`; Zenject and VContainer only start when their scene or root scope loads.
+One build contains the three containers plus a `none` baseline (same scene and prefabs, no container, nothing injected) that measures what Unity costs on its own. Each launch runs **one** variant from a cold process, following a plan stored on the device (`persistentDataPath/FastIoCBenchmarks/plan.json`). The order rotates every round. Fast IoC is kept dormant with `FastIoCUnityBootstrapper.AutoStart = false`; Zenject and VContainer only start when their scene or root scope loads.
 
 Per launch, in this order:
 
@@ -25,6 +25,7 @@ Per launch, in this order:
 | `container-build` | Building the global container with every binding (Fast IoC `Start()`, Zenject `ProjectContext.Instance`, VContainer root `LifetimeScope`). Singletons are not created yet. |
 | `scene-first-inject` | First load of the scene that resolves the whole graph: from its first `Awake` to its first `Start`. Includes creating every singleton and injecting every scene MonoBehaviour. IL2CPP first-use costs land here. |
 | `scene-first-load` | Same, from the `LoadScene` call (adds file loading and the rest of that frame). |
+| `scene-first-preawake` | From the `LoadScene` call to the scene's first `Awake`: Unity loading, before any container runs. |
 | `startup-total` | From the first managed code in the process to the scene being injected. |
 | `scene-reload-inject` | 5 unload/load cycles of the same scene, singletons already built. median/p95/min/max. |
 | `prefab-batch` | 1,000 injected prefab instances in batches of 50 per frame, through each container's own API. |
@@ -44,13 +45,13 @@ Requirements: Unity 6000.3, Android SDK/`adb`, Xcode 15+ for iOS.
 4. **Tools > FastIoC Benchmark**: Apply player settings, pick a profile, Generate. Wait until the window says the profile is ready (two compiles).
 5. Enter Play Mode once on the Boot scene: the Console must say `Graph OK` for the variant it ran.
 6. Build Android or iOS from the same window. Builds go to `Builds/`.
-7. Install and run the plan (3 variants x runs per variant launches):
+7. Install and run the plan (4 variants x runs per variant launches, 20 by default):
 
    ```bash
    adb -s <SERIAL> install -r Builds/Android/FastIoCBench-<profile>.apk
-   ../unity-fast-ioc/Benchmarks~/tools/run_android.sh <SERIAL> <device> 15
+   ../unity-fast-ioc/Benchmarks~/tools/run_android.sh <SERIAL> <device> 20
    # iOS: build and install the Xcode project, then
-   ../unity-fast-ioc/Benchmarks~/tools/run_ios.sh <DEVICE_ID> <device> 15
+   ../unity-fast-ioc/Benchmarks~/tools/run_ios.sh <DEVICE_ID> <device> 20
    ```
 
 8. Check, copy and summarize:
@@ -69,5 +70,6 @@ Each result records device, OS, Unity version, Fast IoC commit (and whether the 
 - VContainer registers its PlayerLoop systems at startup in every launch, whichever variant runs.
 - Zenject reflection baking and the VContainer source generator are not included yet.
 - `startup-200` is an optimization target and should not be mixed into scaling charts.
+- `game-3000` is the size of a typical mobile multiplayer game (about 3x the README profile) and is the headline profile for the brief.
 
 The previous `Assets/` and `Packages/` scaffold folders here are superseded by `Kit/` and the external project.

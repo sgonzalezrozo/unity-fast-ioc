@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace FastIoC.Core
 {
@@ -17,36 +18,37 @@ namespace FastIoC.Core
             if (prefab == null)
                 throw new ArgumentNullException(nameof(prefab));
 
+            // The copy is created inactive so its Awake/OnEnable run after injection.
+            // The prefab is restored right after the copy, before injection runs.
             bool prefabWasActive = prefab.activeSelf;
-            prefab.SetActive(false);
+            if (prefabWasActive)
+                prefab.SetActive(false);
 
+            GameObject instance;
             try
             {
-                GameObject instance = parent != null
-                    ? UnityEngine.Object.Instantiate(prefab, parent)
-                    : UnityEngine.Object.Instantiate(prefab);
-
-                try
-                {
-                    T rootComponent = instance.GetComponent<T>();
-                    if (rootComponent == null)
-                        throw new InvalidOperationException($"Prefab does not contain component of type {typeof(T).Name}");
-
-                    InjectInstance(instance, data);
-                    instance.SetActive(true);
-
-                    return rootComponent;
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[FastIoC] Error during instantiation: {ex.Message}\n{ex.StackTrace}");
-                    UnityEngine.Object.Destroy(instance);
-                    throw;
-                }
+                instance = parent != null ? Object.Instantiate(prefab, parent) : Object.Instantiate(prefab);
             }
             finally
             {
-                prefab.SetActive(prefabWasActive);
+                if (prefabWasActive)
+                    prefab.SetActive(true);
+            }
+
+            try
+            {
+                if (!instance.TryGetComponent(out T rootComponent))
+                    throw new InvalidOperationException($"Prefab does not contain component of type {typeof(T).Name}");
+
+                InjectInstance(instance, data);
+                instance.SetActive(true);
+                return rootComponent;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[FastIoC] Error during instantiation: {ex.Message}\n{ex.StackTrace}");
+                Object.Destroy(instance);
+                throw;
             }
         }
 
@@ -60,13 +62,21 @@ namespace FastIoC.Core
 
         private void InjectInstance(GameObject root, object data)
         {
-            MonoBehaviour[] allMonoBehaviours = root.GetComponentsInChildren<MonoBehaviour>(includeInactive: true);
+            ComponentBuffer buffer = ComponentBuffer.Rent();
+            try
+            {
+                root.GetComponentsInChildren(true, buffer.Items);
 
-            InstantiationScope scope = InstantiationScope.GetOrCreate(root);
-            for (int i = 0; i < allMonoBehaviours.Length; i++)
-                scope.RegisterLocal(allMonoBehaviours[i]);
-
-            InjectionRunner.InjectHierarchy(allMonoBehaviours, context, data, scope);
+                // Local references resolve against the same hierarchy. The buffer is the source,
+                // so no component or dictionary is added to the instance.
+                IGeneratedModule module = GeneratedModuleRegistry.Module;
+                bool needsLocal = module is not IGeneratedModuleFeatures features || features.HasLocalInjectors;
+                InjectionRunner.InjectHierarchy(buffer.Items, context, data, needsLocal ? buffer : null);
+            }
+            finally
+            {
+                ComponentBuffer.Return(buffer);
+            }
         }
     }
 }

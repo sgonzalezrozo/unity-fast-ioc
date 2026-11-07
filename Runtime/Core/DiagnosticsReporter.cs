@@ -6,18 +6,18 @@ namespace FastIoC.Core
     {
         private int cacheHitCount;
         private int cacheMissCount;
-        private readonly HashSet<int> cachedTypeIds = new();
+        private HashSet<int> cachedTypeIds;
 
         public void RecordHit(int typeId)
         {
             cacheHitCount++;
-            cachedTypeIds.Add(typeId);
+            (cachedTypeIds ??= new HashSet<int>()).Add(typeId);
         }
 
         public void RecordMiss(int typeId)
         {
             cacheMissCount++;
-            cachedTypeIds.Add(typeId);
+            (cachedTypeIds ??= new HashSet<int>()).Add(typeId);
         }
 
         public void ReportCacheStatistics()
@@ -32,7 +32,7 @@ namespace FastIoC.Core
         {
             cacheHitCount = 0;
             cacheMissCount = 0;
-            cachedTypeIds.Clear();
+            cachedTypeIds?.Clear();
         }
 
         public int TotalRequests => cacheHitCount + cacheMissCount;

@@ -8,7 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 from statistics import median
 
-KEY_METRICS = ["container-build", "scene-first-inject", "startup-total", "scene-reload-inject", "prefab-batch", "heap-after-ready"]
+KEY_METRICS = ["container-build", "scene-first-inject", "scene-first-preawake", "scene-reload-inject", "prefab-batch", "heap-after-ready"]
 
 
 def metric(result, name, aggregation=None):
@@ -30,6 +30,8 @@ def main():
         key = (r["session"]["deviceModel"], r["workload"]["profileOrScenario"], r["workload"]["variant"])
         groups[key].append(r)
         notes = r["session"].get("notes", "")
+        if r["workload"]["variant"] == "none":
+            continue  # baseline: nothing injected, nothing to check
         if metric(r, "graph-valid") != 1 or metric(r, "graph-valid-after-reload") != 1:
             problems.append(f"{key} run {r['workload']['runIndex']}: wrong graph ({notes})")
         if (metric(r, "prefab-null-fields") or 0) != 0:
@@ -54,7 +56,7 @@ def main():
         for p in problems:
             print("  " + p)
         sys.exit(1)
-    print("\nAll runs resolved the expected graph.")
+    print("\nAll runs resolved the expected graph (the none baseline injects nothing and is not checked).")
 
 
 if __name__ == "__main__":

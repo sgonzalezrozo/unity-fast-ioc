@@ -57,6 +57,7 @@ namespace FastIoCBench.Editor
             Write("FastIoCSpawner", FastIoCSpawner(g));
             Write("ZenjectSpawner", ZenjectSpawner());
             Write("VContainerSpawner", VContainerSpawner());
+            Write("NoneSpawner", NoneSpawner());
             Write("GeneratedBenchFixture", Fixture(g));
             Write("BenchBoot", "    public sealed class BenchBoot : global::FastIoCBench.BenchBootBase { }\n");
             Write("BenchSceneMarker", "    [global::UnityEngine.DefaultExecutionOrder(-32000)]\n    public sealed class BenchSceneMarker : global::FastIoCBench.BenchSceneMarkerBase { }\n");
@@ -245,6 +246,14 @@ namespace FastIoCBench.Editor
             "        public global::UnityEngine.GameObject Spawn(int prefabIndex, global::UnityEngine.Transform parent)\n" +
             "            => container.InstantiatePrefab(prefabs[prefabIndex], parent);\n    }\n";
 
+        private static string NoneSpawner() =>
+            "    /// <summary>Baseline: plain Instantiate, nothing injected.</summary>\n" +
+            "    public sealed class NoneSpawner : global::UnityEngine.MonoBehaviour, global::FastIoCBench.IBenchSpawner\n    {\n" +
+            "        [global::UnityEngine.SerializeField] private global::UnityEngine.GameObject[] prefabs;\n\n" +
+            "        public int PrefabCount => prefabs.Length;\n\n" +
+            "        public global::UnityEngine.GameObject Spawn(int prefabIndex, global::UnityEngine.Transform parent)\n" +
+            "            => global::UnityEngine.Object.Instantiate(prefabs[prefabIndex], parent);\n    }\n";
+
         private static string VContainerSpawner() =>
             "    public sealed class VContainerSpawner : global::UnityEngine.MonoBehaviour, global::FastIoCBench.IBenchSpawner\n    {\n" +
             "        [global::VContainer.Inject] private global::VContainer.IObjectResolver resolver;\n" +
@@ -270,13 +279,16 @@ namespace FastIoCBench.Editor
             sb.Append($"        public int MonoInjectableCount => {g.MonoInstanceTypes.Count};\n");
             sb.Append($"        public int FeatureCount => {p.featureCount};\n");
             sb.Append($"        public int MaxDepth => {p.maxDepth};\n");
-            sb.Append("        public string[] Variants => new[] { \"fastioc\", \"zenject\", \"vcontainer\" };\n");
+            sb.Append("        public string[] Variants => new[] { \"none\", \"fastioc\", \"zenject\", \"vcontainer\" };\n");
             sb.Append($"        public uint ExpectedGraphHash => {g.ExpectedHash}u;\n");
             sb.Append($"        public int ExpectedDistinctInstances => {g.ExpectedDistinctInstances};\n");
             sb.Append($"        public int ExpectedInjectedFields => {g.ExpectedInjectedFields};\n\n");
             sb.Append("        public string SceneName(string variant) => \"Inject_\" + variant;\n\n");
             sb.Append("        public void BuildContainer(string variant)\n        {\n");
             sb.Append("            switch (variant)\n            {\n");
+            sb.Append("                case \"none\":\n");
+            sb.Append("                    // Baseline: same scene and prefabs, no container. Measures what Unity costs on its own.\n");
+            sb.Append("                    break;\n");
             sb.Append("                case \"fastioc\":\n");
             sb.Append("                    global::FastIoC.UnityIntegration.Runtime.Bootstrap.FastIoCUnityBootstrapper.Start();\n");
             sb.Append("                    break;\n");

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FastIoC.Core
@@ -50,6 +51,24 @@ namespace FastIoC.Core
             if (monoBehaviours == null)
                 return;
 
+            ComponentBuffer buffer = ComponentBuffer.Rent();
+            try
+            {
+                buffer.Items.AddRange(monoBehaviours);
+                InjectHierarchy(buffer.Items, context, data, localSource);
+            }
+            finally
+            {
+                ComponentBuffer.Return(buffer);
+            }
+        }
+
+        /// <summary>Same as the array overload, without allocating. The list is not modified.</summary>
+        public static void InjectHierarchy(List<MonoBehaviour> monoBehaviours, ContextRuntime context, object data, ILocalComponentSource localSource)
+        {
+            if (monoBehaviours == null)
+                return;
+
             IGeneratedModule module = GeneratedModuleRegistry.Module;
             if (module == null)
             {
@@ -57,9 +76,12 @@ namespace FastIoC.Core
                 return;
             }
 
-            if (data != null)
+            IGeneratedModuleFeatures features = module as IGeneratedModuleFeatures;
+            int count = monoBehaviours.Count;
+
+            if (data != null && (features == null || features.HasDataInjectors))
             {
-                for (int i = 0; i < monoBehaviours.Length; i++)
+                for (int i = 0; i < count; i++)
                 {
                     MonoBehaviour mb = monoBehaviours[i];
                     if (mb == null)
@@ -78,7 +100,7 @@ namespace FastIoC.Core
 
             if (context != null)
             {
-                for (int i = 0; i < monoBehaviours.Length; i++)
+                for (int i = 0; i < count; i++)
                 {
                     MonoBehaviour mb = monoBehaviours[i];
                     if (mb == null)
@@ -90,9 +112,9 @@ namespace FastIoC.Core
                 }
             }
 
-            if (localSource != null)
+            if (localSource != null && (features == null || features.HasLocalInjectors))
             {
-                for (int i = 0; i < monoBehaviours.Length; i++)
+                for (int i = 0; i < count; i++)
                 {
                     MonoBehaviour mb = monoBehaviours[i];
                     if (mb == null || mb is InstantiationScope)

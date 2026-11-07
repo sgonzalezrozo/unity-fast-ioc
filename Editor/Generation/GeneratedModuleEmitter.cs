@@ -21,7 +21,7 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("    /// Connects the generated code to the FastIoC runtime with direct calls (no reflection).");
             sb.AppendLine("    /// </summary>");
             sb.AppendLine("    [global::UnityEngine.Scripting.Preserve]");
-            sb.AppendLine("    internal sealed class GeneratedModule : global::FastIoC.Core.IGeneratedModule");
+            sb.AppendLine("    internal sealed class GeneratedModule : global::FastIoC.Core.IGeneratedModule, global::FastIoC.Core.IGeneratedModuleFeatures");
             sb.AppendLine("    {");
             sb.AppendLine("        [global::UnityEngine.Scripting.Preserve]");
             sb.AppendLine("        [global::UnityEngine.RuntimeInitializeOnLoadMethod(global::UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]");
@@ -60,6 +60,13 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine();
             sb.AppendLine("        public void InjectLocal(global::UnityEngine.MonoBehaviour target, global::FastIoC.Core.ILocalComponentSource source)");
             sb.AppendLine("            => GeneratedMonoInjectors.InjectLocal(target, source);");
+            sb.AppendLine();
+            sb.AppendLine("        public bool TryGetSceneRecipe(string sceneName, out global::FastIoC.Core.RecipeActivator[] activators, out global::FastIoC.Core.Lifetime[] lifetimes)");
+            sb.AppendLine("            => GeneratedRegistry.TryGetSceneRecipe(sceneName, out activators, out lifetimes);");
+            sb.AppendLine();
+            sb.AppendLine("        public bool HasLocalInjectors => GeneratedMonoInjectors.LocalInjectorCount > 0;");
+            sb.AppendLine();
+            sb.AppendLine("        public bool HasDataInjectors => GeneratedMonoInjectors.DataInjectorCount > 0;");
             sb.AppendLine("    }");
             sb.AppendLine("}");
 

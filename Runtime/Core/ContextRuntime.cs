@@ -126,6 +126,9 @@ namespace FastIoC.Core
                 disposeCoordinator.TrackInstance(instance);
         }
 
+        /// <summary>Instances created so far that implement IInitializable or IAsyncInitializable.</summary>
+        public int InitializableCount => initCoordinator.Count;
+
         public void ReportCacheStatistics()
             => diagnostics.ReportCacheStatistics();
 
