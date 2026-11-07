@@ -13,9 +13,9 @@ namespace FastIoC.Editor
             FastIoCConstants.GENERATED_PATH,
             "GenerationStatus.json");
 
-        public static void WriteSuccessStatus()
+        public static void WriteSuccessStatus(List<string> warnings = null)
         {
-            GenerationStatus status = new(GenerationStatus.Status.Success);
+            GenerationStatus status = new(GenerationStatus.Status.Success) { warnings = new StringListWrapper(warnings) };
             WriteStatus(status);
         }
 

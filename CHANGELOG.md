@@ -9,6 +9,7 @@ All notable changes to this package are documented in this file.
 - `FastIoCUnityBootstrapper.AutoStart` and `FastIoCUnityBootstrapper.Start()`. Set `AutoStart` to false from a `SubsystemRegistration` method to start Fast IoC later, for example when another container runs in the same build.
 - Added `Benchmarks~/`: a benchmark kit, profiles and run scripts that measure IL2CPP Release builds on Android and iOS phones, plus a summary script that stops on invalid results. The README's Performance section now has results from two Android phones and two iPhones.
 - Added benchmark result schema documentation under `Documentation~/benchmarks/`.
+- Generation warns about `internal` MonoBehaviour fields whose type is an interface or abstract class from your code with no binding, since nothing fills them. They're also listed under the new `warnings` in `GenerationStatus.json`.
 - Added `Documentation~/agent-rules.md`, rules to copy into a project's `AGENTS.md`, `CLAUDE.md` or Cursor rules so AI coding agents use Fast IoC correctly, and an `llms.txt` summary at the package root.
 - The README has a FAQ and a section on using Fast IoC with AI coding agents. The package description and keywords now use the terms people search for.
 

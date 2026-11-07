@@ -41,6 +41,8 @@ namespace FastIoC.Core
         public string lastUpdateTime = "";
         public string errorReason = "";
         public StringListWrapper errorDetails = new();
+        /// <summary>Problems that don't fail generation, such as `internal` fields whose service type has no binding.</summary>
+        public StringListWrapper warnings = new();
 
         public GenerationStatus()
         {

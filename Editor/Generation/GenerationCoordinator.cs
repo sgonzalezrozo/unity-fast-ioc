@@ -73,7 +73,7 @@ namespace FastIoC.Editor.Generation
                 ReportInjectorResult(injectorResult);
 
                 Debug.Log("[FastIoC] Code generation completed successfully");
-                GenerationStatusWriter.WriteSuccessStatus();
+                GenerationStatusWriter.WriteSuccessStatus(UnboundFieldWarnings(injectorResult));
                 AssetDatabase.Refresh();
             }
             catch (Exception ex)
@@ -225,6 +225,13 @@ namespace FastIoC.Editor.Generation
                                  string.Join("\n  • ", result.SkippedTypes));
             }
 
+            if (result.UnboundFields.Count > 0)
+            {
+                Debug.LogWarning($"[FastIoC] {result.UnboundFields.Count} `internal` field(s) have a service type that isn't bound in any installer, " +
+                                 "so they stay null. Bind the type, or ignore this if you assign the field yourself:\n  • " +
+                                 string.Join("\n  • ", result.UnboundFields));
+            }
+
             if (result.IgnoredPrivateFields.Count > 0)
             {
                 Debug.LogWarning("[FastIoC] These private fields have a bound type but aren't injected, because only `internal` fields are. " +
@@ -242,6 +249,14 @@ namespace FastIoC.Editor.Generation
             {
                 Debug.Log("[FastIoC] MonoBehaviour injection uses no reflection.");
             }
+        }
+
+        private static List<string> UnboundFieldWarnings(MonoInjectorEmitter.Result result)
+        {
+            List<string> warnings = new(result.UnboundFields.Count);
+            foreach (string field in result.UnboundFields)
+                warnings.Add($"{field} isn't bound in any installer, so it stays null.");
+            return warnings;
         }
 
         private static void EnsureDirectory(string path)

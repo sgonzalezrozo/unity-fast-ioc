@@ -32,6 +32,7 @@ namespace FastIoC.Editor.Generation
             public readonly List<string> ReflectionFallbackFields = new();
             public readonly List<string> SkippedTypes = new();
             public readonly List<string> IgnoredPrivateFields = new();
+            public readonly List<string> UnboundFields = new();
         }
 
         private sealed class FieldInjection
@@ -115,6 +116,7 @@ namespace FastIoC.Editor.Generation
             List<LocalInjector> localInjectors = new();
             List<DataInjector> dataInjectors = new();
             BuildHierarchyInjectors(access, localInjectors, dataInjectors);
+            FindUnboundFields(typeIdMap, interfaceImplementations, instanceBindings, access, result);
 
             result.InjectorCount = injectors.Count;
             result.LocalInjectorCount = localInjectors.Count;
@@ -218,6 +220,68 @@ namespace FastIoC.Editor.Generation
             }
 
             return injectors;
+        }
+
+        /// <summary>
+        /// Lists `internal` MonoBehaviour fields whose type looks like a service (an interface or abstract class
+        /// outside System and Unity) but has no binding. Nothing fills them, so they stay null at runtime.
+        /// Fields typed as MonoBehaviours are local references and aren't listed.
+        /// </summary>
+        private static void FindUnboundFields(
+            Dictionary<Type, int> typeIdMap,
+            Dictionary<Type, Type> interfaceImplementations,
+            Dictionary<Type, bool> instanceBindings,
+            InternalsAccessPlan access,
+            Result result)
+        {
+            HashSet<string> playerAssemblies = new(access.PlayerAssemblyNames);
+            List<string> found = new();
+
+            foreach (Type type in TypeCache.GetTypesDerivedFrom<MonoBehaviour>())
+            {
+                if (type.ContainsGenericParameters || !playerAssemblies.Contains(type.Assembly.GetName().Name) || IsTestType(type))
+                    continue;
+
+                if (!IsTypeValid(type))
+                    continue;
+
+                // DeclaredOnly: a field of a base class is reported once, under the class that declares it.
+                foreach (FieldInfo field in type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                {
+                    if (!CodeGenTypeUtility.IsInternal(field) || field.Name.IndexOf('<') >= 0 || !LooksLikeService(field.FieldType))
+                        continue;
+
+                    Type fieldType = field.FieldType;
+                    Type resolveType = fieldType;
+                    Type interfaceKey = FindKey(fieldType, interfaceImplementations);
+                    if (interfaceKey != null)
+                        resolveType = interfaceImplementations[interfaceKey];
+
+                    if (FindKey(resolveType, typeIdMap) != null || FindKey(fieldType, instanceBindings) != null)
+                        continue;
+
+                    found.Add($"{type.FullName}.{field.Name} ({CodeGenTypeUtility.GetCSharpName(fieldType).Replace("global::", string.Empty)})");
+                }
+            }
+
+            found.Sort(string.CompareOrdinal);
+            result.UnboundFields.AddRange(found);
+        }
+
+        private static bool LooksLikeService(Type type)
+        {
+            if (!type.IsInterface && !(type.IsClass && type.IsAbstract))
+                return false;
+
+            if (typeof(UnityEngine.Object).IsAssignableFrom(type) || typeof(Delegate).IsAssignableFrom(type))
+                return false;
+
+            string ns = type.Namespace ?? string.Empty;
+            return !(ns == "System" || ns.StartsWith("System.", StringComparison.Ordinal)
+                     || ns == "UnityEngine" || ns.StartsWith("UnityEngine.", StringComparison.Ordinal)
+                     || ns == "UnityEditor" || ns.StartsWith("UnityEditor.", StringComparison.Ordinal)
+                     || ns.StartsWith("Unity.", StringComparison.Ordinal)
+                     || ns == "FastIoC" || ns.StartsWith("FastIoC.", StringComparison.Ordinal));
         }
 
         private static void BuildHierarchyInjectors(InternalsAccessPlan access, List<LocalInjector> localInjectors, List<DataInjector> dataInjectors)

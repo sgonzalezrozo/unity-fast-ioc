@@ -46,7 +46,7 @@ I built and refined it on my own time in personal projects. It isn't used in pro
 - Auto-discovered installers, with no central list to maintain
 - Registries, activators and injectors generated at edit time
 - Automatic regeneration after a script compile, when installers, bindings, constructors or injected fields change
-- Cycle, missing-binding and asset validation during generation
+- Cycle, missing-binding and asset validation during generation, plus warnings for unbound MonoBehaviour fields
 - Constructor injection for plain classes
 - `internal` field injection for MonoBehaviours
 - `AsSingle`, `AsCached`, `AsTransient` and `FromInstance` bindings
@@ -518,7 +518,26 @@ Fix the issues and regenerate code:
 Tools > FastIoC > Regenerate Code
 ```
 
-Constructor parameters with a default value are skipped. MonoBehaviour fields aren't checked, because an `internal` field isn't always a dependency, so an unbound field stays `null`.
+Constructor parameters with a default value are skipped.
+
+### Example: an unbound MonoBehaviour field
+
+```csharp
+public class ShopView : MonoBehaviour
+{
+    // IShopService has no binding in any installer.
+    internal IShopService shop;
+}
+```
+
+Generation still succeeds, because an `internal` field isn't always a dependency, but nothing fills this one. Fast IoC warns about `internal` fields whose type is an interface or abstract class from your code with no binding, and lists them under `warnings` in `GenerationStatus.json`:
+
+```text
+[FastIoC] 1 `internal` field(s) have a service type that isn't bound in any installer, so they stay null.
+  • ShopView.shop (IShopService)
+```
+
+Fields of concrete classes aren't checked, because they're often plain state.
 
 ## Editor commands
 
@@ -669,7 +688,7 @@ Not yet. It's a pre-release package (`0.x`) by a single author, not yet used in 
 | `Could not resolve asset path` | Use the asset's name or its full `Assets/...` path |
 | `neither in Resources/ folder nor marked for Addressables` | Move the asset to a `Resources` folder or mark it as Addressable |
 | `TypeId ... is not registered` | Add a binding, and check that its scene installer applies to the active scene |
-| A MonoBehaviour field stays `null` | Make the field `internal`, bind its type, and use it from `Start()` |
+| A MonoBehaviour field stays `null` | Make the field `internal`, bind its type, and use it from `Start()`. Check `warnings` in `GenerationStatus.json`. |
 | `These private fields have a bound type but aren't injected` | Make the field `internal` if it's a dependency. If it's private state, ignore the warning. |
 | `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
 | `Generated code is not registered` | Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists |
@@ -678,7 +697,7 @@ Not yet. It's a pre-release package (`0.x`) by a single author, not yet used in 
 ## Limitations
 
 - MonoBehaviour fields must be `internal`. Local references inside an instantiated prefab are also filled only for `internal` fields.
-- Generation doesn't check MonoBehaviour fields for missing bindings.
+- Generation only warns about unbound MonoBehaviour fields typed as an interface or abstract class. Unbound fields of concrete classes aren't reported.
 - Installers with a `FromInstance(value)` binding run once more at startup.
 - A failed generation doesn't block player builds.
 - Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`. Bindings are fixed when the code is generated and can't change at runtime.
