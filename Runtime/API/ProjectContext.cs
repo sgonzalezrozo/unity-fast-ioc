@@ -48,6 +48,7 @@ namespace FastIoC.API
 
             InitializeInstanceRegistry();
             InjectCurrentSceneMonoBehaviours();
+            CreateNonLazyInstances();
 
             sceneSubscriber = new(runtime);
             sceneSubscriber.Subscribe();
@@ -106,6 +107,21 @@ namespace FastIoC.API
             catch (Exception ex)
             {
                 Debug.LogWarning($"[FastIoC] Could not initialize instance registry: {ex.Message}\n{ex.StackTrace}");
+            }
+        }
+
+        private void CreateNonLazyInstances()
+        {
+            if (runtime == null)
+                return;
+
+            try
+            {
+                GeneratedModuleRegistry.Module?.CreateNonLazyInstances(runtime);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[FastIoC] Could not create NonLazy instances: {ex.Message}\n{ex.StackTrace}");
             }
         }
 

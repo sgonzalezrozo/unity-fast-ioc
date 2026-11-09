@@ -54,7 +54,6 @@ namespace FastIoC.Editor.Generation
                 InternalsAccessPlan internalsAccess = InternalsAccessPlan.Create();
                 MonoInjectorEmitter.Result injectorResult = MonoInjectorEmitter.GenerateMonoInjectors(allMonoBehaviourTypes, typeIdMap, interfaceImplementations, instanceBindings, internalsAccess);
                 string injectorCode = injectorResult.Code;
-                string moduleCode = GeneratedModuleEmitter.GenerateModule();
 
                 string registryCode = RegistryEmitter.GenerateRegistry(
                     reachableTypes,
@@ -67,6 +66,14 @@ namespace FastIoC.Editor.Generation
                 string instanceRegistryCode = InstanceRegistryEmitter.GenerateInstanceRegistry(typeIdMap);
                 Dictionary<Type, BindingInfo> allInstanceBindings = InstallerGraphCollector.GetCachedBindingInfo();
                 string instanceInitCode = InstanceRegistryPopulator.GenerateInstancePopulationCode(allInstanceBindings, typeIdMap);
+
+                List<string> nonLazyTypeIdNames = CollectNonLazyTypeIds(
+                    allInstanceBindings,
+                    interfaceImplementations,
+                    typeIdMap,
+                    InstallerGraphCollector.CollectInstallersByScene());
+
+                string moduleCode = GeneratedModuleEmitter.GenerateModule(nonLazyTypeIdNames);
 
                 WriteGeneratedFiles(typeIdsCode, activatorsCode, injectorCode, moduleCode, registryCode, instanceRegistryCode, instanceInitCode);
                 internalsAccess.WriteFiles();
@@ -168,6 +175,105 @@ namespace FastIoC.Editor.Generation
             }
 
             return filtered;
+        }
+
+        /// <summary>
+        /// Returns the ordered list of GeneratedTypeIds member names for NonLazy bindings.
+        /// Validates that no NonLazy binding lives in a scene-specific installer.
+        /// Order: installer Priority desc, then DeclarationOrder within the same priority.
+        /// </summary>
+        internal static List<string> CollectNonLazyTypeIds(
+            Dictionary<Type, BindingInfo> allBindings,
+            Dictionary<Type, Type> interfaceImplementations,
+            Dictionary<Type, int> typeIdMap,
+            Dictionary<string, List<Type>> installersByScene)
+        {
+            ValidateNonLazyBindings(allBindings, installersByScene);
+
+            // Gather (installerPriority, declarationOrder, concreteTypeIdName) for each NonLazy global binding.
+            List<(int priority, int order, string name)> entries = new();
+
+            foreach (KeyValuePair<Type, BindingInfo> kvp in allBindings)
+            {
+                BindingInfo info = kvp.Value;
+                if (!info.IsNonLazy)
+                    continue;
+
+                // Resolve to the concrete TypeId: use the impl type, or fall back through interfaceImplementations.
+                Type concreteType = info.ImplementationType;
+                if (!typeIdMap.ContainsKey(concreteType) &&
+                    interfaceImplementations != null &&
+                    interfaceImplementations.TryGetValue(concreteType, out Type mapped))
+                {
+                    concreteType = mapped;
+                }
+
+                if (!typeIdMap.ContainsKey(concreteType))
+                    continue; // type was filtered out (test type, etc.)
+
+                string typeIdName = CodeGenTypeUtility.GetTypeIdMemberName(concreteType);
+
+                int installerPriority = GetInstallerPriority(kvp.Key, installersByScene);
+                entries.Add((installerPriority, info.DeclarationOrder, typeIdName));
+            }
+
+            // Sort: Priority desc, then DeclarationOrder asc.
+            entries.Sort((a, b) =>
+            {
+                int cmp = b.priority.CompareTo(a.priority);
+                return cmp != 0 ? cmp : a.order.CompareTo(b.order);
+            });
+
+            // De-duplicate concrete type names while preserving order (a concrete type bound to several interfaces
+            // should only be created once).
+            HashSet<string> seen = new();
+            List<string> result = new();
+            foreach ((_, _, string name) in entries)
+            {
+                if (seen.Add(name))
+                    result.Add(name);
+            }
+
+            return result;
+        }
+
+        /// <summary>Throws if any NonLazy binding belongs to a scene-specific installer.</summary>
+        internal static void ValidateNonLazyBindings(
+            Dictionary<Type, BindingInfo> allBindings,
+            Dictionary<string, List<Type>> installersByScene)
+        {
+            foreach (KeyValuePair<Type, BindingInfo> kvp in allBindings)
+            {
+                if (!kvp.Value.IsNonLazy)
+                    continue;
+
+                Type owner = InstallerGraphCollector.GetBindingOwner(kvp.Key);
+                if (owner == null)
+                    continue;
+
+                // Check whether the installer is ONLY in scene scopes (not global).
+                bool isGlobal = false;
+                if (installersByScene.TryGetValue(FastIoCConstants.GLOBAL_SCOPE, out List<Type> globalInstallers))
+                    isGlobal = globalInstallers.Contains(owner);
+
+                if (!isGlobal)
+                {
+                    throw new InvalidOperationException(
+                        $"[FastIoC] NonLazy() is only supported on global installers. " +
+                        $"Type '{kvp.Key.FullName}' is NonLazy but its installer '{owner.Name}' is scene-specific. " +
+                        $"Remove .NonLazy() or move the binding to a global installer.");
+                }
+            }
+        }
+
+        private static int GetInstallerPriority(Type boundInterfaceType, Dictionary<string, List<Type>> installersByScene)
+        {
+            Type owner = InstallerGraphCollector.GetBindingOwner(boundInterfaceType);
+            if (owner == null)
+                return 0;
+
+            MonoInstallerAttribute attr = owner.GetCustomAttribute<MonoInstallerAttribute>();
+            return attr?.Priority ?? 0;
         }
 
         private static void WriteGeneratedFiles(

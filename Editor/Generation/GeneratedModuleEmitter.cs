@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.Text;
 
 namespace FastIoC.Editor.Generation
@@ -10,7 +11,11 @@ namespace FastIoC.Editor.Generation
     /// </summary>
     public static class GeneratedModuleEmitter
     {
-        public static string GenerateModule()
+        /// <param name="nonLazyTypeIdNames">
+        /// Ordered list of GeneratedTypeIds member names to resolve eagerly at startup.
+        /// Order: installer Priority desc, then DeclarationOrder. Each entry is a concrete type.
+        /// </param>
+        public static string GenerateModule(IReadOnlyList<string> nonLazyTypeIdNames = null)
         {
             StringBuilder sb = new();
 
@@ -67,10 +72,35 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("        public bool HasLocalInjectors => GeneratedMonoInjectors.LocalInjectorCount > 0;");
             sb.AppendLine();
             sb.AppendLine("        public bool HasDataInjectors => GeneratedMonoInjectors.DataInjectorCount > 0;");
+            sb.AppendLine();
+            AppendCreateNonLazyInstances(sb, nonLazyTypeIdNames);
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
             return sb.ToString();
+        }
+
+        private static void AppendCreateNonLazyInstances(StringBuilder sb, IReadOnlyList<string> typeIdNames)
+        {
+            sb.AppendLine("        public void CreateNonLazyInstances(global::FastIoC.Core.ContextRuntime context)");
+            sb.AppendLine("        {");
+
+            if (typeIdNames != null)
+            {
+                foreach (string name in typeIdNames)
+                {
+                    sb.AppendLine("            try");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                context.Resolve(GeneratedTypeIds.{name});");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("            catch (global::System.Exception ex)");
+                    sb.AppendLine("            {");
+                    sb.AppendLine($"                global::UnityEngine.Debug.LogError(\"[FastIoC] NonLazy creation failed for '{name}': \" + ex.Message);");
+                    sb.AppendLine("            }");
+                }
+            }
+
+            sb.AppendLine("        }");
         }
     }
 }

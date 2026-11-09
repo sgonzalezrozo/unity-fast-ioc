@@ -3,6 +3,25 @@ using FastIoC.Core;
 
 namespace FastIoC.API
 {
+    /// <summary>
+    /// Options returned by <see cref="BindingBuilder{T}.AsSingle"/>.
+    /// Lets callers chain <c>.NonLazy()</c> after a Singleton binding.
+    /// </summary>
+    public readonly struct BindingOptions
+    {
+        private readonly IBindingRecorder recorder;
+        private readonly Type interfaceType;
+
+        internal BindingOptions(IBindingRecorder recorder, Type interfaceType)
+        {
+            this.recorder = recorder;
+            this.interfaceType = interfaceType;
+        }
+
+        /// <summary>Marks the binding as non-lazy: the instance is created eagerly at startup.</summary>
+        public void NonLazy() => recorder.MarkNonLazy(interfaceType);
+    }
+
     /// <summary>Fluent API for declaring how a type is provided. Finish a binding with a lifetime method.</summary>
     public class BindingBuilder<T> : IBindingDescriptor where T : class
     {
@@ -13,6 +32,7 @@ namespace FastIoC.API
         internal bool IsInstance { get; private set; }
         internal string AssetPath { get; private set; }
         internal bool IsPathBinding { get; private set; }
+        internal bool IsNonLazyValue { get; private set; }
 
         Type IBindingDescriptor.ImplementationType => ImplementationType;
         Lifetime IBindingDescriptor.BindingLifetime => BindingLifetime;
@@ -20,6 +40,7 @@ namespace FastIoC.API
         bool IBindingDescriptor.IsInstance => IsInstance;
         string IBindingDescriptor.AssetPath => AssetPath;
         bool IBindingDescriptor.IsPathBinding => IsPathBinding;
+        bool IBindingDescriptor.IsNonLazy => IsNonLazyValue;
 
         /// <summary>Creates a builder that records its binding on the given installer.</summary>
         public BindingBuilder(IBindingRecorder installer)
@@ -64,11 +85,12 @@ namespace FastIoC.API
         /// <summary>Gets the concrete type for this binding.</summary>
         public Type GetImplementationType() => ImplementationType;
 
-        /// <summary>Records one shared instance, created on first resolve.</summary>
-        public void AsSingle()
+        /// <summary>Records one shared instance, created on first resolve. Returns options to chain <c>.NonLazy()</c>.</summary>
+        public BindingOptions AsSingle()
         {
             BindingLifetime = Lifetime.Singleton;
             installer.RecordBinding(typeof(T), this);
+            return new BindingOptions(installer, typeof(T));
         }
 
         /// <summary>Records one cached instance, cleared when a scene unloads.</summary>

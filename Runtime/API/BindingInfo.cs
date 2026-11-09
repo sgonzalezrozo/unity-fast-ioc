@@ -11,6 +11,8 @@ namespace FastIoC.API
         public bool IsInstance { get; internal set; }
         public string AssetPath { get; internal set; }
         public bool IsPathBinding { get; internal set; }
+        public bool IsNonLazy { get; internal set; }
+        public int DeclarationOrder { get; internal set; }
 
         public BindingInfo(Type interfaceType, Type implementationType, string lifetimeName)
         {
@@ -21,9 +23,9 @@ namespace FastIoC.API
             IsInstance = false;
             AssetPath = null;
             IsPathBinding = false;
+            IsNonLazy = false;
+            DeclarationOrder = 0;
         }
     }
 }
-
-
 

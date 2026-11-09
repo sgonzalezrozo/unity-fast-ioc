@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- `AsSingle().NonLazy()`: marks a global Singleton binding as eager. `ProjectContext` resolves all NonLazy bindings after scene injection and before `IInitializable.Initialize` runs. Creation order follows installer Priority (descending) then declaration order; if a type fails to create the error is logged and the remaining types are still created. NonLazy on a scene-specific installer is a generation-time error with a clear message.
+- `IGeneratedModule.CreateNonLazyInstances(ContextRuntime)`: new method implemented by the generated `GeneratedModule`.
+- `BindingInfo.IsNonLazy` and `BindingInfo.DeclarationOrder`: carry NonLazy state through the generation pipeline.
+
 ### Documentation
 
 - More package keywords.

@@ -52,4 +52,42 @@ namespace FastIoC.Fixtures
             Bind<Other>().AsTransient();
         }
     }
+
+    // Shared-instance fixture — three contracts, one concrete type.
+    public interface IFirst { }
+    public interface ISecond { }
+    public class Both : IFirst, ISecond { }
+
+    public class SharedInstanceInstaller : BindingRecorder
+    {
+        public override void InstallBindings()
+        {
+            Bind<IFirst>().To<Both>().AsSingle();
+            Bind<ISecond>().To<Both>().AsSingle();
+            Bind<Both>().AsSingle();
+        }
+    }
+
+    // NonLazy fixtures.
+    public class Analytics { }
+    public class Repository { }
+
+    /// <summary>High-priority global installer with NonLazy bindings for F1 tests.</summary>
+    public class NonLazyHighPriorityInstaller : BindingRecorder
+    {
+        public override void InstallBindings()
+        {
+            Bind<Analytics>().AsSingle().NonLazy();    // order 0
+            Bind<Repository>().AsSingle();             // not NonLazy — must not appear
+        }
+    }
+
+    /// <summary>Lower-priority global installer with a NonLazy binding declared second.</summary>
+    public class NonLazyLowPriorityInstaller : BindingRecorder
+    {
+        public override void InstallBindings()
+        {
+            Bind<Other>().AsSingle().NonLazy();        // order 0, but lower priority
+        }
+    }
 }

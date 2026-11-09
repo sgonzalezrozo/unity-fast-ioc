@@ -1,5 +1,6 @@
 using System;
 using FastIoC.Core;
+using FastIoC.Fixtures;
 using NUnit.Framework;
 
 namespace FastIoC.Tests.Editor
@@ -94,6 +95,33 @@ namespace FastIoC.Tests.Editor
         public void Resolve_ThrowsForAnUnboundType()
         {
             Assert.Throws<InvalidOperationException>(() => Resolve(SCENE_ONLY));
+        }
+
+        [Test]
+        public void AsSingle_AllContractsToSameConcrete_ResolveSameInstance()
+        {
+            // Matches the generated pattern for:
+            //   Bind<IFirst>().To<Both>().AsSingle();
+            //   Bind<ISecond>().To<Both>().AsSingle();
+            //   Bind<Both>().AsSingle();
+            //
+            // IFirst and ISecond don't get their own TypeIds; all resolution goes through
+            // Both's slot via interfaceImplementations in the generator.
+            const int BOTH_ID = 0;
+
+            RecipeActivator[] activators = new RecipeActivator[] { _ => new Both() };
+            Lifetime[] lifetimes = new Lifetime[] { Lifetime.Singleton };
+            ContextRuntime ctx = new(0, activators, lifetimes);
+
+            ServiceLocatorEnforcer.EnforcementLevel = ServiceLocatorEnforcementLevel.Off;
+
+            object viaIFirst = ctx.Resolve(new TypeId(BOTH_ID));
+            object viaISecond = ctx.Resolve(new TypeId(BOTH_ID));
+            object viaBoth = ctx.Resolve(new TypeId(BOTH_ID));
+
+            Assert.IsInstanceOf<Both>(viaBoth);
+            Assert.AreSame(viaIFirst, viaBoth);
+            Assert.AreSame(viaISecond, viaBoth);
         }
     }
 }

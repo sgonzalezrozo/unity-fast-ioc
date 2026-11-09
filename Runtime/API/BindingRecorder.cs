@@ -7,6 +7,7 @@ namespace FastIoC.API
     public abstract class BindingRecorder : IBindingRecorder
     {
         protected readonly Dictionary<Type, BindingInfo> bindings = new();
+        private int declarationCounter;
 
         /// <summary>Declares this installer's bindings. Runs in the Editor during code generation.</summary>
         public virtual void InstallBindings()
@@ -27,7 +28,16 @@ namespace FastIoC.API
             info.IsInstance = descriptor.IsInstance;
             info.AssetPath = descriptor.AssetPath;
             info.IsPathBinding = descriptor.IsPathBinding;
+            info.IsNonLazy = descriptor.IsNonLazy;
+            info.DeclarationOrder = declarationCounter++;
             bindings[interfaceType] = info;
+        }
+
+        /// <summary>Marks a previously recorded Singleton binding as non-lazy (eager creation at startup).</summary>
+        public void MarkNonLazy(Type interfaceType)
+        {
+            if (bindings.TryGetValue(interfaceType, out BindingInfo info))
+                info.IsNonLazy = true;
         }
 
         /// <summary>Starts a binding for a type.</summary>

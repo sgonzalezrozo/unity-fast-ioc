@@ -12,5 +12,6 @@ namespace FastIoC.API
         bool IsInstance { get; }
         string AssetPath { get; }
         bool IsPathBinding { get; }
+        bool IsNonLazy { get; }
     }
 }

@@ -36,5 +36,8 @@ namespace FastIoC.Core
 
         /// <summary>Fills null MonoBehaviour fields of <paramref name="target"/> from components in the same instantiated hierarchy.</summary>
         void InjectLocal(MonoBehaviour target, ILocalComponentSource source);
+
+        /// <summary>Creates all bindings marked NonLazy. Called after scene injection, before IInitializable.Initialize.</summary>
+        void CreateNonLazyInstances(ContextRuntime context);
     }
 }
