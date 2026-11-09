@@ -230,10 +230,7 @@ namespace FastIoC.Editor.Validation
 
                 AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
                 if (settings == null)
-                {
-                    Debug.LogError("[FastIoC] Addressable Asset Settings could not be found!");
-                    return false;
-                }
+                    return false; // Addressables not configured — not an error, fall through to Manifest
 
                 List<AddressableAssetEntry> allEntries = new();
                 settings.GetAllAssets(allEntries, true);
