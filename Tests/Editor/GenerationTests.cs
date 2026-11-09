@@ -66,16 +66,18 @@ namespace FastIoC.Tests.Editor
         {
             // Bind<IFirst>().To<Both>() and Bind<ISecond>().To<Both>() and Bind<Both>() —
             // only Both enters reachableTypes and gets a TypeId.
-            // IFirst and ISecond are in interfaceImplementations and resolve through Both's TypeId.
+            // IFirst and ISecond are in cachedBindingInfo mapping to Both, so constructor/field
+            // injection resolves them through Both's TypeId slot.
             InstallerGraphCollector.AnalyzeInstallerBindings(new List<Type> { typeof(SharedInstanceInstaller) });
 
-            Dictionary<Type, Type> implMap = InterfaceImplementationMapBuilder.BuildInterfaceImplementationMap(
-                CoreFrameworkTypesRegistry.GetCoreFrameworkTypes());
+            // BuildInterfaceImplementationMap uses scanner auto-discovery, which requires
+            // [MonoInstaller]. Test the invariant directly via the cache instead.
+            Dictionary<Type, FastIoC.API.BindingInfo> cache = InstallerGraphCollector.GetCachedBindingInfo();
 
-            Assert.IsTrue(implMap.ContainsKey(typeof(IFirst)), "IFirst must be in interfaceImplementations");
-            Assert.IsTrue(implMap.ContainsKey(typeof(ISecond)), "ISecond must be in interfaceImplementations");
-            Assert.AreEqual(typeof(Both), implMap[typeof(IFirst)]);
-            Assert.AreEqual(typeof(Both), implMap[typeof(ISecond)]);
+            Assert.IsTrue(cache.ContainsKey(typeof(IFirst)), "IFirst must be in cachedBindingInfo");
+            Assert.IsTrue(cache.ContainsKey(typeof(ISecond)), "ISecond must be in cachedBindingInfo");
+            Assert.AreEqual(typeof(Both), cache[typeof(IFirst)].ImplementationType);
+            Assert.AreEqual(typeof(Both), cache[typeof(ISecond)].ImplementationType);
 
             // Both gets a TypeId; IFirst and ISecond do not (they go through Both's slot).
             HashSet<Type> reachable = new() { typeof(Both) };
@@ -87,8 +89,8 @@ namespace FastIoC.Tests.Editor
 
             // All contracts map to the same concrete TypeId.
             int bothId = typeIdMap[typeof(Both)];
-            Assert.AreEqual(bothId, typeIdMap[implMap[typeof(IFirst)]]);
-            Assert.AreEqual(bothId, typeIdMap[implMap[typeof(ISecond)]]);
+            Assert.AreEqual(bothId, typeIdMap[cache[typeof(IFirst)].ImplementationType]);
+            Assert.AreEqual(bothId, typeIdMap[cache[typeof(ISecond)].ImplementationType]);
         }
 
         [Test]
