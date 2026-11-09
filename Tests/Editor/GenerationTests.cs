@@ -245,5 +245,78 @@ namespace FastIoC.Tests.Editor
             Assert.Throws<InvalidOperationException>(() =>
                 AssetPathValidator.DetermineLoadingStrategy("Assets/SomePath/Foo.asset", isGlobal: false, out _));
         }
+
+        // ── FromProjectContext ────────────────────────────────────────────────────────────────
+
+        [Test]
+        public void FromProjectContext_SetsIsProjectContextBinding()
+        {
+            HostedInstaller installer = new();
+            installer.InstallBindings();
+
+            Dictionary<Type, FastIoC.API.BindingInfo> bindings = installer.GetBindingsForGeneration();
+
+            Assert.IsTrue(bindings[typeof(HostedService)].IsProjectContextBinding,
+                "HostedService must have IsProjectContextBinding = true");
+            Assert.IsTrue(bindings[typeof(IHostedService)].IsProjectContextBinding,
+                "IHostedService must have IsProjectContextBinding = true");
+        }
+
+        [Test]
+        public void FromProjectContext_IsInstanceAndSingleton()
+        {
+            HostedInstaller installer = new();
+            installer.InstallBindings();
+
+            Dictionary<Type, FastIoC.API.BindingInfo> bindings = installer.GetBindingsForGeneration();
+            FastIoC.API.BindingInfo info = bindings[typeof(HostedService)];
+
+            Assert.IsTrue(info.IsInstance);
+            Assert.AreEqual("Singleton", info.LifetimeName);
+        }
+
+        [Test]
+        public void FromProjectContext_WithNonLazy_MarkedNonLazy()
+        {
+            HostedInstaller installer = new();
+            installer.InstallBindings();
+
+            Dictionary<Type, FastIoC.API.BindingInfo> bindings = installer.GetBindingsForGeneration();
+
+            Assert.IsTrue(bindings[typeof(HostedService)].IsNonLazy,
+                "HostedService.FromProjectContext().NonLazy() must be NonLazy");
+        }
+
+        [Test]
+        public void HostedComponentBindings_GeneratedCode_ContainsGetComponentInChildren()
+        {
+            InstallerGraphCollector.AnalyzeInstallerBindings(new List<Type> { typeof(HostedInstaller) });
+            Dictionary<Type, FastIoC.API.BindingInfo> bindings = InstallerGraphCollector.GetCachedBindingInfo();
+
+            HashSet<Type> types = new() { typeof(HostedService), typeof(HostedServiceImpl) };
+            TypeIdEmitter.GenerateTypeIds(types, out Dictionary<Type, int> typeIdMap);
+
+            string code = InstanceRegistryPopulator.GenerateInstancePopulationCode(bindings, typeIdMap);
+
+            StringAssert.Contains("GetComponentInChildren", code);
+            StringAssert.Contains("FastIoC_Fixtures_HostedService", code);
+            StringAssert.Contains("FastIoC_Fixtures_HostedServiceImpl", code);
+        }
+
+        [Test]
+        public void HostedComponentValidator_SceneInstaller_Throws()
+        {
+            InstallerGraphCollector.AnalyzeInstallerBindings(new List<Type> { typeof(HostedInstaller) });
+            Dictionary<Type, FastIoC.API.BindingInfo> bindings = InstallerGraphCollector.GetCachedBindingInfo();
+
+            // Simulate scene-only installer scope.
+            Dictionary<string, List<Type>> sceneOnly = new()
+            {
+                ["SomeScene"] = new List<Type> { typeof(HostedInstaller) },
+            };
+
+            Assert.Throws<InvalidOperationException>(() =>
+                FastIoC.Editor.Validation.HostedComponentValidator.Validate(bindings, sceneOnly));
+        }
     }
 }

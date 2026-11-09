@@ -90,4 +90,18 @@ namespace FastIoC.Fixtures
             Bind<Other>().AsSingle().NonLazy();        // order 0, but lower priority
         }
     }
+
+    // FromProjectContext fixtures.
+    public class HostedService : MonoBehaviour { }
+    public interface IHostedService { }
+    public class HostedServiceImpl : MonoBehaviour, IHostedService { }
+
+    public class HostedInstaller : BindingRecorder
+    {
+        public override void InstallBindings()
+        {
+            Bind<HostedService>().FromProjectContext().NonLazy();
+            Bind<IHostedService>().To<HostedServiceImpl>().FromProjectContext();
+        }
+    }
 }

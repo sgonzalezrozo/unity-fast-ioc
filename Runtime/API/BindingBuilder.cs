@@ -33,6 +33,7 @@ namespace FastIoC.API
         internal string AssetPath { get; private set; }
         internal bool IsPathBinding { get; private set; }
         internal bool IsNonLazyValue { get; private set; }
+        internal bool IsProjectContextBindingValue { get; private set; }
 
         Type IBindingDescriptor.ImplementationType => ImplementationType;
         Lifetime IBindingDescriptor.BindingLifetime => BindingLifetime;
@@ -41,6 +42,7 @@ namespace FastIoC.API
         string IBindingDescriptor.AssetPath => AssetPath;
         bool IBindingDescriptor.IsPathBinding => IsPathBinding;
         bool IBindingDescriptor.IsNonLazy => IsNonLazyValue;
+        bool IBindingDescriptor.IsProjectContextBinding => IsProjectContextBindingValue;
 
         /// <summary>Creates a builder that records its binding on the given installer.</summary>
         public BindingBuilder(IBindingRecorder installer)
@@ -88,6 +90,21 @@ namespace FastIoC.API
         /// <summary>Records one shared instance, created on first resolve. Returns options to chain <c>.NonLazy()</c>.</summary>
         public BindingOptions AsSingle()
         {
+            BindingLifetime = Lifetime.Singleton;
+            installer.RecordBinding(typeof(T), this);
+            return new BindingOptions(installer, typeof(T));
+        }
+
+        /// <summary>
+        /// Binds a MonoBehaviour component that lives on <c>ProjectContext.HostedRoot</c>.
+        /// FastIoC finds it with <c>GetComponentInChildren&lt;TImpl&gt;(true)</c>, injects it,
+        /// and activates the hosted root after all bindings are registered.
+        /// Chain <c>.NonLazy()</c> to ensure it is created at startup.
+        /// </summary>
+        public BindingOptions FromProjectContext()
+        {
+            IsInstance = true;
+            IsProjectContextBindingValue = true;
             BindingLifetime = Lifetime.Singleton;
             installer.RecordBinding(typeof(T), this);
             return new BindingOptions(installer, typeof(T));

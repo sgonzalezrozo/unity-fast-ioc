@@ -29,6 +29,7 @@ namespace FastIoC.API
             info.AssetPath = descriptor.AssetPath;
             info.IsPathBinding = descriptor.IsPathBinding;
             info.IsNonLazy = descriptor.IsNonLazy;
+            info.IsProjectContextBinding = descriptor.IsProjectContextBinding;
             info.DeclarationOrder = declarationCounter++;
             bindings[interfaceType] = info;
         }

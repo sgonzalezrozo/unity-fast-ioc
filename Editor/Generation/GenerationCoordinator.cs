@@ -194,6 +194,11 @@ namespace FastIoC.Editor.Generation
             }
 
             Debug.Log("[FastIoC] DAG validation passed");
+
+            // Validate FromProjectContext() bindings before writing any files.
+            FastIoC.Editor.Validation.HostedComponentValidator.Validate(
+                InstallerGraphCollector.GetCachedBindingInfo(),
+                InstallerGraphCollector.CollectInstallersByScene());
         }
 
         private static HashSet<Type> BuildTypesForGeneration(

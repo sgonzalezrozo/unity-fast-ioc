@@ -16,9 +16,13 @@ namespace FastIoC.API
         internal IInstantiator instantiator;
         private CancellationTokenSource bootstrapCts;
 
+        [SerializeField] private GameObject hostedRoot;
+
         private SceneEventSubscriber sceneSubscriber;
 
         public static ProjectContext Instance => instance;
+        /// <summary>The inactive child GameObject whose components are managed by FastIoC.</summary>
+        public GameObject HostedRoot => hostedRoot;
 
         [ServiceLocatorGuard(
             "Warning: Direct access to Runtime indicates Service Locator anti-pattern. " +
@@ -48,7 +52,9 @@ namespace FastIoC.API
 
             InitializeInstanceRegistry();
             InjectCurrentSceneMonoBehaviours();
+            InjectHostedMonoBehaviours();
             CreateNonLazyInstances();
+            ActivateHostedRoot();
 
             sceneSubscriber = new(runtime);
             sceneSubscriber.Subscribe();
@@ -123,6 +129,21 @@ namespace FastIoC.API
             {
                 Debug.LogWarning($"[FastIoC] Could not create NonLazy instances: {ex.Message}\n{ex.StackTrace}");
             }
+        }
+
+        private void InjectHostedMonoBehaviours()
+        {
+            if (hostedRoot == null || runtime == null)
+                return;
+
+            foreach (MonoBehaviour mb in hostedRoot.GetComponentsInChildren<MonoBehaviour>(true))
+                InjectionRunner.TryInject(mb, runtime);
+        }
+
+        private void ActivateHostedRoot()
+        {
+            if (hostedRoot != null)
+                hostedRoot.SetActive(true);
         }
 
         private void InjectCurrentSceneMonoBehaviours()

@@ -13,6 +13,8 @@ namespace FastIoC.API
         public bool IsPathBinding { get; internal set; }
         public bool IsNonLazy { get; internal set; }
         public int DeclarationOrder { get; internal set; }
+        /// <summary>True when this binding is provided by a component that lives on ProjectContext.HostedRoot.</summary>
+        public bool IsProjectContextBinding { get; internal set; }
 
         public BindingInfo(Type interfaceType, Type implementationType, string lifetimeName)
         {

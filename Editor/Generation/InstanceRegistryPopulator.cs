@@ -73,6 +73,7 @@ namespace FastIoC.Editor.Generation
               }
 
               AppendValueBindings(sb, bindings, typeIdMap);
+              AppendHostedComponentBindings(sb, bindings, typeIdMap);
 
               sb.AppendLine("            }");
               sb.AppendLine("            catch (Exception ex)");
@@ -96,7 +97,7 @@ namespace FastIoC.Editor.Generation
 
             foreach (KeyValuePair<Type, BindingInfo> binding in bindings)
             {
-                if (!binding.Value.IsInstance || binding.Value.IsPathBinding)
+                if (!binding.Value.IsInstance || binding.Value.IsPathBinding || binding.Value.IsProjectContextBinding)
                     continue;
 
                 Type installerType = InstallerGraphCollector.GetBindingOwner(binding.Key);
@@ -134,6 +135,49 @@ namespace FastIoC.Editor.Generation
         private static string CodeName(Type type)
         {
             return "global::" + type.FullName?.Replace("+", ".");
+        }
+
+        /// <summary>
+        /// Emits one <c>GetComponentInChildren</c> call per <c>FromProjectContext()</c> binding.
+        /// Uses the concrete impl type so no reflection is needed at runtime.
+        /// </summary>
+        private static void AppendHostedComponentBindings(
+            StringBuilder sb,
+            Dictionary<Type, BindingInfo> bindings,
+            Dictionary<Type, int> typeIdMap)
+        {
+            bool hasAny = false;
+            foreach (KeyValuePair<Type, BindingInfo> binding in bindings)
+            {
+                if (!binding.Value.IsProjectContextBinding)
+                    continue;
+
+                Type implType = binding.Value.ImplementationType;
+                if (!typeIdMap.ContainsKey(implType))
+                    continue;
+
+                if (!hasAny)
+                {
+                    sb.AppendLine("                // Hosted component bindings (FromProjectContext)");
+                    sb.AppendLine("                global::UnityEngine.GameObject hostedRoot = projectContext.HostedRoot;");
+                    sb.AppendLine("                if (hostedRoot != null)");
+                    sb.AppendLine("                {");
+                    hasAny = true;
+                }
+
+                string typeIdName = implType.FullName?.Replace(".", "_").Replace("+", "_") ?? "Unknown";
+                string implName = CodeName(implType);
+                sb.AppendLine($"                    {{");
+                sb.AppendLine($"                        {implName} component = hostedRoot.GetComponentInChildren<{implName}>(true);");
+                sb.AppendLine($"                        if (component != null)");
+                sb.AppendLine($"                            GeneratedInstanceRegistry.RegisterInstance(GeneratedTypeIds.{typeIdName}.Id, component);");
+                sb.AppendLine($"                        else");
+                sb.AppendLine($"                            global::UnityEngine.Debug.LogError(\"[FastIoC] No {implType.Name} found under hostedRoot\");");
+                sb.AppendLine($"                    }}");
+            }
+
+            if (hasAny)
+                sb.AppendLine("                }");
         }
 
         /// <summary>
