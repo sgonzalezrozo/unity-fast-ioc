@@ -9,6 +9,10 @@ All notable changes to this package are documented in this file.
 - `AsSingle().NonLazy()`: marks a global Singleton binding as eager. `ProjectContext` resolves all NonLazy bindings after scene injection and before `IInitializable.Initialize` runs. Creation order follows installer Priority (descending) then declaration order; if a type fails to create the error is logged and the remaining types are still created. NonLazy on a scene-specific installer is a generation-time error with a clear message.
 - `IGeneratedModule.CreateNonLazyInstances(ContextRuntime)`: new method implemented by the generated `GeneratedModule`.
 - `BindingInfo.IsNonLazy` and `BindingInfo.DeclarationOrder`: carry NonLazy state through the generation pipeline.
+- `FastIoCAssetManifest`: a generated ScriptableObject at `Assets/Resources/Tools/FastIoC/AssetManifest.asset` that holds direct asset references for `FromInstance` path bindings whose assets live outside any `Resources/` folder and are not Addressables. No asset moves required; memory cost is the same as Zenject (same references).
+- `LoadingStrategy.Manifest`: new strategy selected automatically for global path bindings outside Resources and Addressables. Scene-specific bindings without a valid strategy fail generation with a clear message.
+- `AssetPathValidator.TryGetResourcesLoadPath`: pure, testable method that finds the **last** `/Resources/` segment in a path and strips the extension. Fixes a bug where nested Resources paths (e.g. `Assets/MyGame/Resources/Config/Foo.asset`) generated an incorrect `Resources.Load` path.
+- Global path bindings that instantiate prefabs now call `DontDestroyOnLoad` on the instance so the prefab survives scene changes.
 
 ### Documentation
 

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FastIoC.API;
 using UnityEditor;
 using UnityEditor.AddressableAssets;
@@ -17,7 +18,9 @@ namespace FastIoC.Editor.Validation
         public enum LoadingStrategy
         {
             Resources,
-            Addressables
+            Addressables,
+            /// <summary>Asset is outside Resources/Addressables; loaded from the generated FastIoCAssetManifest. Global bindings only.</summary>
+            Manifest
         }
 
         public class AssetInfo
@@ -30,68 +33,100 @@ namespace FastIoC.Editor.Validation
             public bool IsScriptableObject { get; set; }
             public bool IsPrefab { get; set; }
             public LoadingStrategy LoadingStrategy { get; set; } = LoadingStrategy.Resources;
+            /// <summary>Index into the generated FastIoCAssetManifest. -1 for non-manifest bindings.</summary>
+            public int ManifestIndex { get; set; } = -1;
+            /// <summary>True when the binding comes from a global installer.</summary>
+            public bool IsGlobal { get; set; }
         }
 
-        public static Dictionary<Type, AssetInfo> ValidatePathBindings(Dictionary<Type, BindingInfo> allBindings)
+        /// <summary>
+        /// Extracts the <c>Resources.Load</c> path from an asset path that contains a <c>/Resources/</c> segment.
+        /// Uses the LAST occurrence so nested paths like <c>Assets/Foo/Resources/Bar/A.asset</c> work correctly.
+        /// Strips the file extension. Returns false if the path contains no <c>/Resources/</c> segment
+        /// (e.g. <c>Assets/MyResources/A.asset</c>).
+        /// </summary>
+        public static bool TryGetResourcesLoadPath(string assetPath, out string loadPath)
+        {
+            const string marker = "/Resources/";
+            int idx = assetPath.LastIndexOf(marker, StringComparison.Ordinal);
+            if (idx < 0)
+            {
+                loadPath = null;
+                return false;
+            }
+
+            loadPath = assetPath.Substring(idx + marker.Length);
+            int dotIdx = loadPath.LastIndexOf('.');
+            if (dotIdx > 0)
+                loadPath = loadPath.Substring(0, dotIdx);
+            return true;
+        }
+
+        public static Dictionary<Type, AssetInfo> ValidatePathBindings(
+            Dictionary<Type, BindingInfo> allBindings,
+            HashSet<Type> globalInterfaceTypes)
         {
             Dictionary<Type, AssetInfo> validatedAssets = new();
 
             foreach (KeyValuePair<Type, BindingInfo> binding in allBindings)
             {
-                if (binding.Value.IsPathBinding)
-                {
-                    Type interfaceType = binding.Key;
-                    string assetPath = binding.Value.AssetPath;
+                if (!binding.Value.IsPathBinding)
+                    continue;
 
-                    AssetInfo info = ValidateSingleBinding(interfaceType, assetPath);
-                    if (info != null)
-                        validatedAssets[interfaceType] = info;
-                    else
-                        throw new InvalidOperationException(
-                            $"[FastIoC] Code generation FAILED: Path-based binding validation failed for {interfaceType.Name}. " +
-                            $"See previous error messages for details.");
-                }
+                Type interfaceType = binding.Key;
+                string assetPath = binding.Value.AssetPath;
+                bool isGlobal = globalInterfaceTypes != null && globalInterfaceTypes.Contains(interfaceType);
+
+                AssetInfo info = ValidateSingleBinding(interfaceType, assetPath, isGlobal);
+                if (info != null)
+                    validatedAssets[interfaceType] = info;
+                else
+                    throw new InvalidOperationException(
+                        $"[FastIoC] Code generation FAILED: Path-based binding validation failed for {interfaceType.Name}. " +
+                        $"See previous error messages for details.");
+            }
+
+            // Assign manifest indices in deterministic order (InterfaceType.FullName).
+            int idx2 = 0;
+            foreach (KeyValuePair<Type, AssetInfo> kvp in validatedAssets
+                .Where(k => k.Value.LoadingStrategy == LoadingStrategy.Manifest)
+                .OrderBy(k => k.Key.FullName))
+            {
+                kvp.Value.ManifestIndex = idx2++;
             }
 
             return validatedAssets;
         }
 
-        private static AssetInfo ValidateSingleBinding(Type interfaceType, string assetPath)
+        private static AssetInfo ValidateSingleBinding(Type interfaceType, string assetPath, bool isGlobal)
         {
             if (string.IsNullOrWhiteSpace(assetPath))
-            {
-                throw new InvalidOperationException(
-                    $"[FastIoC] Binding {interfaceType.FullName} has empty asset path");
-            }
+                throw new InvalidOperationException($"[FastIoC] Binding {interfaceType.FullName} has empty asset path");
 
             assetPath = assetPath.Trim();
 
             string resolvedPath = ResolveAssetPath(assetPath);
             if (string.IsNullOrEmpty(resolvedPath))
-            {
                 throw new InvalidOperationException(
                     $"[FastIoC] Code generation FAILED: Could not resolve asset path '{assetPath}'. " +
                     $"Provide either a full path (Assets/...) or ensure the asset exists in the project.");
-            }
 
             assetPath = resolvedPath;
-            string addressablesAddress = null;
 
-            LoadingStrategy strategy = DetermineLoadingStrategy(assetPath, out addressablesAddress);
+            LoadingStrategy strategy = DetermineLoadingStrategy(assetPath, isGlobal, out string addressablesAddress);
 
             UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath);
             if (asset == null)
-            {
                 throw new InvalidOperationException(
                     $"[FastIoC] Code generation FAILED: Asset not found at path '{assetPath}' (binding: {interfaceType.FullName})");
-            }
 
             AssetInfo info = new AssetInfo
             {
                 InterfaceType = interfaceType,
                 AssetPath = assetPath,
                 Address = addressablesAddress,
-                LoadingStrategy = strategy
+                LoadingStrategy = strategy,
+                IsGlobal = isGlobal
             };
 
             if (asset is GameObject prefab)
@@ -101,11 +136,9 @@ namespace FastIoC.Editor.Validation
 
                 Component component = prefab.GetComponent(interfaceType);
                 if (component == null)
-                {
                     throw new InvalidOperationException(
                         $"[FastIoC] Code generation FAILED: Prefab '{assetPath}' missing component '{interfaceType.Name}' " +
                         $"on root GameObject. Add component {interfaceType.FullName} to the prefab root.");
-                }
 
                 info.ComponentType = component.GetType();
             }
@@ -115,11 +148,9 @@ namespace FastIoC.Editor.Validation
                 info.AssetType = scriptableObj.GetType();
 
                 if (!interfaceType.IsAssignableFrom(info.AssetType))
-                {
                     throw new InvalidOperationException(
                         $"[FastIoC] Code generation FAILED: ScriptableObject '{assetPath}' type {info.AssetType.FullName} " +
                         $"is not assignable to {interfaceType.FullName}");
-                }
 
                 info.ComponentType = info.AssetType;
             }
@@ -160,21 +191,26 @@ namespace FastIoC.Editor.Validation
             return AssetDatabase.GUIDToAssetPath(guids[0]);
         }
 
-        private static LoadingStrategy DetermineLoadingStrategy(string assetPath, out string addressablesAddress)
+        internal static LoadingStrategy DetermineLoadingStrategy(string assetPath, bool isGlobal, out string addressablesAddress)
         {
             addressablesAddress = null;
 
-            if (assetPath.Contains("Resources/"))
+            if (TryGetResourcesLoadPath(assetPath, out _))
                 return LoadingStrategy.Resources;
 
             if (TryDetectAddressableAtEditorTime(assetPath, out addressablesAddress))
                 return LoadingStrategy.Addressables;
 
+            if (isGlobal)
+                return LoadingStrategy.Manifest;
+
             throw new InvalidOperationException(
-                $"[FastIoC] Code generation FAILED: Asset '{assetPath}' is neither in Resources/ folder nor marked for Addressables.\n" +
+                $"[FastIoC] Code generation FAILED: Asset '{assetPath}' is neither in a Resources/ folder " +
+                $"nor marked for Addressables, and its binding is scene-specific.\n" +
                 $"Choose one of:\n" +
-                $"  1. Move to: Assets/Resources/{assetPath}\n" +
-                $"  2. OR mark for Addressables in AddressableAssets settings");
+                $"  1. Move the asset to a Resources/ subfolder\n" +
+                $"  2. Mark the asset for Addressables\n" +
+                $"  3. Move the binding to a global installer (Manifest strategy applies to global bindings only)");
         }
 
         private static bool TryDetectAddressableAtEditorTime(string assetPath, out string address)
@@ -225,4 +261,3 @@ namespace FastIoC.Editor.Validation
     }
 }
 #endif
-

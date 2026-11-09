@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using FastIoC.Editor.Graph;
+using FastIoC.Editor.Validation;
 using FastIoC.API;
 using FastIoC.Core;
 using UnityEditor;
@@ -65,7 +66,17 @@ namespace FastIoC.Editor.Generation
 
                 string instanceRegistryCode = InstanceRegistryEmitter.GenerateInstanceRegistry(typeIdMap);
                 Dictionary<Type, BindingInfo> allInstanceBindings = InstallerGraphCollector.GetCachedBindingInfo();
-                string instanceInitCode = InstanceRegistryPopulator.GenerateInstancePopulationCode(allInstanceBindings, typeIdMap);
+
+                // Build the global-interface set for path-binding scope checks.
+                HashSet<Type> globalInterfaceTypes = BuildGlobalInterfaceTypes(
+                    allInstanceBindings, InstallerGraphCollector.CollectInstallersByScene());
+
+                // Validate path bindings (assigns manifest indices) and write the manifest asset.
+                Dictionary<Type, AssetPathValidator.AssetInfo> validatedAssets =
+                    ValidateAndWriteManifest(allInstanceBindings, globalInterfaceTypes);
+
+                string instanceInitCode = InstanceRegistryPopulator.GenerateInstancePopulationCode(
+                    allInstanceBindings, typeIdMap, validatedAssets);
 
                 List<string> nonLazyTypeIdNames = CollectNonLazyTypeIds(
                     allInstanceBindings,
@@ -103,6 +114,48 @@ namespace FastIoC.Editor.Generation
             }
 
             return ReachabilityPruner.PruneUnreachableTypes(installerBindings, allScannedTypes.ToList());
+        }
+
+        /// <summary>Returns the set of interface types whose installer is in the global scope.</summary>
+        private static HashSet<Type> BuildGlobalInterfaceTypes(
+            Dictionary<Type, BindingInfo> allBindings,
+            Dictionary<string, List<Type>> installersByScene)
+        {
+            HashSet<Type> globalInstallers = new();
+            if (installersByScene.TryGetValue(FastIoCConstants.GLOBAL_SCOPE, out List<Type> globals))
+                foreach (Type t in globals) globalInstallers.Add(t);
+
+            HashSet<Type> result = new();
+            foreach (KeyValuePair<Type, BindingInfo> kvp in allBindings)
+            {
+                Type owner = InstallerGraphCollector.GetBindingOwner(kvp.Key);
+                if (owner != null && globalInstallers.Contains(owner))
+                    result.Add(kvp.Key);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Validates all path bindings and writes/updates the AssetManifest.
+        /// Returns the validated assets (with manifest indices) for use by the code emitters.
+        /// If there are no path bindings, returns an empty dictionary without touching the manifest.
+        /// </summary>
+        private static Dictionary<Type, AssetPathValidator.AssetInfo> ValidateAndWriteManifest(
+            Dictionary<Type, BindingInfo> allBindings,
+            HashSet<Type> globalInterfaceTypes)
+        {
+            bool hasPathBindings = allBindings.Values.Any(b => b.IsPathBinding);
+            if (!hasPathBindings)
+            {
+                // No path bindings — ensure any stale manifest is removed.
+                AssetManifestWriter.WriteManifest(new Dictionary<Type, AssetPathValidator.AssetInfo>());
+                return new Dictionary<Type, AssetPathValidator.AssetInfo>();
+            }
+
+            Dictionary<Type, AssetPathValidator.AssetInfo> validated =
+                AssetPathValidator.ValidatePathBindings(allBindings, globalInterfaceTypes);
+            AssetManifestWriter.WriteManifest(validated);
+            return validated;
         }
 
         private static void ValidateDependencyGraph(

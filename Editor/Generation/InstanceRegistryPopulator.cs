@@ -5,13 +5,17 @@ using System.Linq;
 using System.Text;
 using FastIoC.API;
 using FastIoC.Editor.Graph;
+using FastIoC.Editor.Validation;
 using UnityEngine;
 
 namespace FastIoC.Editor.Generation
 {
     public static class InstanceRegistryPopulator
     {
-        public static string GenerateInstancePopulationCode(Dictionary<Type, BindingInfo> bindings, Dictionary<Type, int> typeIdMap)
+        public static string GenerateInstancePopulationCode(
+            Dictionary<Type, BindingInfo> bindings,
+            Dictionary<Type, int> typeIdMap,
+            Dictionary<Type, FastIoC.Editor.Validation.AssetPathValidator.AssetInfo> validatedAssets = null)
         {
             StringBuilder sb = new();
             
@@ -61,7 +65,7 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("                // Instance bindings are loaded via path-based assets only (AOT - no reflection)");
             sb.AppendLine("                // Components are injected later by SceneInjector");
               // Add path-based asset initialization code
-              string pathBasedInitCode = PathBasedAssetInitializer.GeneratePathBasedAssetInitCode(bindings, typeIdMap);
+              string pathBasedInitCode = PathBasedAssetInitializer.GeneratePathBasedAssetInitCode(bindings, typeIdMap, validatedAssets);
               if (!string.IsNullOrEmpty(pathBasedInitCode))
               {
                   sb.Append(pathBasedInitCode);

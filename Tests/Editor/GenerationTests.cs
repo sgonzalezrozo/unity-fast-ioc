@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using FastIoC.Editor.Generation;
 using FastIoC.Editor.Graph;
+using FastIoC.Editor.Validation;
 using FastIoC.Fixtures;
 using NUnit.Framework;
 
@@ -204,6 +205,45 @@ namespace FastIoC.Tests.Editor
 
             Assert.Throws<InvalidOperationException>(() =>
                 GenerationCoordinator.ValidateNonLazyBindings(bindings, sceneOnly));
+        }
+
+        // ── TryGetResourcesLoadPath ───────────────────────────────────────────────────────────
+
+        [TestCase("Assets/Resources/A.asset",               ExpectedResult = "A")]
+        [TestCase("Assets/Resources/A.prefab",              ExpectedResult = "A")]
+        [TestCase("Assets/Foo/Resources/Bar/A.asset",       ExpectedResult = "Bar/A")]
+        [TestCase("Assets/MyGame/Resources/Config/X.asset", ExpectedResult = "Config/X")]
+        public string TryGetResourcesLoadPath_ExtractsCorrectPath(string assetPath)
+        {
+            bool ok = AssetPathValidator.TryGetResourcesLoadPath(assetPath, out string loadPath);
+            Assert.IsTrue(ok, $"Expected TryGetResourcesLoadPath to return true for '{assetPath}'");
+            return loadPath;
+        }
+
+        [TestCase("Assets/MyResources/A.asset")]
+        [TestCase("Assets/Foo/NotResources/A.asset")]
+        [TestCase("Assets/Foo/Bar.prefab")]
+        public void TryGetResourcesLoadPath_ReturnsFalseWhenNoResourcesSegment(string assetPath)
+        {
+            bool ok = AssetPathValidator.TryGetResourcesLoadPath(assetPath, out string loadPath);
+            Assert.IsFalse(ok, $"Expected false for '{assetPath}'");
+            Assert.IsNull(loadPath);
+        }
+
+        [Test]
+        public void DetermineLoadingStrategy_GlobalNonResources_ReturnsManifest()
+        {
+            // An asset outside Resources/ with isGlobal = true should map to Manifest, not throw.
+            AssetPathValidator.LoadingStrategy strategy =
+                AssetPathValidator.DetermineLoadingStrategy("Assets/SomePath/Foo.asset", isGlobal: true, out _);
+            Assert.AreEqual(AssetPathValidator.LoadingStrategy.Manifest, strategy);
+        }
+
+        [Test]
+        public void DetermineLoadingStrategy_SceneNonResources_Throws()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                AssetPathValidator.DetermineLoadingStrategy("Assets/SomePath/Foo.asset", isGlobal: false, out _));
         }
     }
 }
