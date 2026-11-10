@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Documentation
+
+- The README says CI isn't set up yet, and the Tests workflow runs only by hand.
+
 ## [0.5.0] - 2026-11-10
 
 ### Added

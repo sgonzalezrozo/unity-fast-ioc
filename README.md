@@ -854,6 +854,8 @@ The tests live in `Tests/` and run in Edit Mode. Unity compiles a package's test
 
 3. Open **Window > General > Test Runner**, select **EditMode** and **Run All**.
 
+The repository has a Tests workflow in `.github/workflows/tests.yml`, but CI isn't set up yet: it runs only by hand, and needs a Unity license in the repository secrets.
+
 | Area | Tests | What they check |
 |---|---|---|
 | Container | 8 | Singleton, transient and cached lifetimes, scene bindings, resolving an unbound type, and one instance for a class bound to several contracts |
