@@ -25,7 +25,7 @@ public class ShopInstaller : BindingRecorder
 ```
 
 - Lifetimes: `AsSingle()` (one shared instance), `AsCached()` (one instance, cleared when a scene unloads), `AsTransient()` (new instance each time, the default).
-- A ScriptableObject or prefab used as a service: `Bind<ShopConfig>().FromInstance("ShopConfig").AsSingle();` The asset must be in a `Resources` folder or marked as Addressable.
+- A ScriptableObject or prefab used as a service: `Bind<ShopConfig>().FromInstance("ShopConfig").AsSingle();` In a global installer the asset can be in any folder. In a scene-specific installer it must be in a `Resources` folder or marked as Addressable.
 - Bindings are by type only. There are no named bindings, factories with runtime parameters, decorators or open generic bindings. Put settings such as numbers or URLs in a config class and bind that.
 
 ## Inject dependencies

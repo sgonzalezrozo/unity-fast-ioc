@@ -11,7 +11,8 @@ All notable changes to this package are documented in this file.
 - `BindingInfo.IsNonLazy` and `BindingInfo.DeclarationOrder`: carry NonLazy state through the generation pipeline.
 - `FromProjectContext()`: binds a MonoBehaviour component that already lives on `ProjectContext.HostedRoot`. FastIoC finds it with `GetComponentInChildren<TImpl>(true)`, injects its `internal` fields, then calls `hostedRoot.SetActive(true)` after all bindings are registered and NonLazy instances are created. Chain `.NonLazy()` to ensure it is resolved at startup.
 - `ProjectContext.HostedRoot`: new `[SerializeField]` field. Assign an inactive child GameObject in the prefab; FastIoC activates it after injection.
-- `HostedComponentValidator`: generation fails with a clear message when a hosted binding is in a scene installer, `hostedRoot` is missing or active, or zero/multiple components of the bound type exist under it. at `Assets/Resources/Tools/FastIoC/AssetManifest.asset` that holds direct asset references for `FromInstance` path bindings whose assets live outside any `Resources/` folder and are not Addressables. No asset moves required; memory cost is the same as Zenject (same references).
+- `HostedComponentValidator`: generation fails with a clear message when a hosted binding is in a scene installer, `hostedRoot` is missing or active, or zero/multiple components of the bound type exist under it.
+- `FastIoCAssetManifest`: a generated ScriptableObject at `Assets/Resources/Tools/FastIoC/AssetManifest.asset` that holds direct asset references for `FromInstance` path bindings whose assets live outside any `Resources/` folder and are not Addressables. No asset moves required; memory cost is the same as a serialized reference.
 - `LoadingStrategy.Manifest`: new strategy selected automatically for global path bindings outside Resources and Addressables. Scene-specific bindings without a valid strategy fail generation with a clear message.
 - `AssetPathValidator.TryGetResourcesLoadPath`: pure, testable method that finds the **last** `/Resources/` segment in a path and strips the extension. Fixes a bug where nested Resources paths (e.g. `Assets/MyGame/Resources/Config/Foo.asset`) generated an incorrect `Resources.Load` path.
 - Global path bindings that instantiate prefabs now call `DontDestroyOnLoad` on the instance so the prefab survives scene changes.
@@ -25,6 +26,7 @@ All notable changes to this package are documented in this file.
 ### Documentation
 
 - More package keywords.
+- README: `NonLazy()`, `FromProjectContext()`, assets outside `Resources` in global installers, exporting global bindings to another container, default parameter values, and what to do when stale generated code doesn't compile.
 
 ### Added
 

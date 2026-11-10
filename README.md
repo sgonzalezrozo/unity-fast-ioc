@@ -51,10 +51,13 @@ I built and refined it on my own time in personal projects. It isn't used in pro
 - `Lazy<T>` and `Func<T>` dependencies, to create a service later or on demand
 - `internal` field injection for MonoBehaviours
 - `AsSingle`, `AsCached`, `AsTransient` and `FromInstance` bindings
+- `NonLazy()` singletons created at startup, in a fixed order
+- `FromProjectContext()` for components that live on the `ProjectContext` prefab
 - Global and scene-specific installers with priorities
 - Sync and async initialization, plus disposal hooks
 - Prefab instantiation with injection and data through `IInstantiator`
 - Service-locator detection in the Editor and development builds
+- Export of global bindings to another DI container
 
 ## Compatibility
 
@@ -241,6 +244,8 @@ public override void InstallBindings()
     Bind<IDamageCalculator>().To<DamageCalculator>().AsTransient();
     Bind<PlayerSessionModel>().AsSingle();
     Bind<GameConfig>().FromInstance("GameConfig").AsSingle();
+    Bind<AnalyticsService>().AsSingle().NonLazy();
+    Bind<AudioPlayer>().FromProjectContext();
 }
 ```
 
@@ -251,6 +256,8 @@ public override void InstallBindings()
 | `AsTransient()` | A new instance for each resolve. This is the default lifetime. |
 | `FromInstance(value)` | A singleton using an object you create. See [Bind existing objects](#bind-existing-objects). |
 | `FromInstance(assetPath).AsSingle()` | A singleton loaded from a prefab or ScriptableObject. See [Bind assets](#bind-assets). |
+| `AsSingle().NonLazy()` | A singleton created at startup instead of on first resolve. See [Create services at startup](#create-services-at-startup). |
+| `FromProjectContext()` | A component that already lives on the `ProjectContext` prefab. See [Host components on the ProjectContext prefab](#host-components-on-the-projectcontext-prefab). |
 
 A scene-specific `AsSingle()` instance stays cached after its scene unloads, so use `AsCached()` when the instance shouldn't outlive the scene.
 
@@ -277,7 +284,8 @@ namespace MyGame.Shop
 
 - **Finish with `AsSingle()`.** `FromInstance(assetPath)` doesn't record the binding by itself.
 - **Pass the asset's name or its full path.** `"ShopConfig"` searches the project and uses the first match. A value containing `/` must be the full path, such as `Assets/Resources/Config/ShopConfig.asset`.
-- **Keep these assets in a `Resources` folder.** Fast IoC also accepts assets marked as Addressable. Generation fails for an asset that's in neither.
+- **Global installers accept assets in any folder.** An asset in a `Resources` folder is loaded from there, and one marked as Addressable through Addressables. Any other asset is referenced from a generated manifest, `Assets/Resources/Tools/FastIoC/AssetManifest.asset`, so you don't have to move it. Commit the manifest and its `.meta`.
+- **Scene-specific installers need `Resources` or Addressables.** Generation fails for an asset that's in neither.
 - **Prefabs must have the bound type on their root.** Fast IoC instantiates the prefab at startup.
 - **ScriptableObjects must be assignable to the bound type.**
 
@@ -297,6 +305,45 @@ A value can't be saved at edit time, so Fast IoC runs this installer once more w
 - **Don't create scene objects in the installer.** It also runs during every generation.
 - **Installers with this binding need a public parameterless constructor.**
 - **The value is shared across all scenes.** It's registered at startup, even if the installer lists scene names.
+
+## Create services at startup
+
+Services are created on first resolve. Add `.NonLazy()` to a global `AsSingle()` binding to create it when the game starts, for example a service that only listens to events and is never injected:
+
+```csharp
+Bind<AnalyticsService>().AsSingle().NonLazy();
+Bind<IPushNotifications>().To<PushNotifications>().AsSingle().NonLazy();
+```
+
+- **They're created after the first scene is injected and before `Initialize` runs.**
+- **The order is fixed.** Installers with a higher `Priority` go first, then bindings in the order they're declared.
+- **One failure doesn't stop the rest.** If a service throws while it's created, the error is logged with its type and the next service is created.
+- **Global installers only.** `NonLazy()` in a scene-specific installer fails generation.
+- **A class bound to several contracts is created once.**
+
+## Host components on the ProjectContext prefab
+
+Some services are MonoBehaviours that need values set in the Inspector, such as a sound manager or a coroutine runner. Put them on the `ProjectContext` prefab and bind them with `FromProjectContext()`:
+
+```csharp
+Bind<ICoroutineRunner>().To<CoroutineRunner>().FromProjectContext();
+Bind<SoundManager>().FromProjectContext().NonLazy();
+```
+
+Set up the prefab once:
+
+1. Open `Assets/Resources/Tools/FastIoC/ProjectContext.prefab`.
+2. Add a child GameObject, for example `Hosted`, and **make it inactive**.
+3. Assign it to the **Hosted Root** field of `ProjectContext`.
+4. Add each component under it.
+
+At startup Fast IoC injects the `internal` fields of every MonoBehaviour under the hosted root, creates the `NonLazy()` services, and then activates the hosted root. Every hosted component has its dependencies by the time its `Awake` runs.
+
+Generation fails if:
+
+- the binding is in a scene-specific installer;
+- the prefab is missing, or **Hosted Root** is empty or active;
+- there isn't exactly one component of the bound type under **Hosted Root**.
 
 ## Scene-specific installers
 
@@ -553,7 +600,7 @@ Fix the issues and regenerate code:
 Tools > FastIoC > Regenerate Code
 ```
 
-Constructor parameters with a default value are skipped.
+Constructor parameters with a default value are skipped. If their type isn't bound, they keep that default value, so `int retries = 3` gets `3`.
 
 ### Example: an unbound MonoBehaviour field
 
@@ -710,6 +757,23 @@ With 3,000 bindings and 1,500 injected MonoBehaviours, building the container an
 
 Yes. Set `FastIoCUnityBootstrapper.AutoStart` to `false` from a `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]` method, then call `FastIoCUnityBootstrapper.Start()` when you want it. The benchmark project uses this to run several containers in one build.
 
+To let the other container use Fast IoC's services, implement `IGlobalBindingSink` and pass it to `ProjectContext.ExportGlobalBindings`. The generated code calls `Add(contract, binding)` once for each global contract, and `binding.Resolve()` returns the instance from Fast IoC. Scene-specific bindings aren't exported. The bridge is one way: Fast IoC can't resolve from the other container, so every dependency of a Fast IoC service must be bound in Fast IoC.
+
+```csharp
+using System;
+using FastIoC.Core;
+
+public class ExternalContainerBridge : IGlobalBindingSink
+{
+    public void Add(Type contract, ExternalBinding binding)
+    {
+        // Register `contract` in the other container so it calls binding.Resolve().
+    }
+}
+```
+
+Call it once, after the other container has registered its own bindings, so the sink can reject a contract that both containers bind.
+
 ### What is the best dependency injection framework for Unity?
 
 It depends on what you value. Zenject (Extenject) and VContainer are the established choices, with large communities. Fast IoC is a new option for teams that want no runtime reflection, edit-time errors and installers owned by each feature. See [How it compares](#how-it-compares).
@@ -739,6 +803,7 @@ Not yet. It's a pre-release package (`0.x`) by a single author. It isn't used in
 | `These private fields have a bound type but aren't injected` | Make the field `internal` if it's a dependency. If it's private state, ignore the warning. |
 | `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
 | `Generated code is not registered` | Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists |
+| Compile errors in `Assets/FastIoC/Generated/` that **Regenerate Code** doesn't fix | The old generated code no longer matches the package, usually after a package update, and generation can't run while the project doesn't compile. Delete the `Assets/FastIoC/Generated/` folder, let Unity compile, then run **Regenerate Code**. |
 | `Service Locator Anti-Pattern Detected` | Inject the dependency instead of resolving it from `ContextRuntime`. The default level is strict, so this throws in the Editor and development builds. |
 
 ## Limitations
@@ -766,7 +831,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 23 tests covers the container, graph validation, the code generators and prefab instantiation. All 23 pass in Unity `6000.3.6f1`. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 41 tests covers the container, graph validation, the code generators and prefab instantiation. All 41 pass in Unity `6000.3.16f1`. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 
@@ -791,9 +856,9 @@ The tests live in `Tests/` and run in Edit Mode. Unity compiles a package's test
 
 | Area | Tests | What they check |
 |---|---|---|
-| Container | 7 | Singleton, transient and cached lifetimes, scene bindings, and resolving an unbound type |
+| Container | 8 | Singleton, transient and cached lifetimes, scene bindings, resolving an unbound type, and one instance for a class bound to several contracts |
 | Graph validation | 6 | Constructor cycles, cycles through `Lazy<T>`, missing bindings and their messages, parameters with default values |
-| Code generation | 10 | Generated activators and MonoBehaviour injectors for plain, `Lazy<T>` and `Func<T>` dependencies, private fields, installer analysis |
+| Code generation | 22 | Generated activators and MonoBehaviour injectors for plain, `Lazy<T>` and `Func<T>` dependencies, default parameter values, private fields, installer analysis, `NonLazy()` order and validation, asset loading strategies, hosted components, global binding export |
 | Prefab instantiation | 5 | Active state of copies, the prefab restored after copying, the parent, `InstantiateAndInject` |
 
 The test types live in their own `FastIoC.Fixtures` assembly, because generation skips assemblies whose name contains `Test`. See the [contributing guide](.github/CONTRIBUTING.md) and [security policy](.github/SECURITY.md).
