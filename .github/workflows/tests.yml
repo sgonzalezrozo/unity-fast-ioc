@@ -1,7 +1,6 @@
 name: Tests
 
-# Manual for now: Tools Core is private, so Unity can't clone it without the GIT_PRIVATE_TOKEN secret.
-# Add push and pull_request triggers back once that works.
+# Manual: running it needs a Unity license in the repository secrets.
 on:
   workflow_dispatch:
 
@@ -34,8 +33,6 @@ jobs:
           projectPath: .github/ci-project
           testMode: editmode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          # Lets Unity clone Tools Core while that repository is private. Not needed once it's public.
-          gitPrivateToken: ${{ secrets.GIT_PRIVATE_TOKEN }}
           checkName: Edit Mode test results
 
       - name: Upload test results

@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.4.0](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
+[![Version 0.5.0](https://img.shields.io/badge/version-0.5.0-blue.svg)](CHANGELOG.md)
 
 Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones and on WebGL. See [Performance](#performance).
 
@@ -76,7 +76,7 @@ Git must be installed on your machine.
 
 ### 1. Install Tools Core
 
-This package requires [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core), the shared code that defines the injection interfaces used by Fast IoC, Screen System and Recyclable Scroller. Unity doesn't install Git dependencies automatically, so add it first.
+This package requires [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core), the shared code that defines the injection interfaces Fast IoC implements. Unity doesn't install Git dependencies automatically, so add it first.
 
 1. In Unity, open **Window > Package Manager**.
 2. Select **+ > Add package from git URL**.
@@ -99,7 +99,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.4.0
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.5.0
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -289,7 +289,7 @@ namespace MyGame.Shop
 - **Prefabs must have the bound type on their root.** Fast IoC instantiates the prefab at startup.
 - **ScriptableObjects must be assignable to the bound type.**
 
-Other prefabs don't belong here. Keep them in Addressables and load them when needed. Screens, for example, are loaded by [Screen System](https://github.com/sgonzalezrozo/unity-screen-system).
+Other prefabs don't belong here. Keep them in Addressables and load them when needed. Screens, for example, are better loaded when they open.
 
 ## Bind existing objects
 
@@ -831,7 +831,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.4.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 41 tests covers the container, graph validation, the code generators and prefab instantiation. All 41 pass in Unity `6000.3.16f1`. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.5.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 41 tests covers the container, graph validation, the code generators and prefab instantiation. All 41 pass in Unity `6000.3.16f1`. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 
@@ -867,10 +867,9 @@ The test types live in their own `FastIoC.Fixtures` assembly, because generation
 
 | Package | Purpose |
 |---|---|
-| [Screen System](https://github.com/sgonzalezrozo/unity-screen-system) | Declarative UI navigation |
+| [Unity Architecture Agents](https://github.com/sgonzalezrozo/unity-architecture-agents) | Architecture rules for coding agents |
 | [UI Tweens](https://github.com/sgonzalezrozo/unity-ui-tweens) | ECS-based UI animation |
-| [Recyclable Scroller](https://github.com/sgonzalezrozo/unity-recyclable-scroller) | Virtualized lists |
-| [Enhanced Console](https://github.com/sgonzalezrozo/unity-enhanced-console) | Unity Editor log triage |
+| [UI Foundations](https://github.com/sgonzalezrozo/unity-ui-foundations) | uGUI click Controllers and view states |
 | [Tools Core](https://github.com/sgonzalezrozo/unity-tools-core) | Shared injection code, required by this package |
 
 ## License
