@@ -78,13 +78,21 @@ namespace FastIoC.Editor.Generation
                 string instanceInitCode = InstanceRegistryPopulator.GenerateInstancePopulationCode(
                     allInstanceBindings, typeIdMap, validatedAssets);
 
+                Dictionary<string, List<Type>> installersByScene = InstallerGraphCollector.CollectInstallersByScene();
+
                 List<string> nonLazyTypeIdNames = CollectNonLazyTypeIds(
                     allInstanceBindings,
                     interfaceImplementations,
                     typeIdMap,
-                    InstallerGraphCollector.CollectInstallersByScene());
+                    installersByScene);
 
-                string moduleCode = GeneratedModuleEmitter.GenerateModule(nonLazyTypeIdNames);
+                List<(string contract, string typeIdMember)> globalExports = CollectGlobalBindingExports(
+                    allInstanceBindings,
+                    interfaceImplementations,
+                    typeIdMap,
+                    installersByScene);
+
+                string moduleCode = GeneratedModuleEmitter.GenerateModule(nonLazyTypeIdNames, globalExports);
 
                 WriteGeneratedFiles(typeIdsCode, activatorsCode, injectorCode, moduleCode, registryCode, instanceRegistryCode, instanceInitCode);
                 internalsAccess.WriteFiles();
@@ -293,6 +301,48 @@ namespace FastIoC.Editor.Generation
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Gathers (contract C# name, concrete TypeId member) for every global binding so the bridge can hand
+        /// each contract to another container. Scene-scoped bindings and framework/auto bindings (no user
+        /// installer) are excluded. Each contract resolves through its concrete TypeId, so an interface and
+        /// its self-binding map to the same instance.
+        /// </summary>
+        internal static List<(string contract, string typeIdMember)> CollectGlobalBindingExports(
+            Dictionary<Type, BindingInfo> allBindings,
+            Dictionary<Type, Type> interfaceImplementations,
+            Dictionary<Type, int> typeIdMap,
+            Dictionary<string, List<Type>> installersByScene)
+        {
+            installersByScene.TryGetValue(FastIoCConstants.GLOBAL_SCOPE, out List<Type> globalInstallers);
+
+            List<(string contract, string typeIdMember)> exports = new();
+
+            foreach (KeyValuePair<Type, BindingInfo> kvp in allBindings)
+            {
+                Type owner = InstallerGraphCollector.GetBindingOwner(kvp.Key);
+                if (owner == null)
+                    continue; // framework / auto binding, not a user global binding
+
+                if (globalInstallers == null || !globalInstallers.Contains(owner))
+                    continue; // scene-scoped binding
+
+                Type concreteType = kvp.Value.ImplementationType;
+                if (!typeIdMap.ContainsKey(concreteType) &&
+                    interfaceImplementations != null &&
+                    interfaceImplementations.TryGetValue(concreteType, out Type mapped))
+                {
+                    concreteType = mapped;
+                }
+
+                if (!typeIdMap.ContainsKey(concreteType))
+                    continue; // type was filtered out (test type, etc.)
+
+                exports.Add((CodeGenTypeUtility.GetCSharpName(kvp.Key), CodeGenTypeUtility.GetTypeIdMemberName(concreteType)));
+            }
+
+            return exports;
         }
 
         /// <summary>Throws if any NonLazy binding belongs to a scene-specific installer.</summary>

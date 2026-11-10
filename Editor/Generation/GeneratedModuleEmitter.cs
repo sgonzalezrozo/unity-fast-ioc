@@ -15,7 +15,7 @@ namespace FastIoC.Editor.Generation
         /// Ordered list of GeneratedTypeIds member names to resolve eagerly at startup.
         /// Order: installer Priority desc, then DeclarationOrder. Each entry is a concrete type.
         /// </param>
-        public static string GenerateModule(IReadOnlyList<string> nonLazyTypeIdNames = null)
+        public static string GenerateModule(IReadOnlyList<string> nonLazyTypeIdNames = null, IReadOnlyList<(string contract, string typeIdMember)> globalExports = null)
         {
             StringBuilder sb = new();
 
@@ -26,7 +26,7 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("    /// Connects the generated code to the FastIoC runtime with direct calls (no reflection).");
             sb.AppendLine("    /// </summary>");
             sb.AppendLine("    [global::UnityEngine.Scripting.Preserve]");
-            sb.AppendLine("    internal sealed class GeneratedModule : global::FastIoC.Core.IGeneratedModule, global::FastIoC.Core.IGeneratedModuleFeatures");
+            sb.AppendLine("    internal sealed class GeneratedModule : global::FastIoC.Core.IGeneratedModule, global::FastIoC.Core.IGeneratedModuleFeatures, global::FastIoC.Core.IGlobalBindingExporter");
             sb.AppendLine("    {");
             sb.AppendLine("        [global::UnityEngine.Scripting.Preserve]");
             sb.AppendLine("        [global::UnityEngine.RuntimeInitializeOnLoadMethod(global::UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]");
@@ -74,10 +74,28 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("        public bool HasDataInjectors => GeneratedMonoInjectors.DataInjectorCount > 0;");
             sb.AppendLine();
             AppendCreateNonLazyInstances(sb, nonLazyTypeIdNames);
+            sb.AppendLine();
+            AppendExportGlobalBindings(sb, globalExports);
             sb.AppendLine("    }");
             sb.AppendLine("}");
 
             return sb.ToString();
+        }
+
+        private static void AppendExportGlobalBindings(StringBuilder sb, IReadOnlyList<(string contract, string typeIdMember)> exports)
+        {
+            sb.AppendLine("        public void ExportGlobalBindings(global::FastIoC.Core.ContextRuntime runtime, global::FastIoC.Core.IGlobalBindingSink sink)");
+            sb.AppendLine("        {");
+
+            if (exports != null)
+            {
+                foreach ((string contract, string typeIdMember) in exports)
+                {
+                    sb.AppendLine($"            sink.Add(typeof({contract}), new global::FastIoC.Core.ExternalBinding(runtime, GeneratedTypeIds.{typeIdMember}));");
+                }
+            }
+
+            sb.AppendLine("        }");
         }
 
         private static void AppendCreateNonLazyInstances(StringBuilder sb, IReadOnlyList<string> typeIdNames)

@@ -93,6 +93,19 @@ namespace FastIoC.Core
         }
 
         /// <summary>
+        /// Resolves <paramref name="typeId"/> without the service-locator check. Only <see cref="ExternalBinding"/>
+        /// uses it, so a second container bridged through <see cref="IGlobalBindingSink"/> can resolve FastIoC's
+        /// global contracts without walking the stack on every call.
+        /// </summary>
+        internal object ResolveForExternalContainer(TypeId typeId)
+        {
+            if (TryResolveCore(typeId, out object instance))
+                return instance;
+
+            throw new InvalidOperationException($"TypeId {typeId.Id} is not registered in scene or global container.");
+        }
+
+        /// <summary>
         /// Resolves <paramref name="typeId"/>, or returns false if it isn't bound in the active scopes.
         /// Generated injectors use it, so a binding missing from a scene doesn't cost an exception.
         /// </summary>

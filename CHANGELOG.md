@@ -15,6 +15,8 @@ All notable changes to this package are documented in this file.
 - `LoadingStrategy.Manifest`: new strategy selected automatically for global path bindings outside Resources and Addressables. Scene-specific bindings without a valid strategy fail generation with a clear message.
 - `AssetPathValidator.TryGetResourcesLoadPath`: pure, testable method that finds the **last** `/Resources/` segment in a path and strips the extension. Fixes a bug where nested Resources paths (e.g. `Assets/MyGame/Resources/Config/Foo.asset`) generated an incorrect `Resources.Load` path.
 - Global path bindings that instantiate prefabs now call `DontDestroyOnLoad` on the instance so the prefab survives scene changes.
+- `IGlobalBindingSink` and `ExternalBinding` (`Runtime/Core`): a one-way bridge so a second DI container can expose FastIoC's global contracts. `ExternalBinding.Resolve()` goes straight to the runtime, bypassing the `ServiceLocatorEnforcer`.
+- `ProjectContext.ExportGlobalBindings(IGlobalBindingSink)`: hands every global contract to the sink. The generated module emits one `sink.Add(typeof(Contract), new ExternalBinding(runtime, typeId))` per global contract; scene-scoped and framework bindings are excluded. Interfaces and their self-binding map to the same instance (shared concrete TypeId). Costs nothing unless called.
 
 ### Fixed
 

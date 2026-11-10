@@ -31,6 +31,28 @@ namespace FastIoC.API
 
         public ContextRuntime Runtime => runtime;
 
+        /// <summary>
+        /// Hands every global contract to <paramref name="sink"/> so another DI container can expose FastIoC's
+        /// services. Call this once, after the other container has registered its own bindings, so the sink
+        /// can detect duplicate owners. Does nothing if the runtime is not initialized yet.
+        /// </summary>
+        public void ExportGlobalBindings(IGlobalBindingSink sink)
+        {
+            if (sink == null)
+                throw new System.ArgumentNullException(nameof(sink));
+
+            if (runtime == null)
+            {
+                Debug.LogError("[FastIoC] Runtime not initialized, cannot export global bindings.");
+                return;
+            }
+
+            if (GeneratedModuleRegistry.Module is IGlobalBindingExporter exporter)
+                exporter.ExportGlobalBindings(runtime, sink);
+            else
+                Debug.LogWarning("[FastIoC] Generated module does not export global bindings. Run Tools > FastIoC > Regenerate Code.");
+        }
+
         private void Awake()
         {
             if (!SingletonEnforcer<ProjectContext>.EnforceSingleton(this))

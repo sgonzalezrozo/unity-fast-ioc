@@ -195,6 +195,31 @@ namespace FastIoC.Tests.Editor
         }
 
         [Test]
+        public void GeneratedModule_ExportsGlobalContractsToBridgeSink()
+        {
+            List<(string contract, string typeIdMember)> exports = new()
+            {
+                ("global::FastIoC.Fixtures.IService", CodeGenTypeUtility.GetTypeIdMemberName(typeof(Service))),
+                ("global::FastIoC.Fixtures.Service", CodeGenTypeUtility.GetTypeIdMemberName(typeof(Service))),
+            };
+
+            string moduleCode = GeneratedModuleEmitter.GenerateModule(null, exports);
+
+            StringAssert.Contains("public void ExportGlobalBindings(global::FastIoC.Core.ContextRuntime runtime, global::FastIoC.Core.IGlobalBindingSink sink)", moduleCode);
+            StringAssert.Contains("sink.Add(typeof(global::FastIoC.Fixtures.IService), new global::FastIoC.Core.ExternalBinding(runtime, GeneratedTypeIds.FastIoC_Fixtures_Service));", moduleCode);
+            StringAssert.Contains("sink.Add(typeof(global::FastIoC.Fixtures.Service), new global::FastIoC.Core.ExternalBinding(runtime, GeneratedTypeIds.FastIoC_Fixtures_Service));", moduleCode);
+        }
+
+        [Test]
+        public void GeneratedModule_WithoutExports_EmitsEmptyExportMethod()
+        {
+            string moduleCode = GeneratedModuleEmitter.GenerateModule();
+
+            StringAssert.Contains("public void ExportGlobalBindings(global::FastIoC.Core.ContextRuntime runtime, global::FastIoC.Core.IGlobalBindingSink sink)", moduleCode);
+            StringAssert.DoesNotContain("sink.Add(", moduleCode);
+        }
+
+        [Test]
         public void GeneratedModule_BindingWithoutNonLazy_DoesNotAppearInCreateNonLazy()
         {
             string moduleCode = GeneratedModuleEmitter.GenerateModule(new List<string> { "FastIoC_Fixtures_Analytics" });
