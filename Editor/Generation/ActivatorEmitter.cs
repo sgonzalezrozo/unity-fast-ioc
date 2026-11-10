@@ -144,16 +144,12 @@ namespace FastIoC.Editor.Generation
                                     }
                                     else
                                     {
-                                        string paramTypeName = paramType.Name;
-                                        sb.AppendLine($"            // WARNING: Parameter type {paramType.Name} not in registry");
-                                        sb.AppendLine($"            var {paramName} = default({paramTypeName});");
+                                        EmitUnboundParameter(sb, parameters[i], paramType, paramName);
                                     }
                                 }
                                 else
                                 {
-                                    string paramTypeName = paramType.Name;
-                                    sb.AppendLine($"            // WARNING: Parameter type {paramType.Name} not in registry");
-                                    sb.AppendLine($"            var {paramName} = default({paramTypeName});");
+                                    EmitUnboundParameter(sb, parameters[i], paramType, paramName);
                                 }
                             }
 
@@ -174,6 +170,14 @@ namespace FastIoC.Editor.Generation
             sb.AppendLine("}");
 
             return sb.ToString();
+        }
+
+        private static void EmitUnboundParameter(StringBuilder sb, ParameterInfo parameter, Type paramType, string paramName)
+        {
+            if (!parameter.HasDefaultValue)
+                sb.AppendLine($"            // WARNING: Parameter type {paramType.Name} is not bound and has no default value");
+
+            sb.AppendLine($"            {CodeGenTypeUtility.GetCSharpName(paramType)} {paramName} = {CodeGenTypeUtility.FormatUnboundParameter(parameter)};");
         }
     }
 }

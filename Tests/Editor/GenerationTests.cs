@@ -39,6 +39,22 @@ namespace FastIoC.Tests.Editor
         }
 
         [Test]
+        public void Activator_UsesCompileTimeDefaultsForUnboundOptionalParameters()
+        {
+            string code = ActivatorEmitter.GenerateActivators(
+                new HashSet<Type> { typeof(DefaultPrimitivesConsumer) },
+                new Dictionary<Type, int> { [typeof(DefaultPrimitivesConsumer)] = 0 },
+                new Dictionary<Type, FastIoC.Core.Lifetime>(), new Dictionary<Type, bool>(), new Dictionary<Type, Type>());
+
+            StringAssert.Contains("global::System.Int32 param0 = 12;", code);
+            StringAssert.Contains("global::System.Single param1 = 0.7f;", code);
+            StringAssert.Contains("global::System.Boolean param2 = true;", code);
+            StringAssert.Contains("global::FastIoC.Fixtures.FixtureMode param3 = (global::FastIoC.Fixtures.FixtureMode)(2);", code);
+            StringAssert.Contains("global::System.Nullable<global::System.TimeSpan> param4 = default(global::System.Nullable<global::System.TimeSpan>);", code);
+            StringAssert.Contains("return new DefaultPrimitivesConsumer(param0, param1, param2, param3, param4);", code);
+        }
+
+        [Test]
         public void MonoInjector_AssignsInternalFieldsAndSkipsPrivateOnes()
         {
             MonoInjectorEmitter.Result result = MonoInjectorEmitter.GenerateMonoInjectors(

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -70,6 +71,63 @@ namespace FastIoC.Editor.Generation
 
             return sb.ToString();
         }
+
+        /// <summary>
+        /// C# expression for a constructor parameter whose type is not bound in any installer.
+        /// Emits the parameter's compile-time default value when it has one, so optional primitives keep
+        /// their intended value instead of collapsing to <c>default(T)</c> (e.g. an <c>int limit = 12</c>
+        /// stays 12 rather than becoming 0). Falls back to <c>default(T)</c> when there is no default value
+        /// or the literal cannot be represented.
+        /// </summary>
+        public static string FormatUnboundParameter(ParameterInfo parameter)
+        {
+            string typeName = GetCSharpName(parameter.ParameterType);
+
+            if (!parameter.HasDefaultValue)
+                return $"default({typeName})";
+
+            object value = parameter.DefaultValue;
+            if (value == null)
+                return $"default({typeName})";
+
+            Type underlying = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
+            if (underlying.IsEnum)
+            {
+                object numeric = Convert.ChangeType(value, Enum.GetUnderlyingType(underlying), CultureInfo.InvariantCulture);
+                return $"({GetCSharpName(underlying)})({Convert.ToString(numeric, CultureInfo.InvariantCulture)})";
+            }
+
+            switch (value)
+            {
+                case bool b: return b ? "true" : "false";
+                case char c: return "'" + EscapeChar(c) + "'";
+                case string s: return "\"" + EscapeString(s) + "\"";
+                case float f: return f.ToString("R", CultureInfo.InvariantCulture) + "f";
+                case double d: return d.ToString("R", CultureInfo.InvariantCulture) + "d";
+                case decimal m: return m.ToString(CultureInfo.InvariantCulture) + "m";
+                case long l: return l.ToString(CultureInfo.InvariantCulture) + "L";
+                case ulong ul: return ul.ToString(CultureInfo.InvariantCulture) + "UL";
+                case uint ui: return ui.ToString(CultureInfo.InvariantCulture) + "U";
+                case byte or sbyte or short or ushort or int:
+                    return Convert.ToString(value, CultureInfo.InvariantCulture);
+                default:
+                    return $"default({typeName})";
+            }
+        }
+
+        private static string EscapeChar(char c) => c switch
+        {
+            '\'' => "\\'",
+            '\\' => "\\\\",
+            '\n' => "\\n",
+            '\r' => "\\r",
+            '\t' => "\\t",
+            '\0' => "\\0",
+            _ => c.ToString()
+        };
+
+        private static string EscapeString(string s)
+            => s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t");
 
         /// <summary>A valid C# identifier built from the type's full name.</summary>
         public static string GetIdentifier(Type type)

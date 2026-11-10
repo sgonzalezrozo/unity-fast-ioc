@@ -32,6 +32,19 @@ namespace FastIoC.Fixtures
     public class NeedsLazyMissing { public NeedsLazyMissing(Lazy<IMissing> missing) { } }
     public class OptionalMissing { public OptionalMissing(IMissing missing = null) { } }
 
+    public enum FixtureMode { Off, On, Auto }
+
+    public class DefaultPrimitivesConsumer
+    {
+        public DefaultPrimitivesConsumer(
+            int count = 12,
+            float ratio = 0.7f,
+            bool enabled = true,
+            FixtureMode mode = FixtureMode.Auto,
+            TimeSpan? period = null)
+        { }
+    }
+
     public class FixtureView : MonoBehaviour
     {
 #pragma warning disable CS0169, CS0649

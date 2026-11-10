@@ -16,6 +16,10 @@ All notable changes to this package are documented in this file.
 - `AssetPathValidator.TryGetResourcesLoadPath`: pure, testable method that finds the **last** `/Resources/` segment in a path and strips the extension. Fixes a bug where nested Resources paths (e.g. `Assets/MyGame/Resources/Config/Foo.asset`) generated an incorrect `Resources.Load` path.
 - Global path bindings that instantiate prefabs now call `DontDestroyOnLoad` on the instance so the prefab survives scene changes.
 
+### Fixed
+
+- Constructor parameters with a compile-time default value that are not bound in any installer now keep that default in the generated activator (e.g. `int limit = 12` stays `12`). Previously the activator emitted `default(T)`, collapsing optional primitives to `0`/`false`/`null` even though the dependency validator already treats them as optional. Reference types and nullables without a default still fall back to `default(T)`. The generated parameter is now declared with its fully-qualified type, fixing invalid code for generic and nullable parameter types (e.g. `TimeSpan?`).
+
 ### Documentation
 
 - More package keywords.
