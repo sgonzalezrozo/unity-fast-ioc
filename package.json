@@ -1,6 +1,6 @@
 {
   "name": "com.sgonzalezrozo.fast-ioc",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "displayName": "Fast IoC",
   "description": "Dependency injection (IoC container) for Unity with edit-time generated code: no runtime reflection, missing bindings and cycles reported before Play Mode, per-feature installers. Verified with IL2CPP on Android, iOS and WebGL.",
   "unity": "2022.3",
