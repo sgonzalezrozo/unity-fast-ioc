@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.8.0](https://img.shields.io/badge/version-0.8.0-blue.svg)](CHANGELOG.md)
+[![Version 0.8.1](https://img.shields.io/badge/version-0.8.1-blue.svg)](CHANGELOG.md)
 
 Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones and on WebGL. See [Performance](#performance).
 
@@ -83,8 +83,10 @@ This package requires [Tools Core](https://github.com/sgonzalezrozo/unity-tools-
 3. Enter:
 
 ```text
-https://github.com/sgonzalezrozo/unity-tools-core.git
+https://github.com/sgonzalezrozo/unity-tools-core.git#v0.3.1
 ```
+
+This tag is the Tools Core version this release is tested with. Without a tag, Unity installs the latest commit.
 
 ### 2. Install this package
 
@@ -99,7 +101,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.8.0
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.8.1
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -866,7 +868,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.8.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 75 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. All 75 pass in Unity `6000.3.16f1`, and the Platform Check sample passes in IL2CPP builds on Android, iOS and WebGL. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.8.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 75 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. All 75 pass in Unity `6000.3.16f1`, and the Platform Check sample passes in IL2CPP builds on Android, iOS and WebGL. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented in this file.
 
+## [0.8.1] - 2026-11-11
+
+### Documentation
+
+- The install steps pin Tools Core to `v0.3.1`, the version this release is tested with. Without a tag, Unity installed its latest commit.
+- The Platform Check sample description in the Package Manager lists everything it checks since 0.8.0.
+
 ## [0.8.0] - 2026-11-11
 
 ### Fixed
