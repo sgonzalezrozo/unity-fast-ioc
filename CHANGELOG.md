@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Startup timing: with the scripting define symbol `FASTIOC_BOOT_TIMING`, Fast IoC logs how long each startup step takes, as `[BootTiming] FastIoC <step> <ms> ms  @ <seconds since engine start>`. Steps: loading and instantiating the `ProjectContext` prefab, each phase of its startup, every NonLazy binding (timed in the generated code), activation of hosted components, initialization, and the work on each scene load and unload. Without the symbol the calls are compiled out. `FastIoC.Core.BootTiming` exposes `Now`, `Span` and `Point` with the same clock, for project code.
+
 ## [0.7.1] - 2026-11-11
 
 ### Fixed

@@ -20,7 +20,9 @@ namespace FastIoC.UnityIntegration.Runtime.Bootstrap
                 return existing;
             }
 
+            long phase = FastIoC.Core.BootTiming.Now();
             GameObject prefab = Resources.Load<GameObject>(PROJECT_CONTEXT_PREFAB_PATH);
+            FastIoC.Core.BootTiming.Span("Bootstrap: load ProjectContext prefab", phase);
             if (prefab == null)
             {
                 Debug.LogError(
@@ -30,7 +32,10 @@ namespace FastIoC.UnityIntegration.Runtime.Bootstrap
                 return null;
             }
 
+            // ProjectContext.Awake runs inside Instantiate: its own lines break this down.
+            phase = FastIoC.Core.BootTiming.Now();
             GameObject instance = Object.Instantiate(prefab);
+            FastIoC.Core.BootTiming.Span("Bootstrap: instantiate ProjectContext (includes Awake)", phase);
             instance.name = "ProjectContext";
 
             ProjectContext context = instance.GetComponent<ProjectContext>();

@@ -634,6 +634,25 @@ Generation still succeeds, because an `internal` field isn't always a dependency
 
 Fields of concrete classes aren't checked, because they're often plain state. Fields with another container's `[Inject]` attribute are skipped too, so a project moving from Zenject or VContainer doesn't get a warning for every field the old container still fills.
 
+## Measure startup time
+
+Add the scripting define symbol `FASTIOC_BOOT_TIMING` (**Project Settings > Player > Scripting Define Symbols**, for each platform you build) to log how long each startup step takes. Without the symbol the timing calls are compiled out, so they cost nothing.
+
+```text
+[BootTiming] FastIoC Bootstrap: load ProjectContext prefab                       12 ms  @    1.023 s
+[BootTiming] FastIoC ProjectContext: instance bindings (assets, prefabs, hosted) 140 ms  @    1.180 s
+[BootTiming] FastIoC NonLazy: MyGame_Services_Analytics                           35 ms  @    1.230 s
+[BootTiming] FastIoC Scene loaded: container + injection (Menu)                    4 ms  @    2.410 s
+```
+
+Each line gives a step and its duration. The time after `@` is seconds since the engine started (`Time.realtimeSinceStartup`), so you can log your own steps with the same clock and read everything as one timeline. Lines cover: loading and instantiating the `ProjectContext` prefab, each step of its startup (runtime, instance bindings, scene and hosted injection, every NonLazy binding, activation of hosted components), initialization, and the work done when each scene loads and unloads.
+
+On Android, read them with:
+
+```bash
+adb logcat -s Unity | grep --line-buffered "\[BootTiming\]"
+```
+
 ## Editor commands
 
 | Command | Use it when |
@@ -847,7 +866,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.7.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 71 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. The 70 tests of 0.7.0 pass in Unity `6000.3.16f1`; the linking fix in 0.7.1 is verified with an IL2CPP Android build. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.7.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 72 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. The 71 tests of 0.7.1 pass in Unity `6000.3.16f1`, and its linking fix is verified with an IL2CPP Android build. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

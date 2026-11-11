@@ -32,6 +32,7 @@ namespace FastIoC.API.Initialization
                 return;
 
             string sceneName = scene.name;
+            long start = BootTiming.Now();
 
             try
             {
@@ -65,6 +66,7 @@ namespace FastIoC.API.Initialization
             // Inject the MonoBehaviours of scenes loaded after startup.
             // Scenes already injected (the first scene, injected by ProjectContext) are skipped.
             SceneInjection.InjectScene(scene, runtime);
+            BootTiming.Span($"Scene loaded: container + injection ({sceneName})", start);
         }
 
         private void OnSceneUnloaded(Scene scene)
@@ -76,7 +78,9 @@ namespace FastIoC.API.Initialization
 
             try
             {
+                long start = BootTiming.Now();
                 runtime.PopSceneContainer(scene.name);
+                BootTiming.Span($"Scene unloaded: disposal + container ({scene.name})", start);
             }
             catch (Exception ex)
             {

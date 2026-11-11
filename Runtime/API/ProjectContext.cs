@@ -59,6 +59,8 @@ namespace FastIoC.API
                 return;
 
             instance = this;
+            long awakeStart = BootTiming.Now();
+            long phase = awakeStart;
 
             ValidateGenerationStatus();
 
@@ -66,20 +68,38 @@ namespace FastIoC.API
             frameworkInit.Initialize();
 
             ValidateRootConstraint();
+            BootTiming.Span("ProjectContext: framework setup", phase);
 
+            phase = BootTiming.Now();
             RuntimeBootstrapper bootstrapper = new();
             runtime = bootstrapper.BootstrapCurrentScene();
+            BootTiming.Span("ProjectContext: create runtime", phase);
             if (runtime == null)
                 return;
 
+            phase = BootTiming.Now();
             InitializeInstanceRegistry();
+            BootTiming.Span("ProjectContext: instance bindings (assets, prefabs, hosted)", phase);
+
+            phase = BootTiming.Now();
             InjectCurrentSceneMonoBehaviours();
+            BootTiming.Span("ProjectContext: inject current scene", phase);
+
+            phase = BootTiming.Now();
             InjectHostedMonoBehaviours();
+            BootTiming.Span("ProjectContext: inject hosted components", phase);
+
+            phase = BootTiming.Now();
             CreateNonLazyInstances();
+            BootTiming.Span("ProjectContext: NonLazy total", phase);
+
+            phase = BootTiming.Now();
             ActivateHostedRoot();
+            BootTiming.Span("ProjectContext: activate hosted root (their Awake/OnEnable)", phase);
 
             sceneSubscriber = new(runtime);
             sceneSubscriber.Subscribe();
+            BootTiming.Span("ProjectContext.Awake total", awakeStart);
 
             // Nothing created so far needs initializing: skip the task, token and semaphore.
             if (runtime.InitializableCount > 0)
@@ -195,7 +215,9 @@ namespace FastIoC.API
 
             try
             {
+                long initStart = BootTiming.Now();
                 await runtime.InitializeAllAsync(maxConcurrency: 4, bootstrapCts.Token);
+                BootTiming.Span("IInitializable / IAsyncInitializable total", initStart);
             }
             catch (OperationCanceledException)
             {

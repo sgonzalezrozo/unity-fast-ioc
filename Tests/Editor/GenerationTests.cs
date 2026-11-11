@@ -196,6 +196,23 @@ namespace FastIoC.Tests.Editor
         }
 
         [Test]
+        public void GeneratedModule_TimesEachNonLazyOnlyWithTheTimingSymbol()
+        {
+            string name = CodeGenTypeUtility.GetTypeIdMemberName(typeof(Analytics));
+
+            string moduleCode = GeneratedModuleEmitter.GenerateModule(new List<string> { name });
+
+            string timed = "#if FASTIOC_BOOT_TIMING\n" +
+                           "                long start = global::FastIoC.Core.BootTiming.Now();\n" +
+                           "#endif\n" +
+                           $"                context.Resolve(GeneratedTypeIds.{name});\n" +
+                           "#if FASTIOC_BOOT_TIMING\n" +
+                           $"                global::FastIoC.Core.BootTiming.Span(\"NonLazy: {name}\", start);\n" +
+                           "#endif";
+            StringAssert.Contains(timed, moduleCode.Replace("\r\n", "\n"));
+        }
+
+        [Test]
         public void GeneratedModule_ExportsGlobalContractsToBridgeSink()
         {
             List<(string contract, string typeIdMember)> exports = new()

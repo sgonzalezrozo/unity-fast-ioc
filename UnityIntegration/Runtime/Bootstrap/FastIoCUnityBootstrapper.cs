@@ -43,6 +43,8 @@ namespace FastIoC.UnityIntegration.Runtime.Bootstrap
                 return;
 
             IsStarted = true;
+            long start = FastIoC.Core.BootTiming.Now();
+            FastIoC.Core.BootTiming.Point("Bootstrap start");
 
             try
             {
@@ -53,6 +55,7 @@ namespace FastIoC.UnityIntegration.Runtime.Bootstrap
                 ToolInjectionServices.MonoBehaviourInjector = new FastIoCMonoBehaviourInjector();
                 lifecycleObserver.StartObserving();
                 ProjectContextHelper.LoadOrCreateProjectContext();
+                FastIoC.Core.BootTiming.Span("Bootstrap total", start);
             }
             catch (Exception ex)
             {
