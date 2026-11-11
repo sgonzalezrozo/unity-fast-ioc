@@ -1,7 +1,9 @@
 # Platform Check
 
-Checks that Fast IoC works on a platform: constructor and field injection, singletons, `Lazy<T>` and `Func<T>`,
-prefab instantiation, and sync and async initialization.
+Checks that Fast IoC works on a platform: that it starts at all (its startup assembly survives code stripping),
+constructor and field injection, singletons, `Lazy<T>` and `Func<T>`, NonLazy bindings, `FromInstance(value)`, an asset
+loaded through the generated asset manifest, exporting bindings to another container, prefab instantiation, and sync
+and async initialization. Hosted components (`FromProjectContext`) need your `ProjectContext` prefab, so they aren't checked here.
 
 1. Import this sample from **Window > Package Manager > Fast IoC > Samples**.
 2. Let Fast IoC regenerate its code.

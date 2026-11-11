@@ -19,6 +19,8 @@ namespace FastIoC.Samples.PlatformCheck
         internal IPlatformClock clock;
         internal Lazy<IPlatformClock> lazyClock;
         internal IInstantiator instantiator;
+        internal PlatformValue value;
+        internal PlatformCheckConfig config;
 
         private readonly List<string> lines = new();
         private int failures;
@@ -39,6 +41,10 @@ namespace FastIoC.Samples.PlatformCheck
             Check("Field Lazy<T> resolves", lazyClock?.Value != null && ReferenceEquals(lazyClock.Value, clock));
             Check("Func<T> creates transients", service != null && service.CreateCounter().Number != service.CreateCounter().Number);
             Check("Fast IoC started (bootstrapper kept in the build)", ProjectContext.Instance != null);
+            Check("NonLazy created at startup", PlatformNonLazyProbe.Created);
+            Check("FromInstance(value) registered", value != null && value.Number == 42);
+            Check("Asset loaded through the manifest", config != null && config.answer == 42);
+            CheckExport();
             CheckPrefab();
 
             // Async initialization gets a few seconds to finish.
@@ -53,6 +59,14 @@ namespace FastIoC.Samples.PlatformCheck
             string summary = failures == 0 ? "ALL PASSED" : $"{failures} FAILED";
             Line($"Result: {summary} on {Application.platform}, {Environment()}");
             Debug.Log("[FastIoC Platform Check]\n" + string.Join("\n", lines));
+        }
+
+        private void CheckExport()
+        {
+            PlatformCountingSink sink = new();
+            ProjectContext.Instance?.ExportGlobalBindings(sink);
+            Check("Global bindings exported", sink.Count > 0);
+            Check("Exported binding resolves the same instance", sink.Clock.HasValue && ReferenceEquals(sink.Clock.Value.Resolve(), clock));
         }
 
         private void CheckPrefab()

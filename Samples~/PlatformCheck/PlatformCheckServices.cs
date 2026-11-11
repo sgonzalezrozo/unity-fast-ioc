@@ -36,6 +36,34 @@ namespace FastIoC.Samples.PlatformCheck
         }
     }
 
+    /// <summary>Bound NonLazy: created at startup although nothing asks for it.</summary>
+    public class PlatformNonLazyProbe
+    {
+        public static bool Created { get; private set; }
+
+        public PlatformNonLazyProbe() => Created = true;
+    }
+
+    /// <summary>A plain value registered with FromInstance(value) when the game starts.</summary>
+    public class PlatformValue
+    {
+        public int Number { get; set; }
+    }
+
+    /// <summary>Stands in for another container: counts the exported contracts and keeps one to resolve.</summary>
+    public class PlatformCountingSink : IGlobalBindingSink
+    {
+        public int Count { get; private set; }
+        public ExternalBinding? Clock { get; private set; }
+
+        public void Add(Type contract, ExternalBinding binding)
+        {
+            Count++;
+            if (contract == typeof(IPlatformClock))
+                Clock = binding;
+        }
+    }
+
     /// <summary>Sync and async initialization. Task.Yield keeps it on the main thread, which WebGL needs.</summary>
     public class PlatformInitService : IInitializable, IAsyncInitializable
     {
