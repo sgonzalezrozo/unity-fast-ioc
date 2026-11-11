@@ -48,6 +48,36 @@ namespace FastIoC.Editor.Graph
             return dag;
         }
 
+        /// <summary>
+        /// Returns one error per type that generated code would create with <c>new</c> but can't, because the type
+        /// has no public constructor. Generated code lives in another assembly and uses no reflection, so a private,
+        /// protected or internal constructor is out of reach. Instance bindings, interfaces, abstract classes and
+        /// value types are skipped: generated code never calls their constructor.
+        /// </summary>
+        internal static List<string> FindTypesWithoutPublicConstructor(
+            IEnumerable<Type> types,
+            IReadOnlyDictionary<Type, bool> instanceBindings)
+        {
+            List<string> errors = new();
+            foreach (Type type in types)
+            {
+                if (!type.IsClass || type.IsAbstract || type.IsGenericTypeDefinition)
+                    continue;
+
+                if (instanceBindings != null && instanceBindings.TryGetValue(type, out bool isInstance) && isInstance)
+                    continue;
+
+                if (type.GetConstructors(BindingFlags.Public | BindingFlags.Instance).Length == 0)
+                    errors.Add(NoPublicConstructorMessage(type));
+            }
+
+            return errors;
+        }
+
+        internal static string NoPublicConstructorMessage(Type type) =>
+            $"'{type.FullName}' has no public constructor, so the generated code can't create it. " +
+            "Make its constructor public, or bind an existing instance.";
+
         private static Type ResolveDependency(Type parameterType, Dictionary<Type, BindingInfo> bindings)
         {
             return bindings.TryGetValue(parameterType, out BindingInfo binding)

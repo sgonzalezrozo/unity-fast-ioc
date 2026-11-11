@@ -803,6 +803,7 @@ Not yet. It's a pre-release package (`0.x`) by a single author. It isn't used in
 | `These private fields have a bound type but aren't injected` | Make the field `internal` if it's a dependency. If it's private state, ignore the warning. |
 | `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
 | `Generated code is not registered` | Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists |
+| `has no public constructor, so the generated code can't create it` | Make the constructor public. Generated code can't call a private, protected or internal one. |
 | Compile errors in `Assets/FastIoC/Generated/` that **Regenerate Code** doesn't fix | The old generated code no longer matches the package, usually after a package update, and generation can't run while the project doesn't compile. Delete the `Assets/FastIoC/Generated/` folder, let Unity compile, then run **Regenerate Code**. |
 | `Service Locator Anti-Pattern Detected` | Inject the dependency instead of resolving it from `ContextRuntime`. The default level is strict, so this throws in the Editor and development builds. |
 

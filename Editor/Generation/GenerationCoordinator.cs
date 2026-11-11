@@ -47,6 +47,8 @@ namespace FastIoC.Editor.Generation
                 Dictionary<Type, bool> instanceBindings = InstanceBindingsBuilder.BuildInstanceBindingsMap(installerBindings);
                 Dictionary<Type, Type> interfaceImplementations = InterfaceImplementationMapBuilder.BuildInterfaceImplementationMap(coreTypes);
 
+                ValidateConstructors(reachableTypes, instanceBindings);
+
                 HashSet<Type> typesForGeneration = BuildTypesForGeneration(reachableTypes, instanceBindings);
                 string typeIdsCode = TypeIdEmitter.GenerateTypeIds(typesForGeneration, out Dictionary<Type, int> typeIdMap);
                 string activatorsCode = ActivatorEmitter.GenerateActivators(reachableTypes, typeIdMap, typeLifetimes, instanceBindings, interfaceImplementations);
@@ -207,6 +209,19 @@ namespace FastIoC.Editor.Generation
             FastIoC.Editor.Validation.HostedComponentValidator.Validate(
                 InstallerGraphCollector.GetCachedBindingInfo(),
                 InstallerGraphCollector.CollectInstallersByScene());
+        }
+
+        private static void ValidateConstructors(HashSet<Type> reachableTypes, Dictionary<Type, bool> instanceBindings)
+        {
+            List<string> errors = DependencyDagValidator.FindTypesWithoutPublicConstructor(reachableTypes, instanceBindings);
+            if (errors.Count == 0)
+                return;
+
+            lastValidationErrors = errors;
+            foreach (string error in errors)
+                Debug.LogError($"[FastIoC] {error}");
+
+            throw new InvalidOperationException("Some bound types have no public constructor");
         }
 
         private static HashSet<Type> BuildTypesForGeneration(

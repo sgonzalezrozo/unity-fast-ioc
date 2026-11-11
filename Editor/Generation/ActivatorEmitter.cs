@@ -82,9 +82,9 @@ namespace FastIoC.Editor.Generation
 
                     if (constructors.Length == 0)
                     {
-                        // No-arg constructor
-                        string typeName = type.Name;
-                        sb.AppendLine($"            return new {typeName}();");
+                        // The implicit constructor is public, so an empty list means only non-public ones exist.
+                        // GenerationCoordinator reports this before emitting; this guards direct callers.
+                        throw new InvalidOperationException(FastIoC.Editor.Graph.DependencyDagValidator.NoPublicConstructorMessage(type));
                     }
                     else
                     {

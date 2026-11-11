@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- A bound class with only non-public constructors made generation write `new T()`, which doesn't compile. Generation now fails with a message that names the type and asks for a public constructor.
+
 ### Documentation
 
 - The README says CI isn't set up yet, and the Tests workflow runs only by hand.

@@ -359,5 +359,38 @@ namespace FastIoC.Tests.Editor
             Assert.Throws<InvalidOperationException>(() =>
                 FastIoC.Editor.Validation.HostedComponentValidator.Validate(bindings, sceneOnly));
         }
+
+        [Test]
+        public void ConstructorCheck_ReportsOnlyClassesGeneratedCodeMustCreate()
+        {
+            List<string> errors = DependencyDagValidator.FindTypesWithoutPublicConstructor(
+                new[] { typeof(PrivateConstructorService), typeof(Service), typeof(IService), typeof(AbstractService) },
+                new Dictionary<Type, bool>());
+
+            Assert.AreEqual(1, errors.Count);
+            StringAssert.Contains("FastIoC.Fixtures.PrivateConstructorService", errors[0]);
+            StringAssert.Contains("no public constructor", errors[0]);
+        }
+
+        [Test]
+        public void ConstructorCheck_SkipsInstanceBindings()
+        {
+            List<string> errors = DependencyDagValidator.FindTypesWithoutPublicConstructor(
+                new[] { typeof(PrivateConstructorService) },
+                new Dictionary<Type, bool> { [typeof(PrivateConstructorService)] = true });
+
+            Assert.IsEmpty(errors);
+        }
+
+        [Test]
+        public void Activator_TypeWithoutPublicConstructor_Throws()
+        {
+            InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => ActivatorEmitter.GenerateActivators(
+                new HashSet<Type> { typeof(PrivateConstructorService) },
+                new Dictionary<Type, int> { [typeof(PrivateConstructorService)] = 0 },
+                new Dictionary<Type, FastIoC.Core.Lifetime>(), new Dictionary<Type, bool>(), new Dictionary<Type, Type>()));
+
+            StringAssert.Contains("PrivateConstructorService", ex.Message);
+        }
     }
 }

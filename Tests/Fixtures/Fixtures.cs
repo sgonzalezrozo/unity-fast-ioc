@@ -32,6 +32,10 @@ namespace FastIoC.Fixtures
     public class NeedsLazyMissing { public NeedsLazyMissing(Lazy<IMissing> missing) { } }
     public class OptionalMissing { public OptionalMissing(IMissing missing = null) { } }
 
+    // Only a non-public constructor: generated code can't create it.
+    public class PrivateConstructorService { private PrivateConstructorService(IService service) { } }
+    public abstract class AbstractService { }
+
     public enum FixtureMode { Off, On, Auto }
 
     public class DefaultPrimitivesConsumer
