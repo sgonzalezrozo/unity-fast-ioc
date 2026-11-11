@@ -33,7 +33,7 @@ namespace FastIoC.Core
                 object sceneInstance = sceneActivator(contextRuntime);
 
                 cache.SetCached(typeId, sceneLifetime, sceneInstance);
-                contextRuntime.TrackCreatedInstance(sceneInstance);
+                contextRuntime.TrackCreatedInstance(typeId, sceneLifetime, sceneInstance);
 
                 instance = sceneInstance;
                 return true;
@@ -57,7 +57,7 @@ namespace FastIoC.Core
             object globalInstance = globalActivator(contextRuntime);
 
             cache.SetCached(typeId, globalLifetime, globalInstance);
-            contextRuntime.TrackCreatedInstance(globalInstance);
+            contextRuntime.TrackCreatedInstance(typeId, globalLifetime, globalInstance);
 
             instance = globalInstance;
             return true;

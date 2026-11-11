@@ -69,7 +69,7 @@ Use `Lazy<T>` (resolved the first time `.Value` is read) or `Func<T>` (resolved 
 
 ## Lifecycle
 
-Services can implement `IInitializable`, `IAsyncInitializable` or `IDisposableHook` (namespace `FastIoC.Core`). Async initialization doesn't block the first scene, so check that a service is ready before using it.
+Services can implement `IInitializable` or `IAsyncInitializable` (namespace `FastIoC.Core`), and `System.IDisposable`. Fast IoC disposes the `IDisposable` instances it creates: scene singletons and `AsCached` when a scene unloads, global singletons when the app quits. It never disposes transients, `FromInstance`/`FromProjectContext` objects or Unity objects. Async initialization doesn't block the first scene, so check that a service is ready before using it.
 
 ## Check your work
 

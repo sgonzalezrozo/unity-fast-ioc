@@ -8,11 +8,6 @@ namespace FastIoC.Core
         void Initialize();
     }
 
-    public interface IDisposableHook
-    {
-        void OnDispose();
-    }
-
     public interface IAsyncInitializable
     {
         Task InitializeAsync(CancellationToken ct = default);

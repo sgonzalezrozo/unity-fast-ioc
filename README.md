@@ -54,7 +54,7 @@ I built and refined it on my own time in personal projects. It isn't used in pro
 - `NonLazy()` singletons created at startup, in a fixed order
 - `FromProjectContext()` for components that live on the `ProjectContext` prefab
 - Global and scene-specific installers with priorities
-- Sync and async initialization, plus disposal hooks
+- Sync and async initialization, and `IDisposable` cleanup per scene and at app exit
 - Prefab instantiation with injection and data through `IInstantiator`
 - Service-locator detection in the Editor and development builds
 - Export of global bindings to another DI container
@@ -456,14 +456,25 @@ public class SaveService
 ## Lifecycle
 
 ```csharp
+using System;
 using FastIoC.Core;
 
-public class SaveSystem : IInitializable, IDisposableHook
+public class SaveSystem : IInitializable, IDisposable
 {
     public void Initialize() { }
-    public void OnDispose() { }
+    public void Dispose() { }
 }
 ```
+
+Fast IoC disposes the `IDisposable` instances it creates, in reverse creation order:
+
+| Lifetime | Disposed when |
+|---|---|
+| `AsSingle()` in a global installer | The `ProjectContext` is destroyed: the app quits, or Play Mode ends |
+| `AsSingle()` in a scene installer, and `AsCached()` | A scene unloads |
+| `AsTransient()` | Never: the class that received it owns it |
+
+Instances Fast IoC didn't create are never disposed: `FromInstance(...)`, `FromProjectContext()` and any Unity object. If one `Dispose` throws, the exception is logged and the other instances are still disposed.
 
 Services can also implement `IAsyncInitializable`:
 

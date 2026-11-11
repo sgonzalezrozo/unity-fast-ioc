@@ -2,6 +2,18 @@
 
 All notable changes to this package are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking:** `IDisposableHook` is removed. Fast IoC now disposes the `System.IDisposable` instances it creates, like most .NET containers: replace `IDisposableHook` with `IDisposable` and `OnDispose()` with `Dispose()`. Classes that already implement `IDisposable` and are created by Fast IoC are now disposed too.
+- Transient instances are never disposed, since the class that received one owns it. Instances Fast IoC didn't create are never disposed either: instance bindings (`FromInstance`, `FromProjectContext`) and Unity objects.
+
+### Fixed
+
+- Scene singletons and `AsCached` instances were dropped without disposal when a scene unloaded, so their cleanup only ran when the app quit, if at all. They're now disposed when the scene unloads, before their caches are cleared. `ContextRuntime.ClearSceneSingletons()` disposes scene singletons too.
+- Disposal runs in reverse creation order, and an exception from one `Dispose` is logged without stopping the rest.
+
 ## [0.6.0] - 2026-11-10
 
 ### Added

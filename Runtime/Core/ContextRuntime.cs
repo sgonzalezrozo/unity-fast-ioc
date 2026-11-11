@@ -29,15 +29,22 @@ namespace FastIoC.Core
             sceneStack = new(cacheArray);
             resolutionStrategy = new DualContainerResolutionStrategy(sceneStack);
             initCoordinator = new();
-            disposeCoordinator = new(cacheArray);
+            disposeCoordinator = new(cacheArray, IsInstanceBinding);
             diagnostics = new();
         }
 
         public void PushSceneContainer(string sceneName, RecipeActivator[] activators, Lifetime[] lifetimes)
             => sceneStack.Push(sceneName, activators, lifetimes);
 
+        /// <summary>
+        /// Ends a scene: disposes the scene singletons and cached instances the container created,
+        /// then removes the scene's container. Runs for every unloaded scene, with or without bindings of its own.
+        /// </summary>
         public void PopSceneContainer(string sceneName)
-            => sceneStack.Pop(sceneName);
+        {
+            disposeCoordinator.DisposeSceneInstances();
+            sceneStack.Pop(sceneName);
+        }
 
         public RecipeActivator[] GetTopSceneActivators()
             => sceneStack.GetTopActivators();
@@ -131,12 +138,19 @@ namespace FastIoC.Core
         /// Registers a newly activated instance for its lifecycle hooks.
         /// Called only on creation, so a cached instance costs no type checks on later resolves.
         /// </summary>
-        internal void TrackCreatedInstance(object instance)
+        internal void TrackCreatedInstance(TypeId typeId, Lifetime lifetime, object instance)
         {
             if (instance is IInitializable or IAsyncInitializable)
                 initCoordinator.TrackInstance(instance);
-            if (instance is IDisposableHook)
-                disposeCoordinator.TrackInstance(instance);
+            if (instance is IDisposable)
+                disposeCoordinator.TrackInstance(typeId, lifetime, instance);
+        }
+
+        // An instance binding returns the object the project registered: the container doesn't own it.
+        private static bool IsInstanceBinding(TypeId typeId, object instance)
+        {
+            IGeneratedModule module = GeneratedModuleRegistry.Module;
+            return module != null && ReferenceEquals(module.GetInstance(typeId.Id), instance);
         }
 
         /// <summary>Instances created so far that implement IInitializable or IAsyncInitializable.</summary>
