@@ -17,6 +17,18 @@ namespace FastIoC.Editor.Generation
     {
         private static List<string> lastValidationErrors;
 
+        /// <summary>
+        /// Generates again even if the result is code that failed to compile before. Manual regeneration uses it:
+        /// the cause may be fixed without changing the generated code, for example by making a type accessible.
+        /// If it still doesn't compile, <see cref="GeneratedCodeRecovery"/> removes it again; nothing loops,
+        /// because only a manual run takes this path.
+        /// </summary>
+        public static void GenerateAllRetryingFailedCode()
+        {
+            GeneratedCodeRecovery.Clear();
+            GenerateAll();
+        }
+
         public static void GenerateAll()
         {
             lastValidationErrors = null;
@@ -399,6 +411,18 @@ namespace FastIoC.Editor.Generation
             return attr?.Priority ?? 0;
         }
 
+        /// <summary>The generated sources, in write order. <see cref="GeneratedCodeRecovery"/> hashes them in this order.</summary>
+        internal static readonly string[] GeneratedSourceFiles =
+        {
+            "GeneratedTypeIds.cs",
+            "GeneratedActivators.cs",
+            "GeneratedMonoInjectors.cs",
+            "GeneratedModule.cs",
+            "GeneratedRegistry.cs",
+            "GeneratedInstanceRegistry.cs",
+            "InstanceRegistryInitializer.cs",
+        };
+
         private static void WriteGeneratedFiles(
             string typeIdsCode,
             string activatorsCode,
@@ -408,17 +432,26 @@ namespace FastIoC.Editor.Generation
             string instanceRegistryCode,
             string instanceInitCode)
         {
+            // Same order as GeneratedSourceFiles.
+            string[] sources = { typeIdsCode, activatorsCode, injectorCode, moduleCode, registryCode, instanceRegistryCode, instanceInitCode };
+
+            // Writing code that already failed to compile would lock the project again: see GeneratedCodeRecovery.
+            if (GeneratedCodeRecovery.IsKnownToFail(GeneratedCodeRecovery.ComputeCodeHash(sources)))
+            {
+                lastValidationErrors = GeneratedCodeRecovery.FailedCodeErrors;
+                throw new InvalidOperationException(
+                    "This is the same generated code that failed to compile, so it wasn't written again. " +
+                    "Fix the cause listed in errorDetails; the next change regenerates.");
+            }
+
             string generatedPath = FastIoCConstants.GENERATED_PATH;
             EnsureDirectory(generatedPath);
             DeleteObsoleteGeneratedFiles(generatedPath);
 
-            WriteFile(Path.Combine(generatedPath, "GeneratedTypeIds.cs"), typeIdsCode);
-            WriteFile(Path.Combine(generatedPath, "GeneratedActivators.cs"), activatorsCode);
-            WriteFile(Path.Combine(generatedPath, "GeneratedMonoInjectors.cs"), injectorCode);
-            WriteFile(Path.Combine(generatedPath, "GeneratedModule.cs"), moduleCode);
-            WriteFile(Path.Combine(generatedPath, "GeneratedRegistry.cs"), registryCode);
-            WriteFile(Path.Combine(generatedPath, "GeneratedInstanceRegistry.cs"), instanceRegistryCode);
-            WriteFile(Path.Combine(generatedPath, "InstanceRegistryInitializer.cs"), instanceInitCode);
+            for (int i = 0; i < GeneratedSourceFiles.Length; i++)
+                WriteFile(Path.Combine(generatedPath, GeneratedSourceFiles[i]), sources[i]);
+
+            GeneratedCodeRecovery.Clear();
         }
 
         private static readonly string[] ObsoleteGeneratedFiles =

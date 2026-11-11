@@ -5,6 +5,7 @@ using FastIoC.Editor.Graph;
 using FastIoC.Editor.Validation;
 using FastIoC.Fixtures;
 using NUnit.Framework;
+using UnityEditor.Compilation;
 
 namespace FastIoC.Tests.Editor
 {
@@ -391,6 +392,59 @@ namespace FastIoC.Tests.Editor
                 new Dictionary<Type, FastIoC.Core.Lifetime>(), new Dictionary<Type, bool>(), new Dictionary<Type, Type>()));
 
             StringAssert.Contains("PrivateConstructorService", ex.Message);
+        }
+
+        [Test]
+        public void Recovery_RecoversWhenEveryErrorIsInGeneratedCode()
+        {
+            CompilerMessage[] messages =
+            {
+                new() { type = CompilerMessageType.Error, file = "Assets/FastIoC/Generated/GeneratedActivators.cs", line = 430, message = "CS1729" },
+                new() { type = CompilerMessageType.Error, file = @"C:\Project\Assets\FastIoC\Generated\GeneratedModule.cs", line = 7, message = "CS0246" },
+                new() { type = CompilerMessageType.Warning, file = "Assets/Game/Player.cs", line = 1, message = "CS0168" },
+            };
+
+            List<string> errors = GeneratedCodeRecovery.FindRecoverableErrors(messages, "Assets/FastIoC/Generated");
+
+            Assert.AreEqual(2, errors.Count);
+            Assert.AreEqual("Assets/FastIoC/Generated/GeneratedActivators.cs(430): CS1729", errors[0]);
+            StringAssert.EndsWith("/Assets/FastIoC/Generated/GeneratedModule.cs(7): CS0246", errors[1]);
+        }
+
+        [TestCase("Assets/Game/Player.cs")]
+        [TestCase("Assets/FastIoC/GeneratedOld/Other.cs")]
+        [TestCase("")]
+        public void Recovery_LeavesGeneratedCodeWhenAnyErrorIsElsewhere(string otherFile)
+        {
+            CompilerMessage[] messages =
+            {
+                new() { type = CompilerMessageType.Error, file = "Assets/FastIoC/Generated/GeneratedActivators.cs", line = 430, message = "CS0246" },
+                new() { type = CompilerMessageType.Error, file = otherFile, line = 3, message = "CS1002" },
+            };
+
+            Assert.IsEmpty(GeneratedCodeRecovery.FindRecoverableErrors(messages, "Assets/FastIoC/Generated"));
+        }
+
+        [Test]
+        public void Recovery_NoErrors_NothingToRecover()
+        {
+            CompilerMessage[] messages =
+            {
+                new() { type = CompilerMessageType.Warning, file = "Assets/FastIoC/Generated/GeneratedRegistry.cs", line = 1, message = "CS0168" },
+            };
+
+            Assert.IsEmpty(GeneratedCodeRecovery.FindRecoverableErrors(messages, "Assets/FastIoC/Generated"));
+        }
+
+        [Test]
+        public void Recovery_CodeHashDependsOnContentAndOrder()
+        {
+            string hash = GeneratedCodeRecovery.ComputeCodeHash(new[] { "a", "b" });
+
+            Assert.AreEqual(hash, GeneratedCodeRecovery.ComputeCodeHash(new[] { "a", "b" }));
+            Assert.AreNotEqual(hash, GeneratedCodeRecovery.ComputeCodeHash(new[] { "b", "a" }));
+            Assert.AreNotEqual(hash, GeneratedCodeRecovery.ComputeCodeHash(new[] { "ab", "" }));
+            Assert.AreNotEqual(hash, GeneratedCodeRecovery.ComputeCodeHash(new[] { "a", "c" }));
         }
     }
 }

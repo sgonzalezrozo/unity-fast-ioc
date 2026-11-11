@@ -33,6 +33,10 @@ namespace FastIoC.Editor
         {
             const string waitAndRetry = "Wait for Unity to finish compiling (click into the Editor if nothing happens), then build again.";
 
+            if (Generation.GeneratedCodeRecovery.HasFailedCode)
+                throw new BuildFailedException("[FastIoC] Generated code didn't compile and was removed, so this build would have no dependency injection. " +
+                                               "Fix the cause listed in " + FastIoCConstants.GENERATED_PATH + "/GenerationStatus.json, then regenerate.");
+
             if (SessionState.GetBool(PENDING_KEY, false))
                 throw new BuildFailedException("[FastIoC] Fast IoC generated new code that the Editor hasn't loaded yet. " + waitAndRetry);
 

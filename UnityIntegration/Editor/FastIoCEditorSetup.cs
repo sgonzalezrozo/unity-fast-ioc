@@ -93,7 +93,7 @@ namespace FastIoC.UnityIntegration.Editor
             AddCoreComponentsToPrefab();
 
             // Generate code
-            GenerationCoordinator.GenerateAll();
+            GenerationCoordinator.GenerateAllRetryingFailedCode();
 
             EditorUtility.DisplayDialog(
                 "FastIoC Setup Complete!",
@@ -116,7 +116,7 @@ namespace FastIoC.UnityIntegration.Editor
         public static void RegenerateCode()
         {
             EnsureEditorProviderInitialized();
-            GenerationCoordinator.GenerateAll();
+            GenerationCoordinator.GenerateAllRetryingFailedCode();
             EditorUtility.DisplayDialog("FastIoC", "Code regeneration complete!", "OK");
         }
 
@@ -129,7 +129,7 @@ namespace FastIoC.UnityIntegration.Editor
             FastIoCEditorAutoRegen.ClearLastHash();
 
             // Regenerate code
-            GenerationCoordinator.GenerateAll();
+            GenerationCoordinator.GenerateAllRetryingFailedCode();
 
 
             EditorUtility.DisplayDialog(

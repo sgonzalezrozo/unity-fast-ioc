@@ -77,6 +77,7 @@ After changing scripts, wait for Unity to compile, then read `Assets/FastIoC/Gen
 
 - `"status": 0` means generation succeeded.
 - `"status": 1` means it failed. The file lists the errors, such as a missing binding (`X requires Y, which isn't bound in any installer`) or a dependency cycle. Fix them in the installers or constructors, not in the generated code.
+- If `errorReason` says the generated code didn't compile and was removed, `errorDetails` holds the compile errors. Fix their cause in the installers or the bound classes, not in the generated code. Generation won't write the same code again; if the fix doesn't change the generated code, run **Regenerate Code**.
 - `warnings` lists `internal` MonoBehaviour fields whose interface or abstract type has no binding. They stay `null` at runtime, so bind the type unless the code assigns the field itself.
 
 To regenerate without a compile, run **Tools > FastIoC > Regenerate Code**, or in batch mode:

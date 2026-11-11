@@ -546,6 +546,8 @@ if grep -q '"status": *1' Assets/FastIoC/Generated/GenerationStatus.json; then e
 - Entering Play Mode logs `CODE GENERATION FAILED` and pauses the Editor.
 - Player builds aren't blocked, so a build can ship with the last good generated code.
 
+If the generated code itself doesn't compile, generation could never run again, because it runs after a successful compile. Fast IoC breaks that loop. When every compile error is in the generated code, it removes the generated sources (keeping `GenerationStatus.json`, which lists the compile errors) so the project compiles, and it won't write that same code again. Fix the cause and the next change regenerates; **Regenerate Code** always retries. Player builds stop until new generated code is written. If your own code also has errors, nothing is removed: fix those first. In batch mode nothing is removed, so CI fails on the compile error.
+
 A player build does stop if Fast IoC generated new code that the Editor hasn't loaded yet, for example when you build right after **Regenerate Code**. Wait for Unity to finish compiling, then build again. Scenes are baked from the generated code loaded in the Editor, so building earlier would bake them from the old code.
 
 ### Example: a dependency cycle
@@ -804,7 +806,9 @@ Not yet. It's a pre-release package (`0.x`) by a single author. It isn't used in
 | `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
 | `Generated code is not registered` | Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists |
 | `has no public constructor, so the generated code can't create it` | Make the constructor public. Generated code can't call a private, protected or internal one. |
-| Compile errors in `Assets/FastIoC/Generated/` that **Regenerate Code** doesn't fix | The old generated code no longer matches the package, usually after a package update, and generation can't run while the project doesn't compile. Delete the `Assets/FastIoC/Generated/` folder, let Unity compile, then run **Regenerate Code**. |
+| `Generated code didn't compile, so Fast IoC removed it` | Fix the errors listed in `GenerationStatus.json`. The next change regenerates; **Regenerate Code** retries right away. |
+| `This is the same generated code that failed to compile` | Generation refused to write code that already broke the build. Fix the listed cause, or run **Regenerate Code** if the fix doesn't change the generated code (for example, an added `InternalsVisibleTo`). |
+| Compile errors in `Assets/FastIoC/Generated/` that stay after an update from 0.5.0 or earlier | Those versions can't remove generated code that doesn't compile. Delete the `Assets/FastIoC/Generated/` folder once, let Unity compile, then run **Regenerate Code**. |
 | `Service Locator Anti-Pattern Detected` | Inject the dependency instead of resolving it from `ContextRuntime`. The default level is strict, so this throws in the Editor and development builds. |
 
 ## Limitations

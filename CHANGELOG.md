@@ -4,6 +4,11 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Generated code that doesn't compile no longer locks the project. Generation runs after a successful compile, so broken generated code used to block it for good. Now, when every error of a compile is inside `Assets/FastIoC/Generated/`, Fast IoC removes the generated sources so the project compiles, keeps `GenerationStatus.json` with the compile errors, and remembers the removed code. Generation refuses to write that same code again, so it can't loop; any change that produces different code writes normally. **Regenerate Code** always retries. If the project has errors of its own, nothing is removed, since those can break the generated code without it being wrong. Player builds stop while the removed code is on record. Batch mode is left alone, so CI fails on the compile error.
+- `GenerationCoordinator.GenerateAllRetryingFailedCode()`: generates even if the result is code that failed to compile before. The **Setup** and **Regenerate Code** commands use it.
+
 ### Fixed
 
 - A bound class with only non-public constructors made generation write `new T()`, which doesn't compile. Generation now fails with a message that names the type and asks for a public constructor.
