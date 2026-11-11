@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Text;
 using FastIoC.API;
 using FastIoC.Core;
-using FastIoC.UnityIntegration.Runtime.Bootstrap;
 using UnityEngine;
 
 namespace FastIoC.Samples.PlatformCheck
@@ -28,7 +27,9 @@ namespace FastIoC.Samples.PlatformCheck
         private IEnumerator Start()
         {
             // Startup state, to tell a platform problem from a setup problem when injection fails.
-            Line($"Startup: bootstrapper started {FastIoCUnityBootstrapper.IsStarted}, generated module {GeneratedModuleRegistry.IsRegistered}, " +
+            // Don't reference FastIoC.Integration here: like a real project, this sample must rely on
+            // [assembly: AlwaysLinkAssembly] to keep the bootstrapper in the build.
+            Line($"Startup: generated module {GeneratedModuleRegistry.IsRegistered}, " +
                  $"ProjectContext {ProjectContext.Instance != null}, container {ProjectContext.Instance != null && ProjectContext.Instance.Runtime != null}, " +
                  $"baked scene manifest {FindObjectsByType<SceneInjectionManifest>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length > 0}");
 
@@ -37,6 +38,7 @@ namespace FastIoC.Samples.PlatformCheck
             Check("Constructor Lazy<T> resolves", service?.LazyClock.Value?.Ticks == 7);
             Check("Field Lazy<T> resolves", lazyClock?.Value != null && ReferenceEquals(lazyClock.Value, clock));
             Check("Func<T> creates transients", service != null && service.CreateCounter().Number != service.CreateCounter().Number);
+            Check("Fast IoC started (bootstrapper kept in the build)", ProjectContext.Instance != null);
             CheckPrefab();
 
             // Async initialization gets a few seconds to finish.

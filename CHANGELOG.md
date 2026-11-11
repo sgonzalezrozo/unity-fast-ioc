@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- In a player build, Fast IoC could fail to start: no `ProjectContext`, no injection, and no error. Unity's linker removes an assembly that no code in the build references, and `FastIoC.Integration`, which holds the startup method, usually isn't referenced by project code. The runtime assemblies are now marked `[assembly: AlwaysLinkAssembly]`, and a test checks that every runtime assembly with a `[RuntimeInitializeOnLoadMethod]` has it.
+- The **Platform Check** sample no longer references `FastIoC.Integration`, which kept that assembly in its builds and hid the bug above. It now checks that Fast IoC started, like a real project would.
+
 ## [0.7.0] - 2026-11-10
 
 ### Changed
