@@ -4,6 +4,10 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- `FromInstance("Name")` could bind the wrong asset. The name search matched parts of names and included scripts, then used the first result, so `ShopConfig.cs` or `ShopConfigOld.asset` could be picked for `ShopConfig.asset`. Now only an exact file name counts and scripts are skipped. **Behavior change:** if two assets have the same name, generation fails and lists them instead of picking one; pass the full path.
+
 ### Added
 
 - Startup timing: with the scripting define symbol `FASTIOC_BOOT_TIMING`, Fast IoC logs how long each startup step takes, as `[BootTiming] FastIoC <step> <ms> ms  @ <seconds since engine start>`. Steps: loading and instantiating the `ProjectContext` prefab, each phase of its startup, every NonLazy binding (timed in the generated code), activation of hosted components, initialization, and the work on each scene load and unload. Without the symbol the calls are compiled out. `FastIoC.Core.BootTiming` exposes `Now`, `Span` and `Point` with the same clock, for project code.

@@ -176,19 +176,56 @@ namespace FastIoC.Editor.Validation
                 return null;
             }
 
-            string[] guids = AssetDatabase.FindAssets(System.IO.Path.GetFileNameWithoutExtension(assetPathOrName));
+            string assetName = System.IO.Path.GetFileNameWithoutExtension(assetPathOrName);
+            List<string> candidates = new();
+            foreach (string guid in AssetDatabase.FindAssets(assetName))
+                candidates.Add(AssetDatabase.GUIDToAssetPath(guid));
 
-            if (guids.Length == 0)
-                return null;
+            return SelectAssetByName(assetName, candidates);
+        }
 
-            if (guids.Length > 1)
+        /// <summary>
+        /// Picks the asset a name refers to. <c>AssetDatabase.FindAssets</c> matches parts of names and also returns
+        /// scripts, so a class and its asset with the same name (<c>ShopConfig.cs</c>, <c>ShopConfig.asset</c>) both
+        /// match. Only an exact file name counts, scripts and folders are skipped, and more than one match fails
+        /// instead of guessing. Returns null when nothing matches.
+        /// </summary>
+        internal static string SelectAssetByName(string assetName, IEnumerable<string> candidatePaths)
+        {
+            List<string> matches = new();
+            foreach (string path in candidatePaths)
             {
-                string assetName = System.IO.Path.GetFileNameWithoutExtension(assetPathOrName);
-                Debug.LogWarning($"[FastIoC] Multiple assets found with name '{assetName}'. " +
-                    $"Using first match. Consider using full path for clarity.");
+                if (string.IsNullOrEmpty(path) || System.IO.Path.GetFileNameWithoutExtension(path) != assetName)
+                    continue;
+
+                string extension = System.IO.Path.GetExtension(path);
+                if (string.IsNullOrEmpty(extension) || IsCodeFile(extension))
+                    continue;
+
+                matches.Add(path);
             }
 
-            return AssetDatabase.GUIDToAssetPath(guids[0]);
+            if (matches.Count <= 1)
+                return matches.Count == 1 ? matches[0] : null;
+
+            throw new InvalidOperationException(
+                $"[FastIoC] Code generation FAILED: {matches.Count} assets are named '{assetName}': " +
+                string.Join(", ", matches) + ". Pass the full Assets/... path instead of the name.");
+        }
+
+        private static bool IsCodeFile(string extension)
+        {
+            switch (extension.ToLowerInvariant())
+            {
+                case ".cs":
+                case ".asmdef":
+                case ".asmref":
+                case ".dll":
+                case ".js":
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         internal static LoadingStrategy DetermineLoadingStrategy(string assetPath, bool isGlobal, out string addressablesAddress)

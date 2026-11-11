@@ -283,7 +283,7 @@ namespace MyGame.Shop
 ```
 
 - **Finish with `AsSingle()`.** `FromInstance(assetPath)` doesn't record the binding by itself.
-- **Pass the asset's name or its full path.** `"ShopConfig"` searches the project and uses the first match. A value containing `/` must be the full path, such as `Assets/Resources/Config/ShopConfig.asset`.
+- **Pass the asset's name or its full path.** `"ShopConfig"` searches the project for an asset with exactly that file name, skipping scripts such as `ShopConfig.cs`. If two assets have that name, generation fails and lists them: pass the full path. A value containing `/` must be the full path, such as `Assets/Resources/Config/ShopConfig.asset`.
 - **Global installers accept assets in any folder.** An asset in a `Resources` folder is loaded from there, and one marked as Addressable through Addressables. Any other asset is referenced from a generated manifest, `Assets/Resources/Tools/FastIoC/AssetManifest.asset`, so you don't have to move it. Commit the manifest and its `.meta`.
 - **Scene-specific installers need `Resources` or Addressables.** Generation fails for an asset that's in neither.
 - **Prefabs must have the bound type on their root.** Fast IoC instantiates the prefab at startup.
@@ -866,7 +866,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.7.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 72 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. The 71 tests of 0.7.1 pass in Unity `6000.3.16f1`, and its linking fix is verified with an IL2CPP Android build. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.7.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 75 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. The 71 tests of 0.7.1 pass in Unity `6000.3.16f1`, and its linking fix is verified with an IL2CPP Android build. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

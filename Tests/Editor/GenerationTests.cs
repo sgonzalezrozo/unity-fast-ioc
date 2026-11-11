@@ -196,6 +196,35 @@ namespace FastIoC.Tests.Editor
         }
 
         [Test]
+        public void AssetByName_PicksTheAssetNotTheScriptWithTheSameName()
+        {
+            string path = AssetPathValidator.SelectAssetByName("ShopConfig", new[]
+            {
+                "Assets/Game/ShopConfig.cs",
+                "Assets/Game/ShopConfigOld.asset",
+                "Assets/Game/Data/ShopConfig.asset",
+            });
+
+            Assert.AreEqual("Assets/Game/Data/ShopConfig.asset", path);
+        }
+
+        [Test]
+        public void AssetByName_NoExactMatch_ReturnsNull()
+        {
+            Assert.IsNull(AssetPathValidator.SelectAssetByName("ShopConfig", new[] { "Assets/ShopConfigOld.asset", "Assets/ShopConfig.cs" }));
+        }
+
+        [Test]
+        public void AssetByName_TwoAssetsWithTheSameName_FailsInsteadOfGuessing()
+        {
+            InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() =>
+                AssetPathValidator.SelectAssetByName("ShopConfig", new[] { "Assets/A/ShopConfig.asset", "Assets/B/ShopConfig.prefab" }));
+
+            StringAssert.Contains("Assets/A/ShopConfig.asset", ex.Message);
+            StringAssert.Contains("Assets/B/ShopConfig.prefab", ex.Message);
+        }
+
+        [Test]
         public void GeneratedModule_TimesEachNonLazyOnlyWithTheTimingSymbol()
         {
             string name = CodeGenTypeUtility.GetTypeIdMemberName(typeof(Analytics));
