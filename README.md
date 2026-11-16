@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.8.1](https://img.shields.io/badge/version-0.8.1-blue.svg)](CHANGELOG.md)
+[![Version 0.9.0](https://img.shields.io/badge/version-0.9.0-blue.svg)](CHANGELOG.md)
 
 Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones and on WebGL. See [Performance](#performance).
 
@@ -101,7 +101,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.8.1
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.9.0
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -535,16 +535,22 @@ Fast IoC checks for changes after each script compile, and regenerates when you'
 - The constructor of a bound type
 - An `internal` field on a MonoBehaviour
 
-It also regenerates when you delete a script. After a failed generation, it tries again on the next compile. To regenerate at any time, run **Tools > FastIoC > Regenerate Code**.
+It also regenerates when you delete a script the generated code uses; deleting any other script, such as one from another package, leaves the generated code alone. After a failed generation, it tries again on the next compile. To regenerate at any time, run **Tools > FastIoC > Regenerate Code**.
+
+Every player build regenerates first. When nothing changed, the build goes on as usual. When something changed, the Editor hasn't compiled it yet, so the build stops and asks you to build again once Unity finishes compiling. A build never uses generated code that's missing or out of date. Define `FASTIOC_SKIP_BUILD_GENERATION` to turn this off.
 
 ### Run it in CI
 
-There's no dedicated CI command yet, but generation can be called with `-executeMethod`:
+Batch mode doesn't regenerate by itself after a compile. Run generation as its own step, then build in a second Unity run, so the build compiles the new code:
 
 ```bash
 unity -batchmode -quit -projectPath . \
   -executeMethod FastIoC.Editor.Generation.GenerationCoordinator.GenerateAll
 ```
+
+If the build regenerates code that the previous step didn't write, it stops instead of building with old code; run the build again. A build also stops when the project has installers but no generated code.
+
+Deleting a script the generated code uses doesn't remove the generated code in batch mode, because nothing would regenerate it there: the compile error names what to fix.
 
 Generation catches its own errors, so Unity can still exit with code `0` after a failed run. Check the status file afterward. A value of `1` means it failed:
 
@@ -557,7 +563,7 @@ if grep -q '"status": *1' Assets/FastIoC/Generated/GenerationStatus.json; then e
 - The errors are logged in the Console, and `GenerationStatus.json` records them.
 - The previous generated files stay in place.
 - Entering Play Mode logs `CODE GENERATION FAILED` and pauses the Editor.
-- Player builds aren't blocked, so a build can ship with the last good generated code.
+- Player builds stop, because every build regenerates first and stops when generation fails.
 
 If the generated code itself doesn't compile, generation could never run again, because it runs after a successful compile. Fast IoC breaks that loop. When every compile error is in the generated code, it removes the generated sources (keeping `GenerationStatus.json`, which lists the compile errors) so the project compiles, and it won't write that same code again. Fix the cause and the next change regenerates; **Regenerate Code** always retries. Player builds stop until new generated code is written. If your own code also has errors, nothing is removed: fix those first. In batch mode nothing is removed, so CI fails on the compile error.
 
@@ -868,7 +874,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.8.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 75 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, assembly linking and prefab instantiation. All 75 pass in Unity `6000.3.16f1`, and the Platform Check sample passes in IL2CPP builds on Android, iOS and WebGL. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.9.0`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 80 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, deleted-script detection, assembly linking and prefab instantiation. All 80 pass in Unity `6000.3.6f1`. The Platform Check sample passed in IL2CPP builds on Android, iOS and WebGL with 0.8.x. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

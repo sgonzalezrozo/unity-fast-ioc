@@ -19,27 +19,27 @@ namespace FastIoC.UnityIntegration.Editor
                 return;
             #pragma warning restore CS0162
 
-            bool hasDeletedScripts = false;
-            foreach (string deletedAsset in deletedAssets)
-            {
-                if (deletedAsset.Contains("Assets/FastIoC/Generated"))
-                    continue;
-
-                if (!deletedAsset.EndsWith(".cs"))
-                    continue;
-
-                hasDeletedScripts = true;
-                Debug.Log($"[FastIoC] Detected deleted script: {deletedAsset}");
-                break;
-            }
-
-            if (!hasDeletedScripts)
+            // Only a deleted script the generated code uses makes it stop compiling. Deleting any other
+            // script, such as one from another package, leaves the generated code valid.
+            System.Collections.Generic.List<string> inUse = FastIoC.Editor.Generation.GeneratedCodeReferences.FindDeletedScriptsInUse(
+                deletedAssets, FastIoC.Editor.Generation.GeneratedCodeReferences.ReadGeneratedSources());
+            if (inUse.Count == 0)
                 return;
+
+            // Batch mode never regenerates by itself, so removing the code there would leave builds without
+            // injection and without an error. Keep it: the compile error names what to fix, and the build
+            // regenerates before it starts.
+            if (Application.isBatchMode)
+            {
+                Debug.LogWarning($"[FastIoC] Deleted script(s) used by the generated code: {string.Join(", ", inUse)}. " +
+                                 "In batch mode the generated code is kept; run Tools > FastIoC > Regenerate Code once the project compiles.");
+                return;
+            }
 
             // Regenerating now would read the types still loaded in memory, deleted ones included,
             // and write references that no longer compile. Remove the generated code instead, so the
             // project compiles; FastIoCEditorAutoRegen regenerates it after the domain reload.
-            Debug.Log("[FastIoC] Script deletion detected - removing generated code; it regenerates after the next compile.");
+            Debug.Log($"[FastIoC] Deleted script(s) used by the generated code: {string.Join(", ", inUse)} - removing generated code; it regenerates after the next compile.");
             EditorApplication.delayCall += () =>
             {
                 RemoveGeneratedScripts();

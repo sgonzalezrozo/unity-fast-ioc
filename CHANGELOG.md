@@ -2,6 +2,21 @@
 
 All notable changes to this package are documented in this file.
 
+## [0.9.0] - 2026-11-16
+
+### Fixed
+
+- Deleting any script removed all generated code, even when the generated code didn't use it, such as a script from another package. In batch mode nothing regenerated it, so builds made from the command line or CI shipped with no dependency injection and no error. Now only deleting a script the generated code uses removes it, and in batch mode it's never removed: the compile error names what to fix.
+
+### Added
+
+- Every player build regenerates the code first. An up-to-date project builds as usual; if anything changed, the build stops and asks to build again once Unity has compiled it, so a build never uses generated code that's missing or out of date. Define `FASTIOC_SKIP_BUILD_GENERATION` to turn it off.
+- A player build stops when the project has installers but no generated code, instead of building a player without injection.
+
+### Changed
+
+- **Behavior change:** a build started when the generated code is out of date now stops once and asks to build again. In CI, run generation as its own step before the build.
+
 ## [0.8.1] - 2026-11-11
 
 ### Documentation
