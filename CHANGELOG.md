@@ -2,7 +2,11 @@
 
 All notable changes to this package are documented in this file.
 
-## [0.9.1] - Unreleased
+## [0.9.1] - 2026-11-17
+
+### Changed
+
+- Requires Tools Core 0.4.0, the version Screen System and UI Scroller use; the install steps pin `v0.4.0`.
 
 ### Fixed
 

@@ -45,7 +45,7 @@
     }
   ],
   "dependencies": {
-    "com.sgonzalezrozo.core": "0.3.0",
+    "com.sgonzalezrozo.core": "0.4.0",
     "com.unity.addressables": "1.21.21"
   }
 }
