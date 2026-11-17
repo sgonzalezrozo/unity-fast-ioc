@@ -548,7 +548,7 @@ unity -batchmode -quit -projectPath . \
   -executeMethod FastIoC.Editor.Generation.GenerationCoordinator.GenerateAll
 ```
 
-If the build regenerates code that the previous step didn't write, it stops instead of building with old code; run the build again. A build also stops when the project has installers but no generated code.
+If the build regenerates code that the previous step didn't write, it stops instead of building with old code, and its message says so: run the build again, which compiles the code the stopped run wrote. A build also stops when the project has installers but no generated code.
 
 Deleting a script the generated code uses doesn't remove the generated code in batch mode, because nothing would regenerate it there: the compile error names what to fix.
 

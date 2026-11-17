@@ -5,6 +5,7 @@ using FastIoC.Editor.Graph;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEngine;
 
 namespace FastIoC.Editor
 {
@@ -31,9 +32,20 @@ namespace FastIoC.Editor
 
         public int callbackOrder => -1000;
 
+        private const string GENERATE_METHOD = "FastIoC.Editor.Generation.GenerationCoordinator.GenerateAll";
+
+        /// <summary>
+        /// What to do when the generated code isn't loaded yet. In the Editor, Unity compiles it on its own; in batch mode
+        /// nothing compiles it within the same run, so the build has to run again, after generation as its own step.
+        /// </summary>
+        internal static string RetryAdvice(bool batchMode)
+            => batchMode
+                ? "In batch mode, run generation as its own Unity run first (-executeMethod " + GENERATE_METHOD + "), then build in a second run; or run the build again, which now compiles the code this run wrote."
+                : "Wait for Unity to finish compiling (click into the Editor if nothing happens), then build again.";
+
         public void OnPreprocessBuild(BuildReport report)
         {
-            const string waitAndRetry = "Wait for Unity to finish compiling (click into the Editor if nothing happens), then build again.";
+            string waitAndRetry = RetryAdvice(Application.isBatchMode);
 
             if (Generation.GeneratedCodeRecovery.HasFailedCode)
                 throw new BuildFailedException("[FastIoC] Generated code didn't compile and was removed, so this build would have no dependency injection. " +

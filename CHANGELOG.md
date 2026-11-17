@@ -2,6 +2,12 @@
 
 All notable changes to this package are documented in this file.
 
+## [0.9.1] - Unreleased
+
+### Fixed
+
+- A batch-mode build stopped by out-of-date generated code told you to wait for Unity to compile and click into the Editor, which a batch build doesn't have. In batch mode the message now says to run generation as its own Unity run first (`-executeMethod FastIoC.Editor.Generation.GenerationCoordinator.GenerateAll`), then build in a second run, or simply to run the build again, since the stopped run already wrote the code.
+
 ## [0.9.0] - 2026-11-16
 
 ### Fixed
