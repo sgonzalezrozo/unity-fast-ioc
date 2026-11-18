@@ -91,6 +91,8 @@ public class GameplayInstaller : BindingRecorder
 
 To start one from a template, right-click a folder in the Project window and select **FastIoC > New MonoInstaller**, then type the class name. It writes a global `[MonoInstaller]` with an empty `InstallBindings` in that folder.
 
+<img src="images/assets-menu.png" alt="The Project window's context menu: FastIoC > New MonoInstaller" width="420">
+
 ### 3. Inject it
 
 Plain classes receive dependencies through their public constructor:

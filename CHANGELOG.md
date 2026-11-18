@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-11-18
+
+### Documentation
+
+- A screenshot of **Assets > FastIoC > New MonoInstaller** in the README's Quickstart and in Getting Started.
+
 ## [0.10.1] - 2026-11-18
 
 ### Changed
