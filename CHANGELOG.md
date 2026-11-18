@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-18
+
+### Changed
+
+- **Assets > FastIoC > New MonoInstaller** sits right after the UI Scroller menu, with no separator between them.
+
 ## [0.10.0] - 2026-11-18
 
 ### Added

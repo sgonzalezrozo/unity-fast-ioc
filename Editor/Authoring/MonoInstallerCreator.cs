@@ -13,7 +13,7 @@ namespace FastIoC.Editor
     {
         private const string DEFAULT_NAME = "GameplayInstaller";
 
-        [MenuItem("Assets/FastIoC/New MonoInstaller", false, 33)]
+        [MenuItem("Assets/FastIoC/New MonoInstaller", false, 23)]
         private static void NewMonoInstaller()
         {
             string folder = SelectedFolder();
