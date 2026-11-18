@@ -4,6 +4,21 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-11-18
+
+### Changed
+
+- Generation writes `Assets/FastIoC/Generated/.gitignore`, so Git ignores `GenerationStatus.json` and its `.meta`: the file changed on every generation, even with the same result, because it holds the time. A `.gitignore` already there gets the entries added. If the status file was committed before, untrack it once with `git rm --cached` (see the README).
+- Faster Play Mode and development builds: generated activators, injectors, `NonLazy` startup and `Lazy<T>`/`Func<T>` factories no longer run the service-locator check, which built a stack trace for every dependency they resolved. They call the new `ContextRuntime.ResolveFromGeneratedCode` and `TryResolveFromGeneratedCode`, hidden from IntelliSense. Your own calls to `Resolve` are still checked. Release builds are unchanged, since the check is compiled out there. Run **Tools > FastIoC > Regenerate Code** to get it in an existing project.
+
+### Fixed
+
+- With `FASTIOC_SKIP_BUILD_GENERATION` defined, a player build went ahead after a failed generation, with no dependency injection. The build guard now stops the build whenever `GenerationStatus.json` reports a failed generation. Without the define, the build already regenerated and stopped on a failure.
+
+### Documentation
+
+- The README no longer lists "a failed generation doesn't block player builds" under Limitations: since 0.9.0 it does.
+
 ## [0.9.2] - 2026-11-17
 
 ### Added

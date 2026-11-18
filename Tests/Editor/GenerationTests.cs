@@ -33,9 +33,9 @@ namespace FastIoC.Tests.Editor
                 new HashSet<Type> { typeof(Consumer), typeof(Service), typeof(Other) },
                 TypeIds, new Dictionary<Type, FastIoC.Core.Lifetime>(), new Dictionary<Type, bool>(), Implementations);
 
-            StringAssert.Contains("var param0 = (IService)context.Resolve(GeneratedTypeIds.FastIoC_Fixtures_Service);", code);
-            StringAssert.Contains($"var param1 = new global::System.Lazy<{SERVICE}>(() => ({SERVICE})context.Resolve(GeneratedTypeIds.FastIoC_Fixtures_Service));", code);
-            StringAssert.Contains("var param2 = new global::System.Func<global::FastIoC.Fixtures.Other>(() => (global::FastIoC.Fixtures.Other)context.Resolve(GeneratedTypeIds.FastIoC_Fixtures_Other));", code);
+            StringAssert.Contains("var param0 = (IService)context.ResolveFromGeneratedCode(GeneratedTypeIds.FastIoC_Fixtures_Service);", code);
+            StringAssert.Contains($"var param1 = new global::System.Lazy<{SERVICE}>(() => ({SERVICE})context.ResolveFromGeneratedCode(GeneratedTypeIds.FastIoC_Fixtures_Service));", code);
+            StringAssert.Contains("var param2 = new global::System.Func<global::FastIoC.Fixtures.Other>(() => (global::FastIoC.Fixtures.Other)context.ResolveFromGeneratedCode(GeneratedTypeIds.FastIoC_Fixtures_Other));", code);
             StringAssert.Contains("return new Consumer(param0, param1, param2);", code);
         }
 
@@ -61,7 +61,7 @@ namespace FastIoC.Tests.Editor
             MonoInjectorEmitter.Result result = MonoInjectorEmitter.GenerateMonoInjectors(
                 new HashSet<Type> { typeof(FixtureView) }, TypeIds, Implementations, new Dictionary<Type, bool>(), InternalsAccessPlan.Create());
 
-            StringAssert.Contains("context.TryResolve(GeneratedTypeIds.FastIoC_Fixtures_Service", result.Code);
+            StringAssert.Contains("context.TryResolveFromGeneratedCode(GeneratedTypeIds.FastIoC_Fixtures_Service", result.Code);
             StringAssert.Contains($"target.service = ({SERVICE})", result.Code);
             StringAssert.Contains($"target.lazyService = new global::System.Lazy<{SERVICE}>(", result.Code);
             StringAssert.Contains("target.createOther = new global::System.Func<global::FastIoC.Fixtures.Other>(", result.Code);
@@ -234,7 +234,7 @@ namespace FastIoC.Tests.Editor
             string timed = "#if FASTIOC_BOOT_TIMING\n" +
                            "                long start = global::FastIoC.Core.BootTiming.Now();\n" +
                            "#endif\n" +
-                           $"                context.Resolve(GeneratedTypeIds.{name});\n" +
+                           $"                context.ResolveFromGeneratedCode(GeneratedTypeIds.{name});\n" +
                            "#if FASTIOC_BOOT_TIMING\n" +
                            $"                global::FastIoC.Core.BootTiming.Span(\"NonLazy: {name}\", start);\n" +
                            "#endif";

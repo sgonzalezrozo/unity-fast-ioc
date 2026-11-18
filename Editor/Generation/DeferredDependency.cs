@@ -38,7 +38,7 @@ namespace FastIoC.Editor.Generation
         public static string Expression(Kind kind, Type inner, string context, string typeIdMember)
         {
             string innerName = CodeGenTypeUtility.GetCSharpName(inner);
-            string factory = $"() => ({innerName}){context}.Resolve(GeneratedTypeIds.{typeIdMember})";
+            string factory = $"() => ({innerName}){context}.ResolveFromGeneratedCode(GeneratedTypeIds.{typeIdMember})";
             return kind == Kind.Lazy
                 ? $"new global::System.Lazy<{innerName}>({factory})"
                 : $"new global::System.Func<{innerName}>({factory})";

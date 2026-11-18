@@ -517,7 +517,7 @@ namespace FastIoC.Editor.Generation
 
                     // A binding missing from the current scene leaves only this field null.
                     string value = $"value{valueIndex++}";
-                    string resolve = $"if (context.TryResolve(GeneratedTypeIds.{injection.TypeIdMember}, out object {value}))";
+                    string resolve = $"if (context.TryResolveFromGeneratedCode(GeneratedTypeIds.{injection.TypeIdMember}, out object {value}))";
                     if (injection.Direct)
                     {
                         string fieldTypeName = CodeGenTypeUtility.GetCSharpName(injection.Field.FieldType);

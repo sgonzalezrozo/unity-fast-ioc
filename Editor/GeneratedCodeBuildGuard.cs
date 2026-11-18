@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.IO;
+using FastIoC.API;
 using FastIoC.Core;
 using FastIoC.Editor.Graph;
 using UnityEditor;
@@ -10,8 +11,8 @@ using UnityEngine;
 namespace FastIoC.Editor
 {
     /// <summary>
-    /// Stops a player build when the Editor hasn't loaded the latest generated code yet, or when the project has
-    /// installers but no generated code.
+    /// Stops a player build when the last generation failed, when the Editor hasn't loaded the latest generated code
+    /// yet, or when the project has installers but no generated code.
     /// The scene baker reads the generated injectors loaded in the Editor; building right after a regeneration,
     /// before Unity recompiles and reloads, would bake scenes from the old code (or without a manifest).
     /// </summary>
@@ -50,6 +51,13 @@ namespace FastIoC.Editor
             if (Generation.GeneratedCodeRecovery.HasFailedCode)
                 throw new BuildFailedException("[FastIoC] Generated code didn't compile and was removed, so this build would have no dependency injection. " +
                                                "Fix the cause listed in " + FastIoCConstants.GENERATED_PATH + "/GenerationStatus.json, then regenerate.");
+
+            // GeneratedCodeBuildRegenerator already stops on a failed generation, unless FASTIOC_SKIP_BUILD_GENERATION
+            // turns it off, as in CI that generates in a separate run. The status file still says how that run went.
+            if (GenerationStatusReader.WasLastGenerationFailed(out GenerationStatus status))
+                throw new BuildFailedException("[FastIoC] The last code generation failed" +
+                                               (string.IsNullOrEmpty(status.errorReason) ? "" : ": " + status.errorReason) +
+                                               ". Fix the errors listed in " + FastIoCConstants.GENERATED_PATH + "/GenerationStatus.json, then build again.");
 
             if (SessionState.GetBool(PENDING_KEY, false))
                 throw new BuildFailedException("[FastIoC] Fast IoC generated new code that the Editor hasn't loaded yet. " + waitAndRetry);

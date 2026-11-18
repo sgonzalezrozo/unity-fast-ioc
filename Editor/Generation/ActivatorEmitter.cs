@@ -130,7 +130,7 @@ namespace FastIoC.Editor.Generation
                                 {
                                     string typeIdName = paramType.FullName?.Replace(".", "_").Replace("+", "_") ?? "Unknown";
                                     string paramTypeName = paramType.Name;
-                                    sb.AppendLine($"            var {paramName} = ({paramTypeName})context.Resolve(GeneratedTypeIds.{typeIdName});");
+                                    sb.AppendLine($"            var {paramName} = ({paramTypeName})context.ResolveFromGeneratedCode(GeneratedTypeIds.{typeIdName});");
                                 }
                                 else if (interfaceImplementations != null && interfaceImplementations.ContainsKey(paramType))
                                 {
@@ -140,7 +140,7 @@ namespace FastIoC.Editor.Generation
                                     {
                                         string typeIdName = concreteType.FullName?.Replace(".", "_").Replace("+", "_") ?? "Unknown";
                                         string paramTypeName = paramType.Name;
-                                        sb.AppendLine($"            var {paramName} = ({paramTypeName})context.Resolve(GeneratedTypeIds.{typeIdName});");
+                                        sb.AppendLine($"            var {paramName} = ({paramTypeName})context.ResolveFromGeneratedCode(GeneratedTypeIds.{typeIdName});");
                                     }
                                     else
                                     {

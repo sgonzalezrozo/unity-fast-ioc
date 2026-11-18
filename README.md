@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.9.2](https://img.shields.io/badge/version-0.9.2-blue.svg)](CHANGELOG.md)
+[![Version 0.9.3](https://img.shields.io/badge/version-0.9.3-blue.svg)](CHANGELOG.md)
 
 Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones and on WebGL. See [Performance](#performance).
 
@@ -101,7 +101,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.9.2
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.9.3
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -516,11 +516,12 @@ When Unity builds a scene, and when a scene loads in Play Mode in the Editor, Fa
 
 ### What to commit
 
-Commit the `.cs` files and their `.meta` files, because player builds need them. Ignore the status file, because it changes on every generation and is only read in the Editor:
+Commit the `.cs` files and their `.meta` files, because player builds need them. Also commit `Assets/FastIoC/Generated/.gitignore`: Fast IoC writes it so Git ignores `GenerationStatus.json`, which changes on every generation and is only read in the Editor. Unity doesn't import files that start with a dot, so it has no `.meta`.
 
-```text
-Assets/FastIoC/Generated/GenerationStatus.json
-Assets/FastIoC/Generated/GenerationStatus.json.meta
+If the status file was committed before, stop tracking it once:
+
+```bash
+git rm --cached Assets/FastIoC/Generated/GenerationStatus.json Assets/FastIoC/Generated/GenerationStatus.json.meta
 ```
 
 ### When regeneration runs
@@ -534,7 +535,7 @@ Fast IoC checks for changes after each script compile, and regenerates when you'
 
 It also regenerates when you delete a script the generated code uses; deleting any other script, such as one from another package, leaves the generated code alone. After a failed generation, it tries again on the next compile. To regenerate at any time, run **Tools > FastIoC > Regenerate Code**.
 
-Every player build regenerates first. When nothing changed, the build goes on as usual. When something changed, the Editor hasn't compiled it yet, so the build stops and asks you to build again once Unity finishes compiling. A build never uses generated code that's missing or out of date. Define `FASTIOC_SKIP_BUILD_GENERATION` to turn this off.
+Every player build regenerates first. When nothing changed, the build goes on as usual. When something changed, the Editor hasn't compiled it yet, so the build stops and asks you to build again once Unity finishes compiling. A build never uses generated code that's missing or out of date, and a failed generation stops it. Define `FASTIOC_SKIP_BUILD_GENERATION` to skip the regeneration, for example when CI generates in its own run; a failed generation recorded in `GenerationStatus.json` still stops the build.
 
 ### Run it in CI
 
@@ -677,7 +678,7 @@ The runtime doesn't use reflection:
 
 Generation falls back to reflection only for an `internal` field in a package that doesn't expose its internals to `Assembly-CSharp`. Generation lists these fields in the Console, and `GeneratedMonoInjectors.ReflectionFallbackFieldCount` says how many there are. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to that package to remove the fallback.
 
-Service-locator detection still reads stack traces, in the Editor and development builds only.
+Service-locator detection reads a stack trace when your own code calls `Resolve`, in the Editor and development builds only. Generated code skips that check, so resolving dependencies costs the same there as in a release build.
 
 Test IL2CPP builds with code stripping enabled before shipping.
 
@@ -852,7 +853,6 @@ Not yet. It's a pre-release package (`0.x`) by a single author. It isn't used in
 - MonoBehaviour fields must be `internal`. Local references inside an instantiated prefab are also filled only for `internal` fields.
 - Generation only warns about unbound MonoBehaviour fields typed as an interface or abstract class. Unbound fields of concrete classes aren't reported.
 - Installers with a `FromInstance(value)` binding run once more at startup.
-- A failed generation doesn't block player builds.
 - Installers run in the Editor during generation, so don't rely on runtime-only state in `InstallBindings()`. Bindings are fixed when the code is generated and can't change at runtime.
 - Bindings are by type only. There are no named or ID bindings, and no value bindings: `Bind<T>()` takes a class, so put configuration such as an `int` or a URL in a typed config class and bind that.
 - `Func<T>` takes no arguments: there are no factories with runtime parameters yet. There are no decorators or open generic bindings either. Bind each closed type, such as `IRepository<Player>`, on its own.
@@ -872,7 +872,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.9.2`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 81 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, deleted-script detection, assembly linking and prefab instantiation. All 80 pass in Unity `6000.3.6f1`. The Platform Check sample passed in IL2CPP builds on Android, iOS and WebGL with 0.8.x. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.9.3`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 81 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, deleted-script detection, assembly linking and prefab instantiation. All 80 pass in Unity `6000.3.6f1`. The Platform Check sample passed in IL2CPP builds on Android, iOS and WebGL with 0.8.x. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

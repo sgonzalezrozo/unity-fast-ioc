@@ -112,7 +112,7 @@ namespace FastIoC.Editor.Generation
                     sb.AppendLine("#if FASTIOC_BOOT_TIMING");
                     sb.AppendLine("                long start = global::FastIoC.Core.BootTiming.Now();");
                     sb.AppendLine("#endif");
-                    sb.AppendLine($"                context.Resolve(GeneratedTypeIds.{name});");
+                    sb.AppendLine($"                context.ResolveFromGeneratedCode(GeneratedTypeIds.{name});");
                     sb.AppendLine("#if FASTIOC_BOOT_TIMING");
                     sb.AppendLine($"                global::FastIoC.Core.BootTiming.Span(\"NonLazy: {name}\", start);");
                     sb.AppendLine("#endif");

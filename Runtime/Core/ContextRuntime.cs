@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -125,6 +126,25 @@ namespace FastIoC.Core
 
             return TryResolveCore(typeId, out instance);
         }
+
+        /// <summary>
+        /// Generated code only: <see cref="Resolve"/> without the service-locator check. In the Editor and development
+        /// builds that check builds a stack trace on every call, and generated activators and injectors resolve every
+        /// dependency, so skipping it keeps Play Mode and development builds as fast as release ones.
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public object ResolveFromGeneratedCode(TypeId typeId)
+        {
+            if (TryResolveCore(typeId, out object instance))
+                return instance;
+
+            throw new InvalidOperationException($"TypeId {typeId.Id} is not registered in scene or global container.");
+        }
+
+        /// <summary>Generated code only: <see cref="TryResolve"/> without the service-locator check.</summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool TryResolveFromGeneratedCode(TypeId typeId, out object instance)
+            => TryResolveCore(typeId, out instance);
 
         private bool TryResolveCore(TypeId typeId, out object instance)
         {
