@@ -166,9 +166,10 @@ namespace FastIoC.Tests.Editor
         {
             Probe singleton = Resolve(SINGLETON);
             context.Resolve(new TypeId(FAILING));
-            LogAssert.Expect(LogType.Exception, new Regex("dispose failed on purpose"));
+            using LogCapture log = new();
 
             context.Dispose();
+            log.AssertLogged(LogType.Exception, "dispose failed on purpose");
 
             Assert.AreEqual(1, singleton.DisposeCount);
         }
