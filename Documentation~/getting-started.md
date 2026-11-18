@@ -89,6 +89,8 @@ public class GameplayInstaller : BindingRecorder
 }
 ```
 
+To start one from a template, right-click a folder in the Project window and select **FastIoC > New MonoInstaller**, then type the class name. It writes a global `[MonoInstaller]` with an empty `InstallBindings` in that folder.
+
 ### 3. Inject it
 
 Plain classes receive dependencies through their public constructor:
@@ -167,6 +169,7 @@ Fast IoC discovers classes with `[MonoInstaller]` automatically, so there's no c
 | `Tools/FastIoC/Setup` | Setting up a project for the first time |
 | `Tools/FastIoC/Regenerate Code` | Regenerating without waiting for a compile |
 | `Tools/FastIoC/Documentation` | Opening this documentation in the browser |
+| `Assets/FastIoC/New MonoInstaller` | Adding an installer: asks for a class name and writes the script in the selected folder |
 
 ## Next steps
 

@@ -4,6 +4,16 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-18
+
+### Added
+
+- **Assets > FastIoC > New MonoInstaller** (right-click a folder in the Project window): asks for a class name and writes a global `[MonoInstaller]` script with an empty `InstallBindings` in that folder.
+
+### Documentation
+
+- The README's description is plain text instead of a quote, and short enough for two lines.
+
 ## [0.9.5] - 2026-11-18
 
 ### Fixed
