@@ -1,6 +1,6 @@
 # Images
 
-Store README images here. Unity doesn't import folders ending in `~`, so these files never reach a project.
+Store documentation images here. Unity doesn't import folders ending in `~`, so these files never reach a project.
 
 Keep GIFs to 10–15 seconds, about 800 px wide and under 5 MB. Use lowercase names with hyphens.
 

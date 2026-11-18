@@ -4,7 +4,17 @@
 
 ## Docs
 
-- [README](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/README.md): installation, quick start, binding reference, prefabs, lifecycle, generated code, limitations, FAQ
+- [README](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/README.md): overview, installation, quickstart, links to every guide
+- [Getting Started](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/getting-started.md): requirements, installation, setup, quick start, feature installers
+- [Bindings](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/bindings.md): binding reference, scene installers, assets, existing objects, NonLazy, ProjectContext-hosted components
+- [Injection & Lifecycle](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/injection.md): constructors, internal fields, prefabs, Lazy and Func, initialization and disposal
+- [Core Concepts](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/core-concepts.md): how it works, runtime reflection, comparison with other containers
+- [Code Generation](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/code-generation.md): generated files, what to commit, regeneration, CI, generation errors
+- [Performance](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/performance.md): device benchmarks, boot timing
+- [AI Coding Agents](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/ai-agents.md)
+- [Troubleshooting & Limitations](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/troubleshooting.md): errors, limitations, planned features
+- [FAQ](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/faq.md)
+- [Project Status](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/project-status.md): status, versioning, contributing, tests, related packages
 - [Rules for AI coding agents](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Documentation~/agent-rules.md): copy into AGENTS.md, CLAUDE.md or Cursor rules
 - [Changelog](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/CHANGELOG.md)
 - [Quick start sample](https://github.com/sgonzalezrozo/unity-fast-ioc/blob/main/Samples~/QuickStart/README.md)

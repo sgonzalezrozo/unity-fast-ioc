@@ -4,6 +4,17 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-11-18
+
+### Removed
+
+- The welcome dialog shown once per project after the package is imported.
+
+### Documentation
+
+- The README is now a short overview with installation, a quickstart and links. Its content moved into guides in `Documentation~/`: Getting Started, Bindings, Injection & Lifecycle, Core Concepts, Code Generation, Performance, AI Coding Agents, Troubleshooting & Limitations, FAQ and Project Status.
+- Installation instructions no longer pin a release tag.
+
 ## [0.9.3] - 2026-11-18
 
 ### Changed
