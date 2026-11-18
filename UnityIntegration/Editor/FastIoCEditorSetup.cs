@@ -150,12 +150,7 @@ namespace FastIoC.UnityIntegration.Editor
             {
                 Debug.Log($"[FastIoC] ProjectContext prefab not found at {prefabPath}. Creating it...");
 
-                string directory = Path.GetDirectoryName(prefabPath);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                    AssetDatabase.Refresh();
-                }
+                FastIoC.Editor.AssetFolderUtility.EnsureFolder(Path.GetDirectoryName(prefabPath));
 
                 GameObject newGo = new GameObject("ProjectContext");
 
@@ -215,6 +210,9 @@ namespace FastIoC.UnityIntegration.Editor
                     Debug.Log("[FastIoC] Added SceneInjector to prefab.");
                     modified = true;
                 }
+
+                if (projectContextType != null && EnsureHostedRoot(instance.GetComponent(projectContextType)))
+                    modified = true;
             }
             finally
             {
@@ -228,6 +226,37 @@ namespace FastIoC.UnityIntegration.Editor
                 AssetDatabase.Refresh();
             }
         }
+
+        /// <summary>
+        /// Gives ProjectContext an inactive "Hosted" child as its Hosted Root, for FromProjectContext() bindings,
+        /// when none is assigned. A Hosted Root you already assigned is left alone. Returns true if it changed.
+        /// </summary>
+        private static bool EnsureHostedRoot(Component projectContext)
+        {
+            if (projectContext == null)
+                return false;
+
+            SerializedObject so = new SerializedObject(projectContext);
+            SerializedProperty hostedRootProp = so.FindProperty("hostedRoot");
+            if (hostedRootProp == null || hostedRootProp.objectReferenceValue != null)
+                return false;
+
+            Transform hosted = projectContext.transform.Find(HOSTED_ROOT_NAME);
+            if (hosted == null)
+            {
+                hosted = new GameObject(HOSTED_ROOT_NAME).transform;
+                hosted.SetParent(projectContext.transform, false);
+            }
+
+            // Fast IoC activates it after injecting the components under it.
+            hosted.gameObject.SetActive(false);
+            hostedRootProp.objectReferenceValue = hosted.gameObject;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.Log($"[FastIoC] Added the inactive '{HOSTED_ROOT_NAME}' child as ProjectContext's Hosted Root, for FromProjectContext() bindings.");
+            return true;
+        }
+
+        private const string HOSTED_ROOT_NAME = "Hosted";
 
         private static Type FindTypeInLoadedAssemblies(string fullTypeName)
         {

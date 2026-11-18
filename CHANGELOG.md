@@ -2,6 +2,23 @@
 
 All notable changes to this package are documented in this file.
 
+## [Unreleased]
+
+## [0.9.2] - 2026-11-17
+
+### Added
+
+- After the package is imported, a dialog links to the documentation, once per project. **Tools > FastIoC > Documentation** opens it at any time.
+- `documentationUrl` in `package.json`, so the Package Manager links to the documentation.
+
+### Changed
+
+- **Setup** adds an inactive `Hosted` child to the `ProjectContext` prefab and assigns it to **Hosted Root**, ready for `FromProjectContext()` bindings. Before, the field stayed empty until you made the child by hand. A Hosted Root that's already assigned is left alone.
+
+### Fixed
+
+- **Tools > FastIoC > Setup** failed in a project without a `Resources` folder. The `ProjectContext` prefab and the asset manifest now create their folders through the AssetDatabase.
+
 ## [0.9.1] - 2026-11-17
 
 ### Changed

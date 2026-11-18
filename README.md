@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tested on Unity 6000.3](https://img.shields.io/badge/Unity-6000.3%20tested-black?logo=unity)](#compatibility)
-[![Version 0.9.1](https://img.shields.io/badge/version-0.9.1-blue.svg)](CHANGELOG.md)
+[![Version 0.9.2](https://img.shields.io/badge/version-0.9.2-blue.svg)](CHANGELOG.md)
 
 Fast IoC is a dependency injection framework (IoC container) for Unity 6, and an alternative to Zenject/Extenject and VContainer. It generates its injection code in the Editor, reports missing bindings and dependency cycles before you press Play, and is verified in IL2CPP builds on Android and iOS phones and on WebGL. See [Performance](#performance).
 
@@ -101,7 +101,7 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 To pin a release, add its tag:
 
 ```text
-https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.9.1
+https://github.com/sgonzalezrozo/unity-fast-ioc.git#v0.9.2
 ```
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads. This changes your project's Player Settings, so commit that change.
@@ -332,12 +332,9 @@ Bind<ICoroutineRunner>().To<CoroutineRunner>().FromProjectContext();
 Bind<SoundManager>().FromProjectContext().NonLazy();
 ```
 
-Set up the prefab once:
+**Setup** gives the `ProjectContext` prefab an inactive child named `Hosted` and assigns it to the **Hosted Root** field. Add each component under it, in `Assets/Resources/Tools/FastIoC/ProjectContext.prefab`. Keep `Hosted` inactive in the prefab.
 
-1. Open `Assets/Resources/Tools/FastIoC/ProjectContext.prefab`.
-2. Add a child GameObject, for example `Hosted`, and **make it inactive**.
-3. Assign it to the **Hosted Root** field of `ProjectContext`.
-4. Add each component under it.
+In a project set up with an older version, run **Setup** again and choose **Regenerate**, or add an inactive child by hand and assign it to **Hosted Root**. Setup leaves a Hosted Root you assigned alone.
 
 At startup Fast IoC injects the `internal` fields of every MonoBehaviour under the hosted root, creates the `NonLazy()` services, and then activates the hosted root. Every hosted component has its dependencies by the time its `Awake` runs.
 
@@ -667,6 +664,7 @@ adb logcat -s Unity | grep --line-buffered "\[BootTiming\]"
 |---|---|
 | `Tools/FastIoC/Setup` | Setting up a project for the first time |
 | `Tools/FastIoC/Regenerate Code` | Regenerating without waiting for a compile |
+| `Tools/FastIoC/Documentation` | Opening this documentation in the browser |
 
 ## Runtime reflection
 
@@ -874,7 +872,7 @@ Ideas and votes are welcome in [issues](https://github.com/sgonzalezrozo/unity-f
 
 ## Project status
 
-This is a pre-release package at version `0.9.1`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 81 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, deleted-script detection, assembly linking and prefab instantiation. All 80 pass in Unity `6000.3.6f1`. The Platform Check sample passed in IL2CPP builds on Android, iOS and WebGL with 0.8.x. See [Run the tests](#run-the-tests).
+This is a pre-release package at version `0.9.2`. Its API and behavior may change before `1.0.0`. Not yet used in a shipped game. An Edit Mode test suite of 81 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, deleted-script detection, assembly linking and prefab instantiation. All 80 pass in Unity `6000.3.6f1`. The Platform Check sample passed in IL2CPP builds on Android, iOS and WebGL with 0.8.x. See [Run the tests](#run-the-tests).
 
 Until `1.0.0`, minor versions (`0.x.0`) can include breaking changes, and patch versions (`0.x.y`) don't. Breaking changes are marked **Breaking** in the [changelog](CHANGELOG.md).
 

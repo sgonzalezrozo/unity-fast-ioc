@@ -84,9 +84,7 @@ namespace FastIoC.Editor.Generation
             }
             else
             {
-                string dir = Path.GetDirectoryName(ManifestAssetPath)?.Replace('\\', '/');
-                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                    Directory.CreateDirectory(dir);
+                AssetFolderUtility.EnsureFolder(Path.GetDirectoryName(ManifestAssetPath));
 
                 manifest = ScriptableObject.CreateInstance<FastIoCAssetManifest>();
                 AssetDatabase.CreateAsset(manifest, ManifestAssetPath);
