@@ -20,7 +20,7 @@
 | A MonoBehaviour field stays `null` | Make the field `internal`, bind its type, and use it from `Start()`. Check `warnings` in `GenerationStatus.json`. |
 | `These private fields have a bound type but aren't injected` | Make the field `internal` if it's a dependency. If it's private state, ignore the warning. |
 | `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
-| `Generated code is not registered` | Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists |
+| `Generated code is not registered` | The project has installers but no generated code. Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists. A project with no installers yet has nothing to inject and logs nothing. |
 | `has no public constructor, so the generated code can't create it` | Make the constructor public. Generated code can't call a private, protected or internal one. |
 | `Generated code didn't compile, so Fast IoC removed it` | Fix the errors listed in `GenerationStatus.json`. The next change regenerates; **Regenerate Code** retries right away. |
 | `This is the same generated code that failed to compile` | Generation refused to write code that already broke the build. Fix the listed cause, or run **Regenerate Code** if the fix doesn't change the generated code (for example, an added `InternalsVisibleTo`). |

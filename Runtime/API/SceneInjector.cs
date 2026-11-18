@@ -55,6 +55,12 @@ namespace FastIoC.API
             }
 
             ContextRuntime contextRuntime = projectContext.Runtime;
+
+            // No generated code (no installers yet): nothing has an injector, so there's nothing to do.
+            // ProjectContext already said so if the installers are there and the code isn't.
+            if (contextRuntime == null && !GeneratedModuleRegistry.IsRegistered)
+                return;
+
             if (contextRuntime == null)
             {
                 Debug.LogError("[FastIoC] ProjectContext.Runtime is not initialized.");

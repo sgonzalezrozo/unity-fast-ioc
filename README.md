@@ -8,7 +8,7 @@
 > Dependency injection for Unity with generated code and no runtime reflection. Missing bindings and dependency cycles are reported before you press Play, and each feature owns its installer. With 3,000 bindings and 1,500 injected objects: 11–39 ms to build the container and inject the first scene on three of four phones (IL2CPP).
 
 [![Unity](https://img.shields.io/badge/Unity-6000.3%20tested-black?style=for-the-badge&logo=unity)](Documentation~/getting-started.md#requirements)
-[![Version](https://img.shields.io/badge/version-0.9.4-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.9.5-blue?style=for-the-badge)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 [**Installation**](#installation) • [**Key Features**](#key-features) • [**Quickstart**](#quickstart) • [**Bindings**](Documentation~/bindings.md) • [**Core Concepts**](Documentation~/core-concepts.md) • [**Code Generation**](Documentation~/code-generation.md)

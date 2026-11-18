@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-11-18
+
+### Fixed
+
+- Warnings and errors when entering Play Mode in a project with no installers yet, for example right after installing Fast IoC. With no installers there's nothing to inject, so Fast IoC logs nothing, and objects other packages ask it to inject (such as Screen System's layers) are left as they are. The `Generated code is not registered` warnings still show when the project has installers but no generated code.
+
 ## [0.9.4] - 2026-11-18
 
 ### Removed
