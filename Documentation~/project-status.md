@@ -13,7 +13,7 @@
 
 ## Status
 
-Pre-release (`0.11.3`), by a single author, not yet used in a shipped game. Its API and behavior may change before `1.0.0`.
+Pre-release (`0.11.4`), by a single author, not yet used in a shipped game. Its API and behavior may change before `1.0.0`.
 
 An Edit Mode test suite of 81 tests covers the container, disposal, graph validation, the code generators, generated-code recovery, deleted-script detection, assembly linking and prefab instantiation. The last recorded run, in Unity `6000.3.6f1`, reported 80 passing; see the table below for what each area checks. The Platform Check sample passed in IL2CPP builds on Android, iOS and WebGL with 0.8.x. See [Run the tests](#run-the-tests).
 

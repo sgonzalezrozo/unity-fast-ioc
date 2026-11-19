@@ -1,6 +1,6 @@
 {
   "name": "com.sgonzalezrozo.fast-ioc",
-  "version": "0.11.3",
+  "version": "0.11.4",
   "displayName": "Fast IoC",
   "description": "Dependency injection (IoC container) for Unity with edit-time generated code: no runtime reflection, missing bindings and cycles reported before Play Mode, per-feature installers. Verified with IL2CPP on Android, iOS and WebGL.",
   "documentationUrl": "https://github.com/sgonzalezrozo/unity-fast-ioc#readme",
@@ -8,6 +8,7 @@
   "license": "MIT",
   "author": {
     "name": "Santiago González Rozo",
+    "email": "santiago.gonzalezrozo@outlook.com",
     "url": "https://github.com/sgonzalezrozo"
   },
   "repository": {
