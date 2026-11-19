@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-11-19
+
+### Changed
+
+- The Fast IoC Benchmark Kit (`Benchmarks~/Kit`) names its author, so the Package Manager lists it with the other packages in the benchmark project.
+
 ## [0.11.2] - 2026-11-19
 
 ### Changed
