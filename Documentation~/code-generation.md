@@ -26,7 +26,15 @@ Fast IoC writes these files to `Assets/FastIoC/Generated/`:
 | `GeneratedInstanceRegistry.cs`, `InstanceRegistryInitializer.cs` | Assets bound with `FromInstance` |
 | `GenerationStatus.json` | The result of the last generation |
 
-If a MonoBehaviour with `internal` injected fields lives in an assembly definition under `Assets/`, Fast IoC also writes `FastIoC.InternalsVisibleTo.g.cs` next to that `.asmdef`, so the generated code in `Assembly-CSharp` can assign those fields. Commit it too. Assemblies in packages are never modified: add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to them yourself.
+If a MonoBehaviour with `internal` injected fields lives in an assembly definition under `Assets/`, the generated code in `Assembly-CSharp` needs that assembly's permission to assign them: `[assembly: InternalsVisibleTo("Assembly-CSharp")]`. Fast IoC writes it inside `Generated`, never next to your `.asmdef`:
+
+```
+Assets/FastIoC/Generated/InternalsVisibleTo/Client/
+├── Client.asmref                      compiles this folder into the Client assembly
+└── FastIoC.InternalsVisibleTo.g.cs
+```
+
+The Assembly Definition Reference points at the `.asmdef` by GUID, so renaming the assembly keeps working, and the folder of an assembly that no longer exists is removed. Commit them with the rest of `Generated`. This is what keeps those fields free of reflection; without it they'd be assigned through `FieldInfo.SetValue`. Versions before 0.11.2 wrote the `.g.cs` next to the `.asmdef`; generation deletes that copy when it's unchanged. Assemblies in packages are never modified: add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to them yourself.
 
 ## Scene manifests
 

@@ -4,6 +4,12 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-11-19
+
+### Changed
+
+- The `InternalsVisibleTo` file that lets the generated injectors assign `internal` fields without reflection now lives inside `Assets/FastIoC/Generated`, never next to your `.asmdef`: `Generated/InternalsVisibleTo/<Assembly>/` holds `FastIoC.InternalsVisibleTo.g.cs` and an `<Assembly>.asmref` that compiles the folder into that assembly, pointing at its `.asmdef` by GUID. Injection stays reflection-free. The copy earlier versions wrote next to the `.asmdef` is deleted when it's unchanged, and the folder of an assembly that no longer exists is removed at the start of the next generation, even one with no installers.
+
 ## [0.11.1] - 2026-11-19
 
 ### Documentation

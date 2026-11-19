@@ -35,6 +35,7 @@ namespace FastIoC.Editor.Generation
             try
             {
                 Debug.Log("[FastIoC] Starting code generation...");
+                InternalsAccessPlan.RemoveOrphanFolders();
 
                 List<Type> installers = InstallerGraphCollector.CollectInstallers();
                 if (installers.Count == 0)
