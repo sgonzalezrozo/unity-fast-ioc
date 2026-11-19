@@ -31,6 +31,8 @@ Fast IoC depends on [Tools Core](https://github.com/sgonzalezrozo/unity-tools-co
 https://github.com/sgonzalezrozo/unity-tools-core.git
 ```
 
+<sub>* Tools Core is needed only by Screen System, Fast IoC and UI Scroller. Add it once, even if you use several of them.</sub>
+
 ```text
 https://github.com/sgonzalezrozo/unity-fast-ioc.git
 ```
