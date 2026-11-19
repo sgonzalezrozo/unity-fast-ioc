@@ -7,15 +7,29 @@ namespace FastIoC.Core
     /// Baked at build time (and when a scene loads in Play Mode in the editor) by the FastIoC scene baker.
     /// Holds serialized references to every injectable MonoBehaviour in the scene and the index of
     /// its generated injector, so scene injection needs no FindObjectsByType and no type lookups.
+    /// Its Awake runs before every other Awake of its scene, so a scene loaded after startup is injected
+    /// before its own components wake up, not later on SceneManager.sceneLoaded.
     /// </summary>
     [AddComponentMenu("")]
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(EXECUTION_ORDER)]
     public sealed class SceneInjectionManifest : MonoBehaviour
     {
+        // Lower than any order a project is expected to use, so this Awake is the first of its scene.
+        internal const int EXECUTION_ORDER = -32000;
+
+        // Set by the running context (FastIoC assembly) while it is subscribed to scene events.
+        internal static Action<SceneInjectionManifest> Awakened;
+
         [SerializeField] private MonoBehaviour[] targets = Array.Empty<MonoBehaviour>();
         [SerializeField] private int[] injectorIds = Array.Empty<int>();
 
         public int Count => targets?.Length ?? 0;
+
+        private void Awake()
+        {
+            Awakened?.Invoke(this);
+        }
 
         /// <summary>Called by the editor baker.</summary>
         public void SetEntries(MonoBehaviour[] bakedTargets, int[] bakedInjectorIds)

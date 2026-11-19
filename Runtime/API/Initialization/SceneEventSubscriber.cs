@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FastIoC.Core;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,6 +10,10 @@ namespace FastIoC.API.Initialization
     {
         private readonly ContextRuntime runtime;
 
+        // Scenes whose container is already pushed: a scene injected from its manifest's Awake gets its container
+        // then, and its load event must not push it again.
+        private readonly HashSet<int> preparedScenes = new();
+
         public SceneEventSubscriber(ContextRuntime runtime)
         {
             this.runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
@@ -18,12 +23,26 @@ namespace FastIoC.API.Initialization
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
+            SceneInjectionManifest.Awakened = OnManifestAwakened;
         }
 
         public void Unsubscribe()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneUnloaded -= OnSceneUnloaded;
+
+            if (SceneInjectionManifest.Awakened == OnManifestAwakened)
+                SceneInjectionManifest.Awakened = null;
+        }
+
+        // The first Awake of a loading scene: push its container and inject it before its components wake up.
+        private void OnManifestAwakened(SceneInjectionManifest manifest)
+        {
+            Scene scene = manifest.gameObject.scene;
+            long start = BootTiming.Now();
+            PushSceneContainer(scene);
+            SceneInjection.InjectWhileLoading(manifest, runtime);
+            BootTiming.Span($"Scene awake: container + injection ({scene.name})", start);
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -31,8 +50,21 @@ namespace FastIoC.API.Initialization
             if (runtime == null)
                 return;
 
-            string sceneName = scene.name;
             long start = BootTiming.Now();
+            PushSceneContainer(scene);
+
+            // Injects what the manifest's Awake didn't: scenes without a manifest, and objects not reachable then.
+            // Scenes already injected (the first scene, injected by ProjectContext) are skipped.
+            SceneInjection.InjectScene(scene, runtime);
+            BootTiming.Span($"Scene loaded: container + injection ({scene.name})", start);
+        }
+
+        private void PushSceneContainer(Scene scene)
+        {
+            if (runtime == null || !preparedScenes.Add(scene.handle))
+                return;
+
+            string sceneName = scene.name;
 
             try
             {
@@ -62,16 +94,12 @@ namespace FastIoC.API.Initialization
             {
                 Debug.LogWarning($"[FastIoC] Failed to load scene container for '{sceneName}': {ex.Message}");
             }
-
-            // Inject the MonoBehaviours of scenes loaded after startup.
-            // Scenes already injected (the first scene, injected by ProjectContext) are skipped.
-            SceneInjection.InjectScene(scene, runtime);
-            BootTiming.Span($"Scene loaded: container + injection ({sceneName})", start);
         }
 
         private void OnSceneUnloaded(Scene scene)
         {
             SceneInjection.MarkUnloaded(scene);
+            preparedScenes.Remove(scene.handle);
 
             if (runtime == null)
                 return;

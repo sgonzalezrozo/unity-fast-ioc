@@ -12,7 +12,7 @@
 ## Constructors and fields
 
 - **Plain classes** receive dependencies through their one public constructor.
-- **MonoBehaviours** receive them through `internal` fields. There's no `[Inject]` attribute; public and private fields aren't injected. Use them from `Start()`.
+- **MonoBehaviours** receive them through `internal` fields. There's no `[Inject]` attribute; public and private fields aren't injected. Fast IoC assigns them before the component's `Awake()`, so they're ready in `Awake()` and `OnEnable()`. See [When fields are assigned](#when-fields-are-assigned).
 
 ```csharp
 public class InventoryView : MonoBehaviour
@@ -108,6 +108,19 @@ public class SaveService
 - **They don't count as cycles.** Nothing is created in a loop at startup, so `A(Lazy<B>)` with `B(A)` is allowed. Don't read `.Value` in the constructor, or the loop comes back.
 - **They resolve when used.** A field whose `T` is bound only in another scene throws when it's used, instead of staying `null`.
 - `Func<T>` takes no arguments. Factories with runtime parameters aren't supported yet.
+
+## When fields are assigned
+
+Every injected MonoBehaviour has its fields by the time its `Awake()` runs:
+
+| Where the component is | When Fast IoC injects it |
+|---|---|
+| The first scene | From `ProjectContext`, which starts before the scene's objects wake up |
+| A scene loaded later, single or additive | From the scene's baked `SceneInjectionManifest`, whose `Awake()` runs first in its scene (execution order -32000). The scene's own container is pushed first |
+| Under the `ProjectContext`'s **Hosted Root** | Before the hosted root is activated |
+| A prefab created with `IInstantiator` | Before the instance is activated |
+
+Two cases are injected later, on `SceneManager.sceneLoaded`, after `Awake()`: a scene with no manifest (Play Mode with **Reload Scene** off in Enter Play Mode Options, or no generated code when the scene was baked), and a component whose own execution order is lower than -32000. A prefab created with `Object.Instantiate` isn't injected at all: use `IInstantiator`.
 
 ## Lifecycle
 

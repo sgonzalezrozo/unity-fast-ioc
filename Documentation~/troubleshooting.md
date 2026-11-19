@@ -17,7 +17,7 @@
 | `Could not resolve asset path` | Use the asset's name or its full `Assets/...` path |
 | `neither in Resources/ folder nor marked for Addressables` | Move the asset to a `Resources` folder or mark it as Addressable |
 | `TypeId ... is not registered` | Add a binding, and check that its scene installer applies to the active scene |
-| A MonoBehaviour field stays `null` | Make the field `internal`, bind its type, and use it from `Start()`. Check `warnings` in `GenerationStatus.json`. |
+| A MonoBehaviour field stays `null` | Make the field `internal` and bind its type. Check `warnings` in `GenerationStatus.json`. If it's only `null` in `Awake()`, see the cases injected after `Awake()` in [When fields are assigned](injection.md#when-fields-are-assigned). |
 | `These private fields have a bound type but aren't injected` | Make the field `internal` if it's a dependency. If it's private state, ignore the warning. |
 | `injected field(s) still use reflection` | The listed fields are `internal` in an assembly that doesn't expose its internals. Add `[assembly: InternalsVisibleTo("Assembly-CSharp")]` to it, then regenerate. |
 | `Generated code is not registered` | The project has installers but no generated code. Run **Regenerate Code**, and check that `Assets/FastIoC/Generated/GeneratedModule.cs` exists. A project with no installers yet has nothing to inject and logs nothing. |

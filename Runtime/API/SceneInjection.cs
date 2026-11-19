@@ -25,6 +25,7 @@ namespace FastIoC.API
         {
             s_injectedScenes.Clear();
             s_injectedEarly.Clear();
+            SceneInjectionManifest.Awakened = null;
         }
 
         /// <summary>Injects every loaded scene that hasn't been injected yet.</summary>
@@ -98,6 +99,18 @@ namespace FastIoC.API
             }
 
             s_scanBuffer.Clear();
+        }
+
+        /// <summary>
+        /// Injects a scene from its manifest while the scene is still loading, before its components' Awake.
+        /// The scene's load event then skips everything injected here.
+        /// </summary>
+        public static void InjectWhileLoading(SceneInjectionManifest manifest, ContextRuntime context)
+        {
+            if (manifest == null || context == null || s_injectedScenes.Contains(manifest.gameObject.scene.handle))
+                return;
+
+            manifest.InjectAll(context, s_injectedEarly, s_injectedEarly);
         }
 
         /// <summary>Forgets a scene so it is injected again if it is loaded again.</summary>

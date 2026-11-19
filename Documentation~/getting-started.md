@@ -118,14 +118,14 @@ public class InventoryView : MonoBehaviour
 {
     internal IInventoryService inventory;
 
-    private void Start()
+    private void Awake()
     {
         Debug.Log($"Items: {inventory.ItemCount}");
     }
 }
 ```
 
-The field must be `internal`, so the generated code can assign it directly. Public and private fields aren't injected. Give each service one public constructor.
+The field must be `internal`, so the generated code can assign it directly. Public and private fields aren't injected. It's assigned before `Awake()`. Give each service one public constructor.
 
 ### 4. Press Play
 

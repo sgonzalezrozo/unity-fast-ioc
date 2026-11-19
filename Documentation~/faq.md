@@ -127,7 +127,7 @@ Yes, through a rules file you copy into your project. See [AI Coding Agents](ai-
 
 ### How do I inject into a MonoBehaviour?
 
-Declare the dependency as an `internal` field and use it from `Start()`. There's no `[Inject]` attribute:
+Declare the dependency as an `internal` field. It's assigned before `Awake()`. There's no `[Inject]` attribute:
 
 ```csharp
 public class InventoryView : MonoBehaviour

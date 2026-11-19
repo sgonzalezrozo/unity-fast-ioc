@@ -50,11 +50,11 @@ public class ShopView : MonoBehaviour
     // [Inject] private IShopService shop;   wrong: not injected
     // public IShopService shop;             wrong: not injected
 
-    private void Start() => shop.Open();
+    private void Awake() => shop.Open();
 }
 ```
 
-Use injected fields from `Start()` or later.
+Injected fields are assigned before `Awake()`: use them from `Awake()` or later. The exceptions are in [When fields are assigned](injection.md#when-fields-are-assigned).
 
 ## Create objects at runtime
 

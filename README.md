@@ -116,7 +116,7 @@ public class InventoryView : MonoBehaviour
 {
     internal IInventoryService inventory;
 
-    private void Start()
+    private void Awake()
     {
         Debug.Log($"Items: {inventory.ItemCount}"); // Items: 3
     }

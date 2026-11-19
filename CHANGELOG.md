@@ -4,6 +4,16 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-19
+
+### Changed
+
+- Scenes loaded after startup are injected before their components' `Awake()`, not on `SceneManager.sceneLoaded`. The scene's baked `SceneInjectionManifest` runs first in its scene (execution order -32000), pushes the scene's container and injects the scene. `sceneLoaded` still injects scenes without a manifest and skips what was injected early.
+
+### Documentation
+
+- Injected fields are documented as ready in `Awake()`, with the cases that are still injected later.
+
 ## [0.10.2] - 2026-11-18
 
 ### Documentation
