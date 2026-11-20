@@ -4,6 +4,8 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.5] - 2026-11-19
+
 ### Fixed
 
 - **New MonoInstaller** adds `FastIoC` to the assembly definition that compiles the folder it writes to, keeping its name or GUID style. Under an `.asmdef` without it, the installer failed with `CS0246`.

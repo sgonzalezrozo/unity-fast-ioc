@@ -8,7 +8,7 @@
 Dependency injection for Unity with generated code and no runtime reflection. Missing bindings and cycles are caught before Play; 3,000 bindings inject in 11–39 ms on phones.
 
 [![Unity](https://img.shields.io/badge/Unity-6000.3%20tested-black?style=for-the-badge&logo=unity)](Documentation~/getting-started.md#requirements)
-[![Version](https://img.shields.io/badge/version-0.11.4-blue?style=for-the-badge)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.11.5-blue?style=for-the-badge)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 [**Installation**](#installation) • [**Key Features**](#key-features) • [**Quickstart**](#quickstart) • [**Bindings**](Documentation~/bindings.md) • [**Core Concepts**](Documentation~/core-concepts.md) • [**Code Generation**](Documentation~/code-generation.md)
