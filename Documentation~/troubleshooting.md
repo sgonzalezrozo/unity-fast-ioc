@@ -12,6 +12,7 @@
 
 | Problem | Try this |
 |---|---|
+| `ScriptableSingleton already exists` or `assets located in immutable packages were unexpectedly altered` after adding packages | A package was added while Unity was still importing another. Nothing is broken: clear the Console. Next time, add Tools Core first and wait for the compile before adding the next package. If they come back when you open the project without adding a package, report it |
 | Play Mode stops with `CODE GENERATION FAILED` | Fix the listed errors, then run **Regenerate Code** |
 | `requires ..., which isn't bound in any installer` | Bind the type, or give the constructor parameter a default value |
 | `Could not resolve asset path` | Use the asset's name or its full `Assets/...` path |

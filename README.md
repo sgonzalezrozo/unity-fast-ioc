@@ -37,6 +37,8 @@ https://github.com/sgonzalezrozo/unity-tools-core.git
 https://github.com/sgonzalezrozo/unity-fast-ioc.git
 ```
 
+> **Wait for each package to compile.** Add the first URL, wait until Unity finishes importing and compiling, then add the next. Adding a package while Unity is still importing the previous one can log `ScriptableSingleton already exists` and `assets located in immutable packages were unexpectedly altered`. They don't block anything: clear the Console and continue. If they come back when you open the project without adding a package, report it.
+
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads; commit that Player Settings change. Requirements and tested platforms: [Getting Started](Documentation~/getting-started.md#requirements).
 
 ---
