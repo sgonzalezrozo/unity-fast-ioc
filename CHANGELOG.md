@@ -4,6 +4,15 @@ All notable changes to this package are documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **New MonoInstaller** adds `FastIoC` to the assembly definition that compiles the folder it writes to, keeping its name or GUID style. Under an `.asmdef` without it, the installer failed with `CS0246`.
+
+### Documentation
+
+- The README and `agent-rules.md` list the assemblies an assembly definition needs to use Fast IoC: `FastIoC`, `FastIoC.Core` (`IInjectableForChildren`) and `ToolsCore` (`IPrefabInstantiator`).
+- The README and troubleshooting say to add Tools Core first and wait for each package to compile: adding one mid-import can log `ScriptableSingleton already exists` and "assets located in immutable packages were unexpectedly altered", which block nothing.
+
 ## [0.11.4] - 2026-11-19
 
 ### Changed

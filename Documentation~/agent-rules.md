@@ -9,6 +9,18 @@ It tells an agent how this project wires dependencies with Fast IoC.
 - Bindings live in installers: classes that extend `BindingRecorder` and have `[MonoInstaller]` (namespace `FastIoC.API`). Each feature has its own installer next to its code. Don't edit a shared, central installer to add a feature's bindings.
 - Fast IoC generates code from the installers after every script compile. The game runs the generated code in `Assets/FastIoC/Generated/`. **Never edit files in that folder by hand.**
 
+## Assembly references
+
+Unity doesn't add a package's assemblies to your assembly definitions. Every `.asmdef` whose code uses this package MUST list these in its **Assembly Definition References** (`references` in the JSON), in the same change that adds the first `using`. Without them the build fails with `CS0246: The type or namespace name 'FastIoC' could not be found`. Code in `Assembly-CSharp` (no `.asmdef`) needs nothing.
+
+| Assembly | Needed for |
+|---|---|
+| `FastIoC` | Installers: `BindingRecorder`, `[MonoInstaller]` (namespace `FastIoC.API`) |
+| `FastIoC.Core` | `IInjectableForChildren` and the other types in the namespace `FastIoC.Core` |
+| `ToolsCore` | `IPrefabInstantiator`, used to instantiate prefabs with injected fields |
+
+**Assets > FastIoC > New MonoInstaller** adds `FastIoC` to the `.asmdef` that compiles the folder it writes to. Code you write by hand still needs the assemblies above.
+
 ## Add a service
 
 ```csharp

@@ -41,6 +41,8 @@ https://github.com/sgonzalezrozo/unity-fast-ioc.git
 
 Fast IoC adds the `FAST_IoC` scripting define for all build targets when it loads; commit that Player Settings change. Requirements and tested platforms: [Getting Started](Documentation~/getting-started.md#requirements).
 
+**Assembly references.** If your code is in an assembly definition (`.asmdef`), add `FastIoC`, `FastIoC.Core` and `ToolsCore` to its **Assembly Definition References**. Unity doesn't add them for you, and without them the build fails with `CS0246`. **New MonoInstaller** adds `FastIoC` to the folder's `.asmdef`.
+
 ---
 
 ## Key Features

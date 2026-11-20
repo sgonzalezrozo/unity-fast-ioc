@@ -37,6 +37,8 @@ namespace FastIoC.Editor
             }
 
             File.WriteAllText(path, Template(className));
+            // An installer under an .asmdef needs Fast IoC's assembly, or it fails with CS0246.
+            AssemblyReferences.Ensure(folder, "FastIoC");
             AssetDatabase.ImportAsset(path);
 
             Object script = AssetDatabase.LoadAssetAtPath<Object>(path);
